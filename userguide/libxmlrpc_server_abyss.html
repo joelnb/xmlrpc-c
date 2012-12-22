@@ -1,0 +1,1891 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server_abyss</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server_abyss</b> function library, which is part of
+XML-RPC For C/C++ (Xmlrpc-c).  Also see <a
+href="libgeneral.html">General Library Information - C</a>
+
+<p>The <b>libxmlrpc_server_abyss</b> library provides functions for use in
+a program that is an XML-RPC server based on the Abyss HTTP server.
+
+<p>When using <b>libxmlrpc_server_abyss</b>, you must also use the <a
+href="libxmlrpc.html"><b>libxmlrpc</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server_abyss</b> library routines depend on it.
+
+<p>Similarly, you will need the <a
+href="libxmlrpc_server.html">libxmlrpc_server</a> library.  It
+contains functions for XML-RPC servers that are not specific to
+Abyss-based servers.  And <b>libxmlrpc_server_abyss</b> library
+routines depend on it.
+
+<p>Finally, you will need Abyss itself, which is in the library
+<b>libxmlrpc_abyss</b>, which is part of Xmlrpc-c.
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#aboutabyss">About Abyss</a>
+<li><a href="#styles">Styles Of Abyss-Based Server Programs</a>
+<li><a href="#ownabyss">Running Your Own Abyss Server</a>
+  <ul>
+  <li><a href="#set_handlers2"><b>xmlrpc_server_abyss_set_handlers2()</b></a>
+    <ul>
+    <li><a href="#set_handlers_example">Example</a>
+    </ul>
+  <li><a href="#set_handlers"><b>xmlrpc_server_abyss_set_handlers()</b></a>
+  <li><a href="#set_handler"><b>xmlrpc_server_abyss_set_handler()</b></a>
+    <ul>
+    <li><a href="#set_handler_example">Example</a>
+    </ul>
+  <li><a href="#set_handler3"><b>xmlrpc_server_abyss_set_handler3()</b></a>
+  <li><a href="#set_handler2"><b>xmlrpc_server_abyss_set_handler2()</b></a>
+  <li><a href="#set_default_handler">
+     <b>xmlrpc_server_abyss_set_default_handler()</b></a>
+    <ul>
+    <li><a href="#set_default_handler_example">Example</a>
+    </ul>
+  <li><a href="#xmlrpc_server_abyss_run"><b>xmlrpc_server_abyss_run()</b></a>
+  <li><a href="#methodfunctionservices"><b>Method Function Services</b></a>
+  </ul>
+<li><a href="#undercovers">Having Abyss Under The Covers</a>
+  <ul>
+  <li><a href="#anonymous">Anonymous Server</a>
+    <ul>
+    <li><a href="#server_abyss"><b>xmlrpc_server_abyss()</b></a>
+    </ul>
+  <li><a href="#explicit_server_abyss">
+      Explicit <b>xmlrpc_server_abyss_t</b> object</a>
+    <ul>
+    <li><a href="#server_abyss_global_init">
+        <b>xmlrpc_server_abyss_global_init()</b></a>
+    <li><a href="#server_abyss_global_term">
+        <b>xmlrpc_server_abyss_global_term()</b></a>
+    <li><a href="#server_abyss_create"><b>xmlrpc_server_abyss_create()</b></a>
+    <li><a href="#server_abyss_destroy">
+        <b>xmlrpc_server_abyss_destroy()</b></a>
+    <li><a href="#server_abyss_run_server">
+        <b>xmlrpc_server_abyss_run_server()</b></a>
+    <li><a href="#server_abyss_terminate">
+        <b>xmlrpc_server_abyss_terminate()</b></a>
+    <li><a href="#server_abyss_reset_terminate">
+        <b>xmlrpc_server_abyss_reset_terminate()</b></a>
+    <li><a href="#server_abyss_setup_sig">
+        <b>xmlrpc_server_abyss_setup_sig()</b></a>
+    <li><a href="#server_abyss_restore_sig">
+        <b>xmlrpc_server_abyss_restore_sig()</b></a>
+    </ul>
+  <li><a href="#server_abyss_parameters">Parameters</a>
+    <ul>
+    <li><a href="#registryP">registryP</a>
+    <li><a href="#port_number">port_number</a>
+    <li><a href="#socket_bound">socket_bound</a>
+    <li><a href="#socket_fd">socket_fd</a>
+    <li><a href="#sockaddr_p">sockaddr_p</a>
+    <li><a href="#sockaddrlen">sockaddrlen</a>
+    <li><a href="#uri_path">uri_path</a>
+    <li><a href="#max_conn">max_conn</a>
+    <li><a href="#max_conn_backlog">max_conn_backlog</a>
+    <li><a href="#keepalive_timeout">keepalive_timeout</a>
+    <li><a href="#keepalive_max_conn">keepalive_max_conn</a>
+    <li><a href="#timeout">timeout</a>
+    <li><a href="#enable_shutdown">enable_shutdown</a>
+    <li><a href="#dont_advertise">dont_advertise</a>
+    <li><a href="#chunk_response">chunk_response</a>
+    <li><a href="#allow_origin">allow_origin</a>
+    <li><a href="#access_control_expires">access_control_expires</a>
+    <li><a href="#access_control_max_age">access_control_max_age</a>
+    <li><a href="#log_file_name">log_file_name</a>
+    <li><a href="#runfirst">runfirst</a>
+    </ul>
+  <li><a href="#server_address_parameters">Server Address Parameters</a>
+  <li><a href="#server_abyss_term">Server Termination</a>
+  <li><a href="#signals">Signals</a>
+  <li><a href="#daemonizing">Daemonizing</a>
+  <li><a href="#configfile">
+          Deprecated &quot;config file&quot; Style Interface</a>
+  <li><a href="#wireprotocol">Wire Protocol</a>
+  </ul>
+<li><a href="#notes">Notes</A>
+  <ul>
+  <li><a href="#httpauth">HTTP Authentication</a>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_server_abyss.h&gt;</B> header file declares the
+interface to <b>libxmlrpc_server_abyss</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use 
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<p>Because the <b>libxmlrpc</b>, <b>libxmlrpc_server</b>, and
+<b>libxmlrpc_abyss</b> libraries are
+prerequisites, you'll also need their header files (<b>xmlrpc.h</b>,
+<b>xmlrpc_server.h</b>, and <b>xmlrpc_abyss.h</b>).
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server_abyss</b> library is
+<b>libxmlrpc_server_abyss.a</b> or <b>libxmlrpc_server_abyss.so</b>.
+The classic linker option to cause the library to be linked into your
+program is <tt>-l xmlrpc_server_abyss</tt>.  These are hints; you'll
+have to modify this according to conventions of your particular
+platform.  You'll also have to figure out where the library resides
+and how to make your linker look there for it.
+
+<p>You can use <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>, specifying the
+&quot;abyss-server&quot; feature, to find out what libraries to link.
+This is designed to be used in a build program such as a make file.
+When properly installed, it tells exactly how to link on your
+particular system.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_server_abyss</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_abyss
+<li>libxmlrpc_server
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>A complete example of an XML-RPC server program that uses
+<b>libxmlrpc_server_abyss</b> is <a
+href="index.html#serverexample">here</a>.
+
+<h2 id="aboutabyss">About Abyss</h2>
+
+<p>Abyss is a general purpose HTTP server program.  Because the most
+common use of HTTP is in web servers, Abyss is usually called a web
+server program.  It is in the same class as the more famous Apache
+HTTP server program.  It is much simpler than Apache, though.
+
+<p>Since XML-RPC is implemented over HTTP, all you need for an XML-RPC
+server is an Abyss server with a handler attached that knows how to
+execute an XML-RPC call.  <b>libxmlrpc_server</b>'s <a
+href="libxmlrpc_server.html#method_registry">method registry</a>
+provides all the logic you need to execute an XML-RPC call, so all you
+have to do is hook that up to Abyss.  <b>libxmlrpc_server_abyss</b>
+gives the facilities to make that connection.
+
+
+<h2 id="styles">Styles Of Abyss-Based Server Programs</h2>
+
+<p>There are lots of ways you can build an XML-RPC server based on an
+Abyss HTTP server.
+
+<p>The most basic (but not easiest) is not to use any Xmlrpc-c XML-RPC
+facilities at all.  Write your own Abyss request handler which takes
+an XML document from Abyss, interprets it as an XML-RPC call, and
+returns to Abyss an XML response.  Register that request handler with
+Abyss using Abyss function calls.  Create and start up your Abyss
+server using Abyss function calls.
+
+<p>The next step up in convenience would be to have your Abyss request
+handler use <a href="libxmlrpc.html#xmlencode">Xmlrpc-c's XML encoding
+and decoding tools</a> to free you from having to know the XML-RPC
+protocol, and other <a href="libxmlrpc.html"><b>libxmlrpc</b></a>
+facilities to process the data easily.
+
+<p>The next step up would be to use an Xmlrpc-c method registry.
+Instead of writing your own Abyss request handler, call
+<b>xmlrpc_server_abyss_set_handlers2()</b>.  That installs a request
+handler for your URI path (usually &quot;/RPC2&quot;) that executes an
+XML-RPC call.  Abyss delivers all HTTP requests for that URI path to
+that handler.  To tell the handler what methods to execute, you build
+a <a href="libxmlrpc_server.html#method_registry">method registry</a>
+and identify it in <b>xmlrpc_server_abyss_set_handlers2()</b>'s
+arguments.  (The Abyss server thus created rejects requests for any
+other URI path).  Now you don't have to know how to write an Abyss
+request handler, but you still have to know other parts of the
+Abyss API.
+
+<p>The next step up would be to have Xmlrpc-c handle the details of
+the Abyss API as well.  To do that, create a <b>xmlrpc_server_abyss_t</b>
+object with <b>xmlrpc_server_abyss_create()</b> and invoke the various
+methods of that object.  The object sets up the Abyss server to
+execute XML-RPC methods using the method registry you supply.  You
+never see Abyss itself.
+
+<p>What you give up for that convenience is that the
+<b>xmlrpc_server_abyss_t</b> object is not capable of exploiting many of
+the features of Abyss.  For example, you can't have the server do any
+kind of authentication using this style.
+
+<p>One level up from that is to have the <b>xmlrpc_server_abyss_t</b>
+object under the covers as well.  You just run
+<b>xmlrpc_server_abyss()</b>.  It creates the <b>xmlrpc_server_abyss_t</b>
+object and runs the server.  It returns when the server terminates.
+Because you have no handle for the server object, you can't control
+it from outside; in particular, you can't shut it down from another
+thread or signal handler.
+
+<p>There is another style in which you don't build a method registry
+separately, but rather use <b>libxmlrpc_server_abyss</b> facilities to
+add individual methods to a server instance.  I don't recommend this
+style.  It used to be (before Xmlrpc-c 1.01 - January 2005) the only
+one, so continues to exist for backward compatibility, but I find it
+to be more complex than the newer <b>xmlrpc_server_abyss()</b> style.
+
+<h2 id="ownabyss">Running Your Own Abyss Server</h2>
+
+<p>If in your program you create your own Abyss server
+(<b>ServerCreate()</b>) using facilities of <b>libxmlrpc_abyss</b>, you
+can turn it into an XML-RPC server by using the facilities described
+in this section.
+
+<p>See the <a href="libxmlrpc_abyss.html"><b>libxmlrpc_abyss</b> manual</a>
+for information on the basic Abyss interface, which your program must also
+use.
+
+<h3 id="set_handlers2">xmlrpc_server_abyss_set_handlers2()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_server_abyss_set_handlers2(TServer *         const srvP,
+                                  const char *      const uriPath,
+                                  xmlrpc_registry * const registryP);
+
+</code>
+</pre>
+
+<p>This function adds to the Abyss server identified by <i>srvP</i> a
+request handler for the URI path <i>uriPath</i>.  This handler
+executes a POST request as an XML-RPC call as defined by the <a
+href="libxmlrpc_server.html#method_registry">method registry</a>
+identified by <i>registryP</i>.  It rejects requests with other HTTP
+methods for this URI path with an HTTP &quot;Method Not Allowed&quot;
+(code 405) failure.
+
+<p>&quot;URI path&quot; means the part of a Uniform Resource
+Identifier known as the &quot;abs_path&quot; in the URI spec (RFC 2396).
+In the example URI <tt>http://www.google.com/index.html</tt>,
+<tt>/index.html</tt> is the URI path.
+
+<p>In an HTTP POST request, the URI path becomes part of the POST
+header.
+
+<p>The customary URI path for an XML-RPC server is &quot;/RPC2&quot;.
+
+<p>You must not call this twice for the same Abyss server.
+
+<p>This function also adds a default request handler, which handles
+requests to every URI path other than the specified.  All that handler
+does is fail the request with an HTTP &quot;file not found&quot; (code
+404) error.
+
+<p>You normally call this once per server.  If you call it a second
+time, it adds another handler, later in Abyss' search order, for exactly
+the same requests, so it has no effect.
+
+<p>This function was new in Xmlrpc-c 1.06 (June 2006).  With older
+Xmlrpc-c, use <a
+href="#set_handlers"><b>xmlrpc_server_abyss_set_handlers()</b></a> or
+<a href="#set_handler"><b>xmlrpc_server_abyss_set_handler()</b></a>.
+
+
+<h4 id="set_handlers_example">Example</h4>
+
+<p>This is just a fragment showing the interface to
+<b>xmlrpc_server_abyss_set_handlers2()</b>.  You'd have to add a bunch
+more Abyss library calls to make a complete server.
+
+<pre>
+<code>
+    #include &lt;xmlrpc.h&gt;
+    #include &lt;xmlrpc_server.h&gt;
+    #include &lt;xmlrpc_server_abyss.h&gt;
+    #include &lt;xmlrpc_abyss.h&gt;
+
+    xmlrpc_registry * registryP;
+    xmlrpc_env env;
+    TServer abyssServer;
+
+    xmlrpc_env_init(&amp;env);
+
+    registryP = xmlrpc_registry_new(&amp;env);
+
+    xmlrpc_registry_add_method(
+        &amp;env, registryP, NULL, "sample.add", &amp;sample_add, NULL);
+
+    ServerCreate(&amp;abyssServer, "XmlRpcServer", 8080, DEFAULT_DOCS, NULL);
+
+    xmlrpc_server_abyss_set_handlers2(&amp;abyssServer,
+                                      &quot;/RPC2&quot;,
+                                      registryP);
+</code>
+</pre>
+
+<p>For a complete example, see the program <b>xmlrpc_loop_server</b>
+in the examples directory of the Xmlrpc-c source tree.
+
+<h3 id="set_handlers">xmlrpc_server_abyss_set_handlers()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_server_abyss_set_handlers(TServer *         const srvP,
+                                 xmlrpc_registry * const registryP);
+
+</code>
+</pre>
+
+<p>This is the same as <b>xmlrpc_server_abyss_set_handlers2()</b>
+except that the URI path is always &quot;RPC2&quot;.
+
+<p>This function exists for backward compatibility.  You should use <a
+href="#set_handlers2"><b>xmlrpc_server_abyss_set_handlers2()</b></a>
+instead if possible.
+
+<h3 id="set_handler">xmlrpc_server_abyss_set_handler()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_server_abyss_set_handler(TServer *         const srvP,
+                                xmlrpc_registry * const registryP);
+
+</code>
+</pre>
+
+<p>This is like <b>xmlrpc_server_abyss_set_handlers2()</b> (note that
+one is plural and other not), above, except that it does not set up a
+default handler.  That means you can set up one of your own or let
+Abyss' default handling (basic serving of web pages) work.
+
+<p>You can use <b>xmlrpc_server_abyss_set_default_handler()</b> to set up the
+same default URI handler that <b>xmlrpc_server_abyss_set_handlers2()</b>
+does.
+
+<p>Also, you can call it as many times as you want and add handlers for as
+many URI paths as you want.
+
+<p>So this gives you lower level control.
+
+<p>One thing you can do with this function is have separate logical servers by
+registering handles for multiple URI paths, each with its own method registry.
+Of course, they could share a registry too.
+
+<h4 id="set_handler_example">Example</h4>
+
+<p>Refer to the example of <b>xmlrpc_server_abyss_set_handlers2()</b>
+above.  The following is an example of how the last part of that example
+could be different to use <b>xmlrpc_server_abyss_set_handler()</b>.
+
+<pre>
+<code>
+
+    xmlrpc_server_abyss_set_handler(
+        &amp;env, &amp;abyssServer, &quot;/RPC3&quot;, registryP);
+
+</code>
+</pre>
+
+
+<h3 id="set_handler3">xmlrpc_server_abyss_set_handler3()</h3>
+
+<pre>
+<code>
+typedef void
+xmlrpc_call_processor(xmlrpc_env *        envP,
+                      void *              processorArg,
+                      const char *        callXml,
+                      size_t              callXmlLen,
+                      TSession *          abyssSessionP,
+                      xmlrpc_mem_block ** responseXmlPP);
+
+void
+xmlrpc_server_abyss_set_handler3(
+    xmlrpc_env *                              envP,
+    TServer *                                 srvP,
+    const xmlrpc_server_abyss_handler_parms * parmsP,
+    unsigned int                              parmSize);
+</code>
+</pre>
+
+<p>This is like <b>xmlrpc_server_abyss_set_handler()</b> above, except that
+it gives you more options.
+
+<p>Rather than the handler executing and XML-RPC call as it sees fit, you
+supply the a subroutine to execute the call.  Xmlrpc-c takes care of all the
+HTTP stuff and passes the XML-RPC call (XML) to your subroutine.  You parse
+the XML, interpret the XML-RPC, do the requested computation, and generate the
+XML-RPC response (XML).  You can of course use Xmlrpc-c facilities to assist
+in interpreting and generating the XML-RPC messages.
+
+<p><i>parmsP</i> points to a structure containing various options.
+<i>parmSize</i> is the size in bytes of that structure.  More precisely, it is
+the amount of the structure that you have filled with meaningful information.
+The definition of this structure is below.
+
+<p>For <i>parmSize</i>, use the <b>XMLRPC_AHPSIZE</b> macro as in the
+example.  This macro gives the size of the
+<b>xmlrpc_server_abyss_handler_parms</b> structure up through the member you
+name.  Name the last member in the structure that you set.  You must
+set every member up through that one, but for every member after it,
+<b>xmlrpc_server_abyss_set_hanlder3()</b> will assume a default.
+
+<p>The reason it's important to use <b>XMLRPC_AHPSIZE</b> instead of just
+setting all the members and using <b> sizeof(struct
+xmlrpc_server_abyss_handler_parms)</b> is forward compatibility.  Future
+versions of <b>libxmlrpc_server_abyss_set_handler3</b> might add new members,
+and you want the server program you write today, whether you compile it today
+or then, to work properly with that future library.
+
+<p>You must supply at least the <b>xml_processor</b>, <b>xml_processor_arg</b>,
+and <b>xml_processor_max_stack</b> parameters.
+
+<p>For an example of using <b>xmlrpc_server_abyss_set_handler3()</b>, see
+<b>libxmlrpc_server_abyss++</b> source code.  That library uses an XML
+processor that executes an XML-RPC using the C++ version of a method registry
+(<b>libxmlrpc_server++</b>) rather than the C version
+(<b>libxmlrpc_server</b>).
+
+<p><b>xmlrpc_server_abyss_set_handler3()</b> does not set up an Abyss default
+URI handler.  So you should normally call
+<b>xmlrpc_server_abyss_set_default_handler()</b> too.
+
+<p><b>xmlrpc_server_abyss_set_handler3()</b> was new in Xmlrpc-c Release 1.25
+(December 2010).  Before that, you can
+use <b>xmlrpc_server_abyss_set_handler2()</b> and if you need more control
+than that, you have to abandon <b>libxmlrpc_server_abyss</b> altogether and
+have your own code do the things it does.
+
+<h4 id="set_handler_parameters">Handler parameters</h4>
+
+<P>This section describes the parameters in the
+<b>xmlrpc_server_abyss_handler_parms</b> struct, which comprises the
+parameters of a <b>xmlrpc_server_abyss_set_handler3()</b> call.
+
+<p>Synopsis:
+<pre>
+<code>
+typedef struct {
+    xmlrpc_call_processor * xml_processor;
+    void *                  xml_processor_arg;
+    size_t                  xml_processor_max_stack;
+    const char *            uri_path;
+    xmlrpc_bool             chunk_response;
+    const char *            allow_origin;
+        /* NULL means don't answer HTTP access control query */
+    xmlrpc_bool             access_ctl_expires;
+    unsigned int            access_ctl_max_age;
+} xmlrpc_server_abyss_handler_parms;
+
+</code>
+</pre>
+
+<p><i>xml_processor</i> is your XML processor, described above.
+<i>xml_processor_arg</i> is the argument that the Abyss server passes to
+your XML processor.
+
+<p><i>xml_processor_max_stack</i> is the maximum number of bytes of stack
+space your XML processor will use.  It is unspecified what happens if it
+attempts to use more.
+
+<p>The rest of the parameters have the same meaning as the identically named
+<a href="#server_abyss_parameters">server parameters</a>.
+
+
+<h3 id="set_handler2">xmlrpc_server_abyss_set_handler2()</h3>
+
+<pre>
+<code>
+typedef void
+xmlrpc_call_processor(xmlrpc_env *        const envP,
+                      void *              const processorArg,
+                      const char *        const callXml,
+                      size_t              const callXmlLen,
+                      TSession *          const abyssSessionP,
+                      xmlrpc_mem_block ** const responseXmlPP);
+
+void
+xmlrpc_server_abyss_set_handler2(
+    TServer *         const srvP,
+    const char *      const uriPath,
+    xmlrpc_call_processor   xmlProcessor,
+    void *            const xmlProcessorArg,
+    size_t            const xmlProcessorMaxStackSize,
+    xmlrpc_bool       const chunkResponse);
+</code>
+</pre>
+
+<p>This is like <b>xmlrpc_server_abyss_set_handler3()</b> above, except that
+it doesn't give you as many options.  It is obsolete.
+
+<p><i>xmlProcessor</i>, <i>xmlProcessorArg</i>,
+and <i>xmlProcessorMaxStackSize</i> are equivalent to
+the <i>xml_processor</i>, <i>xml_processor_arg</i>,
+and <i>xml_processor_stack_size</i> parameters, respectively,
+of <b>xmlrpc_server_abyss_set_handler3()</b>.
+
+<p><b>xmlrpc_server_abyss_set_handler2()</b> was new in Xmlrpc-c Release 1.19
+(June 2009).  Before that, the only way you can have your own XML processor is
+to abandon <b>libxmlrpc_server_abyss</b> altogether and have your own code do
+the things it does.
+
+
+<h3 id="xmlrpc_server_abyss_set_default_handler">
+  xmlrpc_server_abyss_set_default_handler()</h3>
+
+<p>This function sets up an Abyss default URI handler suitable for an
+XML-RPC server.  An Abyss default URI handler is the handler that handles
+HTTP requests that no other handler registered with Abyss claims.
+
+<p>Typically, you'll register one handler for a POST of URI <b>http://RPC2</b>
+using one of the other <b>libxmlrpc_server_abyss</b> subroutines and no one
+has any business sending any other kind of request to the server.  So the
+default URI handler that <b>xmlrpc_server_abyss_set_default_handler()</b>
+registers is one that rejects the request with a 404 HTTP error response
+with a message stating that the server is an XML-RPC server.
+
+<p><b>xmlrpc_server_abyss_set_handlers()</b> and
+<b>xmlrpc_server_abyss_set_handlers2()</b> register this same default URI
+handler for you, so you don't need to call this subroutine too.
+
+<p><b>xmlrpc_server_abyss_set_default_handler()</b> was new in 
+Xmlrpc-c Release 1.19 (June 2009).
+
+<h3 id="xmlrpc_server_abyss_run">xmlrpc_server_abyss_run()</h3>
+
+<p>This is an old, deprecated interface.  It is a utility extension
+to Abyss' <b>ServerRun()</b>.  It sets up some signal handlers and
+daemonizes the process before calling <b>ServerRun()</b>.
+
+<p>It's deprecated because this is not a healthy way to organize a
+system.  Setting up signal handlers and daemonizing have nothing to do
+with XML-RPC or any essential purpose of Xmlrpc-c.  Furthermore,
+daemonizing should really be done by an entirely separate program.
+
+<p>If you have an old program that uses
+<b>xmlrpc_server_abyss_run()</b> and want to update it, see <a
+href="#daemonizing">Daemonizing</a> for discussion of how you should
+get your program daemonized, and use plain <b>ServerRun()</b>.  Or
+check out the easier <a href="#undercovers">Abyss under the covers</a>
+alternative) and remove all the Abyss calls from your program.
+
+<H3 id="methodfunctionservices">Method Function Services</H3>
+
+<p>Within an XML-RPC method function, you can get information from the
+Abyss server about the circumstances of the XML-RPC call, using
+certain Abyss functions.
+
+<p><a href="libxmlrpc_abyss.html#SessionGetRequestInfo">
+<b>SessionGetRequestInfo</b></a> can give you some information about
+the HTTP headers that came with the call, while
+<a href="libxmlrpc_abyss.html#SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></a>
+can tell you how the call got to you.  In particular,
+<b>SessionGetChannelInfo()</b> typically tells you the IP address and TCP port
+number of the HTTP client, and therefore the XML-RPC client.
+
+<p>In order to use these Abyss services, your XML-RPC method function
+must know the handle of the Abyss session that is handling the RPC.
+Abyss supplies that to your method function as the <i>callInfo</i>
+argument.  I.e. <i>callInfo</i> is a <b>TSession *</b>.  See <a
+href="libxmlrpc_server.html#howto">How To Write A Method Function</a>.
+
+<p>Example:
+
+<pre>
+<code>
+    static xmlrpc_value *
+    demo_noop(xmlrpc_env *   const envP, 
+              xmlrpc_value * const paramArrayP,
+              void *         const serverInfo,
+              void *         const channelInfo) {
+        
+        TSession * const abyssSessionP = channelInfo;
+        struct abyss_unix_chaninfo * channelInfoP;
+        struct sockaddr_in * sockAddrInP;
+        unsigned char * ipAddr;  /* 4 byte array */
+    
+        SessionGetChannelInfo(abyssSessionP, (void*)&amp;channelInfoP);
+    
+        sockAddrInP = (struct sockaddr_in *) &amp;channelInfoP->peerAddr;
+    
+        ipAddr = (unsigned char *)&amp;sockAddrInP->sin_addr.s_addr;
+    
+        printf(&quot;RPC is from IP address %u.%u.%u.%u\n&quot;,
+               ipAddr[0], ipAddr[1], ipAddr[2], ipAddr[3]);
+    
+        return xmlrpc_nil_new(envP);
+    }
+    
+    xmlrpc_registry_add_method2(
+        &amp;env, registryP, &quot;demo.noop&quot;, &amp;demo_noop, NULL, NULL, NULL);
+</code>
+</pre>
+
+<p>For a complete example, see the program <b>xmlrpc_loop_server</b>
+in the examples directory of the Xmlrpc-c source tree.
+
+<h2 id="undercovers">Having Abyss Under The Covers</h2>
+
+<p>This section describes Xmlrpc-c facilities for running an Abyss
+server without your program actually seeing any Abyss interfaces.
+This means you don't have any flexibility in the configuration of the
+Abyss server (other than that you still get to supply the
+&quot;abyss.conf&quot; Abyss configuration file), but it saves you 
+having to learn anything about the Abyss API.
+
+<p>There are two versions of this facility: one that's easier to learn
+and less code, and one that lets you do more.
+
+<p>The simpler one is the anonymous server facility.  You can run a
+server with a single library call (to <b>xmlrpc_server_abyss()</b>),
+but because you don't get a handle for the server, you can't terminate
+it from outside (i.e. from a signal handler or a separate thread).
+The only way to terminate the server is have it execute an RPC that
+terminates it.
+
+<p>In the less simple version, you create a server object separately from
+running it.  You have a handle for the server object, which you can use
+in a signal handler or another thread to terminate the server.
+
+<h3 id="anonymous">Anonymous Server</h3>
+
+<p>This is the simplest way to run an XML-RPC server.  It consists of
+a single library subroutine: <b>xmlrpc_server_abyss()</b>.
+
+<h4 id="server_abyss">xmlrpc_server_abyss()</h4>
+
+<pre>
+<code>
+void
+xmlrpc_server_abyss(xmlrpc_env *                const envP,
+                    xmlrpc_server_abyss_parms * const parmP,
+                    unsigned int                const parmSize);
+</code>
+</pre>
+
+<p>This function runs an Abyss server, which functions as a complete
+XML-RPC server.
+
+<p>This is equivalent to the following sequence:
+
+<ul>
+<li><a href="#server_abyss_global_init">
+<b>xmlrpc_server_abyss_global_init()</b>
+</a>
+<li><a href="#server_abyss_create">
+<b>xmlrpc_server_abyss_create()</b>
+</a>
+<li><a href="#server_abyss_setup_sig">
+<b>xmlrpc_server_abyss_setup_sig()</b>
+</a>
+<li><a href="#server_abyss_run_server">
+<b>xmlrpc_server_abyss_run_server()</b>
+</a>
+<li><a href="#server_abyss_restore_sig">
+<b>xmlrpc_server_abyss_restore_sig()</b>
+</a>
+<li><a href="#server_abyss_destroy">
+<b>xmlrpc_server_abyss_destroy()</b>
+</a>
+<li><a href="#server_abyss_global_term">
+<b>xmlrpc_server_abyss_global_term()</b>
+</a>
+</ul>
+
+<p>This is designed to be run as the only thread in a process, and
+owning the entire environment (e.g. not in a library).  If you want to
+run an XML-RPC server as part of a larger process, you should use an
+<a href="#explicit_server_abyss">explicit <b>xmlrpc_server_abyss_t</b>
+object</a>.
+
+<p>Example:
+
+<p>This is just a fragment showing how to call
+<b>xmlrpc_server_abyss()</b>.  <a href="index.html#serverexample">This
+example</a> is a complete program that uses
+<b>xmlrpc_server_abyss()</b>.
+
+<pre>
+<code>
+#include &lt;xmlrpc.h&gt;
+#include &lt;xmlrpc_server.h&gt;
+#include &lt;xmlrpc_server_abyss.h&gt;
+
+    xmlrpc_server_abyss_parms serverparm;
+    xmlrpc_registry * registryP;
+    xmlrpc_env env;
+
+    xmlrpc_env_init(&amp;env);
+
+    registryP = xmlrpc_registry_new(&amp;env);
+
+    xmlrpc_registry_add_method(
+        &amp;env, registryP, NULL, "sample.add", &amp;sample_add, NULL);
+
+    serverparm.config_file_name = NULL;
+    serverparm.registryP = registryP;
+    serverparm.port_number = 8080;
+    serverparm.log_file_name = &quot;/tmp/xmlrpc_log&quot;;
+
+    printf(&quot;Starting XML-RPC server...\n&quot;);
+
+    xmlrpc_server_abyss(&amp;env, &amp;serverparm, XMLRPC_APSIZE(log_file_name));
+
+</code>
+</pre>
+
+<p>The <i>parmP</i> and <i>parmSize</i> arguments are the same as those
+of <a href="#server_abyss_create"><b>xmlrpc_server_abyss_create</b></a>.
+
+<p><em>But:</em> note that there are two styles of providing
+parameters: an old deprectaed one, and a new preferred one.  Before
+Xmlrpc-c Version 1.02 (April 2005), the old style is the only one
+available.
+
+<p><b>xmlrpc_server_abyss()</b> was new in Xmlrpc-c 1.01.
+
+
+<h3 id="explicit_server_abyss">
+Explicit <b>xmlrpc_server_abyss_t</b> object
+</h3>
+
+<P>This is an explicit object oriented interface where you have a visible
+<b>xmlrpc_server_abyss_t</b> object.  You have access to methods of that object
+that not only run the server, but terminate it as well.
+
+<p>This entire facility (the visible <b>xmlrpc_server_abyss_t</b> object) was
+new in Xmlrpc-c 1.14 (March 2008).  Before that, you must use
+the <a href="#anonymous">anonymous server</a> facility.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_server_abyss_parms serverparm;
+    xmlrpc_registry * registryP;
+    xmlrpc_env env;
+    xmlrpc_server_abyss_t * serverP;
+    xmlrpc_server_abyss_sig * oldHandlersP;
+
+    xmlrpc_env_init(&amp;env);
+
+    xmlrpc_server_abyss_global_init(&amp;env);
+
+    registryP = xmlrpc_registry_new(&amp;env);
+
+    xmlrpc_registry_add_method(
+        &amp;env, registryP, NULL, "sample.add", &amp;sample_add, NULL);
+
+    serverparm.config_file_name = NULL;
+    serverparm.registryP = registryP;
+    serverparm.port_number = 8080;
+    serverparm.log_file_name = &quot;/tmp/xmlrpc_log&quot;;
+
+    xmlrpc_server_abyss_create(&amp;env, &amp;parms, XMLRPC_APSIZE(registryP),
+                               &amp;serverP);
+
+    xmlrpc_server_abyss_setup_sig(&amp;env, serverP, &amp;oldHandlersP);
+
+    printf(&quot;Starting XML-RPC server...\n&quot;);
+
+    xmlrpc_server_abyss_run_server(&amp;env, &amp;serverP);
+
+    xmlrpc_server_abyss_restore_sig(oldHandlersP);
+
+    free(oldHandlersP);
+
+    xmlrpc_server_abyss_destroy(serverP);
+
+    xmlrpc_server_abyss_global_term(&amp;env);
+</code>
+</pre>
+
+<p>In the example above, we assume every function succeeds, because it
+makes the code easier to read.  In real life, you will want to check
+the <i>env</i> variable after each function call.
+
+<p>A buildable, working example like that above is in the Xmlrpc-c
+source distribution, in the <b>examples</b> directory with the name
+<b>interrupted_server</b>.
+
+
+<h4 id="server_abyss_global_init"><b>xmlrpc_server_abyss_global_init()</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_server_abyss_global_init(&amp;env);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_server_abyss_global_init(xmlrpc_env * const envP);
+</code>
+</pre>
+
+<p>This is <b>libxmlrpc_server_abyss</b>'s global initialization function.
+
+<p>See <a href="libxmlrpc.html#globalconst">Global Constants</a>
+for an explanation of why you need these and how to use them.
+
+<p>This is required only if you use explicit <b>xmlrpc_server_abyss_t</b>
+objects.
+
+
+<h4 id="server_abyss_global_term"><b>xmlrpc_server_abyss_global_term()</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_server_abyss_global_term();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_server_abyss_global_term(void);
+</code>
+</pre>
+
+<p>This is <b>libxmlrpc_server_abyss</b>'s global termination function.
+
+<p>See <a href="libxmlrpc.html#globalconst">Global Constants</a>
+for an explanation of why you need these and how to use them.
+
+<h4 id="server_abyss_create"><b>xmlrpc_server_abyss_create()</b></h4>
+
+<P>This is a constructor for the <b>xmlrpc_server_abyss_t</b> object
+class.  The object it creates doesn't perform any server functions by
+itself; you must call its <b>xmlrpc_server_abyss_run_server</b> method
+to run the server.
+
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    xmlrpc_server_abyss_create(
+        xmlrpc_env *                      const envP,
+        const xmlrpc_server_abyss_parms * const parmsP,
+        unsigned int                      const parmSize,
+        xmlrpc_server_abyss_t **          const serverPP);
+</code>
+</pre>
+
+<p>See the example above.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>parmsP</i> is a pointer to a structure that contains the
+parameters of the server.  <i>parmSize</i> is the size in bytes of
+that structure.  More precisely, it is the amount of the structure
+that you have filled with meaningful information.  The definition of
+this structure is <a href="#server_abyss_parameters">below</a>.
+
+<p>For <i>parmSize</i>, use the <b>XMLRPC_APSIZE</b> macro as in the
+example.  This macro gives the size of the
+<b>xmlrpc_server_abyss_parms</b> structure up through the member you
+name.  Name the last member in the structure that you set.  You must
+set every member up through that one, but for every member after it,
+<b>xmlrpc_server_abyss()</b> will assume a default.
+
+<p>The reason it's important to use <b>XMLRPC_APSIZE</b> instead of
+just setting all the members and using <b> sizeof(struct
+xmlrpc_server_abyss_parms)</b> is forward compatibility.  Future
+versions of <b>libxmlrpc_server_abyss</b> might add new members, and
+you want the server program you write today, whether you compile it
+today or then, to work properly with that future library.
+
+<p>You must supply at least the <b>config_file_name</b> parameter (just
+set it to NULL) and the <b>registryP</b> parameter.  All the rest
+default if your <b>parmSize</b> indicates they are not present.
+
+<p>The function returns as *<i>serverPP</i> the handle for the newly
+created server object (assuming the function succeeds).  Use this
+handle as an argument to the other functions that serve as methods of
+this object.
+
+
+<h4 id="server_abyss_destroy"><b>xmlrpc_server_abyss_destroy()</b></h4>
+
+<p>This is the object destructor.  It destroys an <b>xmlrpc_server_abyss_t</b>
+object.
+
+<p><em>Do not</em> call this while any other method is running.  That means
+you cannot call it while the server is running; you must terminate the server
+first, to make <b>xmlrpc_server_abyss_run_server()</b> return.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_server_abyss_destroy(xmlrpc_server_abyss_t * const serverP);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the object you are destroying, returned
+by <b>xmlrpc_server_abyss_create()</b>.
+
+<h4 id="server_abyss_run_server"><b>xmlrpc_server_abyss_run_server()</b></h4>
+
+<p>This function runs the server.  It is the heart of your server program.
+
+<p>The server listens on the TCP port you specified when you created
+the <b>xmlrpc_server_abyss_t</b> object and responds to HTTP
+requests (which are normally XML-RPC requests) ad infinitum.
+<b>xmlrpc_server_abyss_run_server()</b> returns when <a
+href="#server_abyss_term">the server terminates</a>.  It
+handles multiple requests simultaneously.
+
+<P>The server executes HTTP requests with the same handlers that
+<b>xmlrpc_server_abyss_set_handlers2()</b> installs.  See the documentation
+of that function for details on how the server implements HTTP requests.
+The handlers use the <a
+href="libxmlrpc_server.html#method_registry">method registry</a>
+you supply via <b>xmlrpc_server_abyss()</b> arguments.
+
+<p>Because the server can execute multiple RPCs at the same time in
+separate threads, it is important that the method functions in your
+registry be thread safe.  If your methods have to be called serially,
+use a lower level style of Abyss server where you control execution of
+RPCs more directly instead.  For example, use a style in which you
+create your own Abyss server object (using <b>libxmlrpc_abyss</b>) and
+call the Abyss function <b>ServerRunOnce()</b> in a loop (like the
+<b>xmlrpc_loop_server</b> example program in the Xmlrpc-c source
+tree).
+
+<p>Abyss' &quot;server root&quot; directory is the current directory.
+
+<p>The function returns when the server <a
+href="#server_abyss_terminate">terminates</a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_server_abyss_run_server(xmlrpc_env *            const envP,
+                                   xmlrpc_server_abyss_t * const serverP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> is the handle of the server you are running, returned
+by <b>xmlrpc_server_abyss_create()</b>.
+
+
+<h4 id="server_abyss_terminate"><b>xmlrpc_server_abyss_terminate()</b></h4>
+
+<p>This function causes a server that is running to terminate, and to
+terminate immediately if it starts running in the future.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_server_abyss_terminate(xmlrpc_env *            const envP,
+                                  xmlrpc_server_abyss_t * const serverP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> is the handle of the server you are terminating, returned
+by <b>xmlrpc_server_abyss_create()</b>.
+
+<p>Because a program that starts a server running does not regain
+control as long as the server is running, this is meant to be called
+from a separate thread or signal handler.
+
+<p>If you have a signal handler that calls
+<b>xmlrpc_server_abyss_terminate()</b> and the process receives a signal while
+the server is running, the server will terminate
+(<b>xmlrpc_server_abyss_run_server()</b> will return) soon after the signal
+handler returns.  If the server is processing an RPC when the process receives
+the signal, it will not terminate until it is done with that RPC.
+
+<p>You can also call this from an XML-RPC method function, as long as
+that function is running in the same process that waits for and
+accepts new connections.  If, on the other hand, you are running Abyss
+in a mode in which it processes connections in the background and you
+have a system in which it does that by way of a Unix fork, a
+<b>xmlrpc_server_abyss_terminate()</b> from inside an XML-RPC method
+function has no effect.
+
+<p>If you are running the server in a mode in which it processes
+connections in the background (i.e. in separate threads or processes),
+<b>xmlrpc_server_abyss_terminate()</b> affects only the foreground
+thread that waits for and dispatches RPCs.  Any background thread that
+is executing an RPC continues normally to completion in its own time.
+
+<p>This function was new in Xmlrpc-c 1.14 (March 2008).  Before that,
+the only way to terminate a server is to execute a
+<a href="libxmlrpc_server.html#system.shutdown">
+<b>system.shutdown</b></a> RPC.
+
+<h4 id="server_abyss_reset_terminate">
+<b>xmlrpc_server_abyss_reset_terminate()</b></h4>
+
+
+<p>This function resets the termination state of a server.  While a
+server is in the terminated state (as set by
+<b>xmlrpc_server_abyss_terminate()</b>, it will terminate at its next
+opportunity if it is running and if you run it in the future, it will
+terminate immediately.  This function resets that state so that the
+server will not terminate.
+
+<p>There probably is no practical way to use this to take back a
+previous termination request so that the server keeps running; it's
+intended use is with a server that has already terminated (by
+request), when you want to run it again.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_server_abyss_reset_terminate(xmlrpc_env *            const envP,
+                                        xmlrpc_server_abyss_t * const serverP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> is the handle of the server you are resetting, returned
+by <b>xmlrpc_server_abyss_create()</b>.
+
+
+<h4 id="server_abyss_setup_sig"><b>xmlrpc_server_abyss_setup_sig()</b></h4>
+
+<p>This function helps you set up signal handling as the
+<b>xmlrpc_server_abyss_t</b> object <a href="#signals">requires</a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_server_abyss_setup_sig(
+        xmlrpc_env *               const envP,
+        xmlrpc_server_abyss_t *    const serverP,
+        xmlrpc_server_abyss_sig ** const oldHandlersPP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> is the handle of the server you want to notify of
+signal arrival, returned by <b>xmlrpc_server_abyss_create()</b>.  This
+object must continue to exist as long as the signal handlers are in
+place, so call <b>xmlrpc_server_abyss_restore_sig()</b> before you
+destroy it.
+
+<p>The function returns as *<i>oldHandlersPP</i> a pointer to a
+description of the state of signal handling before the call.  You
+can use this later with <b>xmlrpc_server_abyss_restore_sig()</b>
+to put it back the way it was.  This points to newly malloc'ed storage.
+You must free it when you are done with it.
+
+
+<h4 id="server_abyss_restore_sig"><b>xmlrpc_server_abyss_restore_sig()</b></h4>
+
+<p>This function restores the state of signal handling to what it was
+before you called <b>xmlrpc_server_abyss_setup_sig()</b>.
+
+<p>Strictly speaking, you need to make sure that the signal handling
+state just before you call <b>xmlrpc_server_abyss_restore_sig()</b> is
+the same as it was just <em>after</em> you called
+<b>xmlrpc_server_abyss_setup_sig()</b>, or you may get unexpected
+results.  I.e. you need to manage signal handling state in a stack
+fashion.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_server_abyss_restore_sig(
+        const xmlrpc_server_abyss_sig * const oldHandlersP);
+</code>
+</pre>
+
+<p><i>oldHandlersP</i> is the pointer returned by your call to
+<b>xmlrpc_server_abyss_setup_sig()</b>.
+
+
+<h3 id="server_abyss_parameters"><b>xmlrpc_server_abyss_t</b> Parameters</h3>
+
+<P>This section describes the parameters in the
+<b>xmlrpc_server_abyss_parms</b> struct, which comprises the
+parameters of a <b>xmlrpc_server_abyss_t</b> object.  You use this
+structure with
+<a href="#xmlrpc_server_abyss_create">
+<b>xmlrpc_server_abyss_create()</b></a> and <a
+href="#xmlrpc_server_abyss"><b>xmlrpc_server_abyss()</b></a>.
+
+<p>Synopsis:
+<pre>
+<code>
+typedef struct {
+    const char *            config_file_name;
+    xmlrpc_registry *       registryP;
+    runfirstFn              runfirst;
+    void *                  runfirst_arg;
+    unsigned int            port_number;
+    const char *            log_file_name;
+    unsigned int            keepalive_timeout;
+    unsigned int            keepalive_max_conn;
+    unsigned int            timeout;
+    xmlrpc_bool             dont_advertise;
+    xmlrpc_bool             socket_bound;
+    xmlrpc_socket           socket_handle;
+    const char *            uri_path;
+    xmlrpc_bool             chunk_response;
+    xmlrpc_bool             enable_shutdown;
+    const char *            allow_origin;
+    xmlrpc_bool             access_ctl_expires;
+    unsigned int            access_ctl_max_age;
+    const struct sockaddr * sockaddr_p;
+    socklen_t               sockaddrlen
+    unsigned int            max_conn;
+    unsigned int            max_conn_backlog;
+} xmlrpc_server_abyss_parms;
+
+</code>
+</pre>
+
+<p>There are two styles of providing parameters possible with
+<b>struct xmlrpc_server_abyss_parms()</b>: an old deprecated one, and
+a new preferred one.  We describe the preferred one here.  The
+deprecated one is described <a href="#configfile">below</a>.
+
+
+<H5 id="config_file_name">config_file_name</H5>
+
+<p>Set this to NULL.  That is what specifies that you're using the
+preferred style instead of the deprecated <a
+href="#configfile">&quot;config file&quot;</a>one.
+
+<p>This parameter is required.
+
+<h5 id="registryP">registryP</h5>
+
+<p>This is a handle for a method registry.  This registry is what
+determines what XML-RPC methods are defined by the server, i.e. it is
+the meat of the XML-RPC server.  Use the <A
+href="libxmlrpc_server.html"><b>libxmlrpc_server</b></A> library to
+build a method registry appropriate for your server.  This is a
+mandatory option (<i>parmSize</i> must be large enough to include
+it).
+
+<p>On a Unix system, where <b>xmlrpc_server_abyss()</b> starts the 
+server in a new process, the server gets a copy of the registry, so
+nothing you do to it after <b>xmlrpc_server_abyss()</b> returns affects
+the server.  (On other systems, <b>xmlrpc_server_abyss()</b> never
+returns, so the issue is moot).
+
+<p>This parameter is required.
+
+<h5 id="port_number">port_number</h5>
+
+<p>This is the TCP port number on which the server will listen and accept
+connections for RPCs.  See <a href="#server_address_parameters">Server Address
+Parameters</a> for details.
+
+<p>If you specify a reserved port number, the program must have the privilege
+required to bind it (on a Unix-like system, you typically must have superuser
+privilege to accept connections to a port number less than 1024).
+
+<h5 id="socket_bound">socket_bound</h5>
+
+<p>This boolean parameter is true (nonzero) to indicate that you are providing
+an already bound stream socket on which the server is to listen for
+connections from clients.  See <a href="#server_address_parameters">Server
+Address Parameters</a> for details.
+
+<p>When you specify true for <b>socket_bound</b>, you must supply a proper
+value for <b>socket_fd</b>.
+
+<p>This option was new in Xmlrpc-c 1.04 (November 2005).  Before that,
+<b>xmlrpc_server_abyss()</b> always created its own socket.
+
+<h5 id="socket_fd">socket_fd</h5>
+
+<p>This option identifies the socket on which the server is to listen
+for connections from clients (on a Unix system, it identifies it by
+file descriptor).
+
+<p>This is meaningful only when <b>socket_bound</b> is true.
+
+<P>The socket you supply must be a stream socket, and must be bound
+and ready to listen (in particular, it cannot be already listening or
+connected).
+
+<p>This option was new in Xmlrpc-c 1.04 (November 2005).  Before that,
+<b>xmlrpc_server_abyss()</b> always created its own socket.
+
+<h5 id="sockaddr_p">sockaddr_p</h5>
+
+<p>This option indicates the full address (e.g. IP address and TCP port
+number) on which the server will listen and accept connections for RPCs.
+See <a href="#server_address_parameters">Server Address Parameters</a> for
+details.
+
+<p>The value is a pointer to a conventional POSIX socket address structure.
+
+<p>When you specify <b>sockaddr_p</b>, you must also
+specify <b>sockaddrlen</b>, the size in bytes of the structure pointed to.
+
+<p>This option also incidentally specifies the network protocol to use,
+because <b>libxmlrpc_server_abyss</b> infers that from the socket address
+family.  This works because it happens that every known network protocol uses
+addresses of a specific family not used by any other protocol; for example
+only an IP Version 4 network uses IP Version 4 network addresses.
+
+<p>This option was new in Xmlrpc-c 1.30 (March 2012).
+
+<h5 id="sockaddrlen">sockaddrlen</h5>
+
+<p>This option goes with <a href="#sockaddrlen"><b>sockaddrlen</b></a>.
+
+<p>This option was new in Xmlrpc-c 1.30 (March 2012).
+
+<h5 id="uri_path">uri_path</h5>
+
+<p>This names the URI path of the XML-RPC server.  For example, if a
+client will make an XML-RPC call using the URL
+&quot;http://www.google.com/RPC2&quot;, the URI path is &quot;/RPC2&quot;.
+The Abyss server will process as an XML-RPC call anything POSTed to
+that URI path and reject requests to any other URI path.
+
+<p>The default (effective if this member isn't present or is NULL) is
+&quot;/RPC2&quot;.
+
+<p>For more information on what a URI path is, see <a
+href="#set_handlers2"><b>xmlrpc_server_abyss_set_handlers2()</b></a>.
+
+<p>This parameter was new in Xmlrpc-c 1.06 (June 2006).  Before that,
+the URI path is always &quot;/RPC2&quot;.
+
+
+<h5 id="max_conn">max_conn</h5>
+
+<p>This is the maximum number of simultaneous TCP connections the server will
+maintain.  When there are already this many, the server will not accept
+additional TCP connections from the operating system
+
+<p>In the simplest case, a TCP connection is an RPC, which means this is the
+maximum number of clients that can simultaneously perform RPCs.  However the
+client and server may agree to perform multiple RPCs on a single connection
+and to facilitate that, to keep a TCP connection open in anticipation of a
+future RPC.  See <a href="#keepalive_timeout"><i>keepalive_timeout</i></a>
+and <a href="#keepalive_max_conn"><i>keepalive_max_conn</i></a>.
+
+<p>While the server is not accepting connections because of this limit, the
+operating system still accepts TCP connections on the server's behalf and
+queues them.
+See <a href="#max_conn_backlog"><i>max_conn_backlog</i></a>.
+
+<p>A value of zero requests the default.
+
+<p>The default is 15.
+
+<p>This option was new in Xmlrpc-c 1.32 (September 2012).
+
+
+<h5 id="max_conn_backlog">max_conn_backlog</h5>
+
+<p>This is the maximum number of TCP connections the operating system will
+accept on the server's behalf without the server accepting them from the
+operating system.  The server accepts TCP connections (presumably intended to
+be RPCs) and queues them for the server to accept when it is ready.  If the
+number queued reaches this limit, the operating system refuses, via the TCP
+protocol, any additional connection attempts.
+
+<p>Because the server actively executes RPCs on connections it has accepted
+from the operating system, but not on those in the operating system backlog,
+you can generally get better throughput with a high <i>max_conn</i> than with
+a high <i>max_conn_backlog</i>.  But if your server is overloaded, having too
+many RPCs executing at once can cause thrashing, in which case a
+lower <i>max_conn</i> improves performance and a high <i>max_conn_backlog</i>
+makes sure you don't lose RPCs.  But note that <i>max_conn_backlog</i> is
+effective only at accomodating bursts of RPCs.  If the RPCs arrive at a
+sustained rate higher than the server can handle, a larger queue only hurts.
+
+<p>A value of zero requests the default.
+
+<p>The default is 15.
+
+<p>This option was new in Xmlrpc-c 1.32 (September 2012).
+
+
+<h5 id="keepalive_timeout">keepalive_timeout</h5>
+
+<p>After the server has received an XML-RPC call and sent the response,
+it keeps the HTTP connection open for a while so that the client may
+send another XML-RPC call without starting up a new connection, thus
+saving time and resources.
+
+<p>This parameter is the maximum time in seconds that the server
+allows a connection to be open between RPCs.  If the client does not
+send another call or close the connection within this period, the
+server closes the connection.
+
+<p>This is also the maximum time the server allows a connection to be open
+before the first data arrives from the client.  If a client connects and then
+doesn't start sending HTTP headers soon enough, it sees the connection close.
+
+<p>A value of zero requests the default.
+
+<p>The default is 15 seconds.
+
+
+<h5 id="keepalive_max_conn">keepalive_max_conn</h5>
+
+<p>This is the maximum number of RPCs that the server will execute on
+a single connection.  Once the server has responded to this many, it
+closes the connection and the client must create a new connection to
+do any more.
+
+<p>A value of zero requests the default.
+
+<p>The default is 30.
+
+
+<h5 id="timeout">timeout</h5>
+
+<p>This is the maximum time in seconds the server will wait for the client
+to do anything while processing an RPC.  This does not apply to waiting
+between RPCs (see <a href="#keepalive_timeout">keepalive_timeout</a>).
+
+<p>A value of zero requests the default.
+
+<p>The default is 15 seconds.
+
+<h5 id="enable_shutdown">enable_shutdown</h5>
+
+<P>This logical value says that the server should shut down when a client
+executes a <b>system.shutdown</b> system method.
+
+<p>The default is false, so that a <b>system.shutdown</b> call always
+fails, with a fault string indicating that there is no way to shut down
+this server.
+
+<p>If you set this to true, any client that can execute an RPC on this
+server can shut it down.
+
+<p>Note that if you use a lower level interface (not
+<b>xmlrpc_server_abyss()</b>), in which you supply your own Abyss
+server, your program can decide whether to comply with a
+<a href="libxmlrpc_server.html#system.shutdown">
+<b>system.shutdown</b></a> request.  It might do it based on the IP
+address of the client, for example.  But with
+<b>xmlrpc_server_abyss()</b>, your only choices are
+<b>system.shutdown</b> for everybody or
+<b>system.shutdown</b> for nobody.
+
+<p>If you create a <b>xmlrpc_server_abyss_t</b> with a registry in which
+you have set a shutdown function, that setting has no effect.  The
+shutdown function does not get called.
+
+<p>This parameter did not exist before Xmlrpc-c 1.07 (October 2006).
+Before that, <b>system.shutdown</b> never succeeds.
+
+<h5 id="dont_advertise">dont_advertise</h5>
+
+<P>The server has a feature wherein it can tell querents things about
+itself, such as what methods is knows.  The feature is called
+&quot;introspection.&quot; See <a
+href="libxmlrpc_server.html#systemmethod">System Methods</a>.  By
+default, the feature is available, but if you set
+<b>dont_advertise</b> to nonzero, it isn't.  In that case, the
+introspection methods do not exist to a client.
+
+<p>Supplying the information for introspection is a separate matter.
+If you allow introspection, but don't supply any information when you
+create your registry, the client can execute the method, but won't get
+any information.  Similarly, if you supply introspection method, but
+set <b>dont_advertise</b> true, the information you supplied will be
+useless.
+
+<h5 id="chunk_response">chunk_response</h5>
+
+<p>This logical value says that the server should chunk responses, in
+the HTTP sense, if possible.  By default, the server never chunks a
+response.
+
+<p>Chunking is an HTTP concept in which the HTTP server sends a response
+in pieces, each piece preceded by an indication of its size.  When an
+HTTP server sends a chunked response, it doesn't have to say at the 
+beginning of the response how big the whole response is.  So it might
+compute the response as it sends it, not knowing until it reaches the
+end how big it is.
+
+<p>While this function makes the server chunk the response, the server
+in all cases includes the required content-length header, per XML-RPC.
+
+<p>When you use this option, the server is not a legal XML-RPC server.
+That's because an XML-RPC server must be an HTTP server and also
+include a content-length header in every response, but an HTTP server
+cannot include a content-length header in a chunked response.
+
+<p>It's hard to see how chunking could be useful in XML-RPC, because
+not only is a response usually pretty small, but the XML-RPC standard
+requires a content-length header at the beginning of the response that
+gives the whole response's size.  And of course, being nonstandard
+XML-RPC, the client might not be able to handle it.  (An Xmlrpc-c
+client can, though).
+
+<p>This parameter was new in Xmlrpc-c 1.06 (June 2006).  In Xmlrpc-c 1.05, the
+response is never chunked, and before that sometimes it is and sometimes it
+isn't, folowing a strange and inexplicable policy partly based on whether the
+server is keeping alive the connection.
+
+<h5 id="allow_origin">allow_origin</h5>
+
+<p>This option is part of HTTP access control, which is a feature that helps
+with the security exposure of cross-site scripting.  This is the problem where
+a user on network node C browses a web site on server S and S sends a script
+for C to execute.  The script says to perform as RPC on Xmlrpc-c server X.
+The Xmlrpc-c server may accord that request special privilege because it comes
+from C, without knowing that the user at C doesn't really know he's making the
+request.  To solve this problem, the browser on C may just refuse to honor any
+requests in any script to perform an RPC anywhere, but this also shuts out
+legitimate scripting.  So HTTP provides the browser on C a way to ask X if it
+would be OK to perform an RPC from a third party and if X says there's no
+cross-scripting security exposure if it does, then and only then the client
+honors the request from S's script to perform an RPC on X.
+
+<p>If you don't specify <b>allow_origin</b> or specify it as a null pointer,
+the Abyss server, when asked, refuses to OK any cross-scripting.
+Specifically, it does not include any of the HTTP access control header fields
+in its response to an HTTP Options method request (or any other request).
+
+<p>If you specify non-null <b>allow_origin</b>, the server includes an
+Access-Control-Allow-Origin field in its responses.  The value of the
+parameter is the verbatim value for the HTTP header field value, so look at
+HTTP specifications for details.  Briefly, it is a list of third party servers
+whose scripts the client should trust to perform RPCs on this server.  The
+most useful value is &quot;*&quot;, which means all third party servers.
+
+<p>This parameter was new in Xmlrpc-c 1.25 (December 2010).  Before that,
+the server fails any attempt to get option information, responding with
+a 405 Method Not Allowed error to any Options request and never includes
+HTTP access control header fields in any other response.
+
+<h5 id="access_control_expires">access_control_expires</h5>
+
+<p>This option is part of HTTP access control and has effect only when
+<b>allow_origin</b> is non-null.
+
+<p>The option value is logical and indicates that the permissions the server
+gives for third party RPCs expires after a certain time -- the client should
+request permission again if it wants to perform third party RPCs after that.
+If the value is true, the Abyss server includes in its response to an HTTP
+request an Access-Control-Max-Age header field.  Otherwise, the server does
+not include such a header field.
+
+<p><b>access_control_max_age</b> controls the expiration period.
+
+<p>Default is false.
+
+<p>This parameter was new in Xmlrpc-c 1.25 (December 2010) along with all
+HTTP access control participation.
+
+<h5 id="access_control_max_age">access_control_max_age</h5>
+
+<p>This option is part of HTTP access control and has effect only when
+<b>allow_origin</b> is non-null.
+
+<p>This option is meaningless when <b>access_control_expires</b> is false.
+
+<p>The value of this option is the time in seconds that permissions the server
+gives out are good.  The server includes this information in its
+Access-Control-Max-Age HTTP header field in response to an HTTP request.
+
+<p>This parameter was new in Xmlrpc-c 1.25 (December 2010) along with all
+HTTP access control participation.
+
+
+<h5 id="log_file_name">log_file_name</h5>
+
+<p>This names the file that Abyss will use for a log file.  If this
+member isn't present (according to <i>parmSize</i>) or is null, Abyss
+won't have a log file.
+
+
+<h5 id="runfirst">runfirst, runfirst_arg</h5>
+
+<p>These are meaningless (they're for the <a href="#configfile">config
+file style interface</a>).
+
+
+
+<h3 id="server_address_parameters">Server Address Parameters</h3>
+
+<p><b>libxmlrpc_server_abyss</b> gives you various ways to determine what
+the address of your server will be, i.e. on what IP address and TCP port it
+will listen for connections from clients.  You choose one via 
+<a href="#server_abyss_parameters">server parameters</a>.
+
+<p>The server listens continually for connections attempted to the given
+address, which causes the operating system to accept connections (up to some
+limit) and queue them.  When you subsequently call the relevant methods, the
+server processes those connections.
+
+<p>Note that all the server parameters we mention here are optional; when
+you create a server object, you say how long your server parameter structure
+is and that determines which parameters you have specified.
+
+<p>In the simplest method, you specify nothing in the parameters, and the
+server defaults to listening on all IP Version 4 network interfaces (i.e. as
+every IP Version 4 address the system has), TCP Port 8080.
+
+<p>If you don't want to use Port 8080, specify a different port number with
+the <a href="#port_number"><b>port_number</b></a> server parameter.  A zero
+value is the same as not specifying the parameter; there is no way to specify
+Port 0.
+
+<p>If you want to limit your server to one IP address (one network interface)
+or put it on an IP Version 6 network, specify a <b>sockaddr_p</b> parameter.
+Its value indicates a conventional POSIX socket address structure.  You
+must always accompany a <b>sockaddr_p</b> parameter with <b>sockaddrlen</b>.
+
+<p>This is a tricky data structure and we won't go into detail on how to use
+it here because that trickiness is not specific to Xmlrpc-c.  If you know how
+to code a program using a POSIX <b>bind()</b> call, you can code one using
+<b>sockaddr_p</b> and <b>sockaddrlen</b>.
+
+<p>When you specify <b>sockaddr_p</b>, any <b>port_number</b> parameter you
+specify is meaningless.
+
+<p>A null pointer for <b>sockaddr_p</b> is the same as not specifying it.
+
+<p>Finally, you can take the choice of address out
+of <b>libxmlrpc_server_abyss</b>'s hands completely and just supply a POSIX
+socket of your own, which is already bound to the desired address.  To do
+that, specify the file descriptor of the socket with a <b>socket_fd</b>
+parameter and specify the <b>socket_bound</b> server parameter flag.
+
+<p>One reason you would want to supply a socket, as opposed to just letting
+the server create one, is that you want the server to listen on a reserved port
+and don't want your program to have the privilege necessary to bind a reserved
+port.  In that case, you can have a privileged program bind the port, drop
+privileges, and then run your program.
+
+<p>When you specify <b>socket_bound</b>, any <b>sockaddr_p</b> or
+<b>port_number</b> parameter you specify is meaningless.
+
+
+<h3 id="server_abyss_term">Server Termination</h3>
+
+<p><b>xmlrpc_server_abyss()</b> or
+<b>xmlrpc_server_abyss_run_server()</b> returns when the server
+terminates.  The server terminates when it executes an RPC of the
+<b>system.shutdown</b> <a
+href="libxmlrpc_server.html#systemmethod">system method</a> or when
+you call the <b>xmlrpc_server_abyss_t</b> object's <a
+href="#server_abyss_terminate"><b>xmlrpc_server_abyss_terminate()</b></a>
+method.
+
+<p>For more information on using <b>system.shutdown</b>, see the <a
+href="#enable_shutdown"><i>enable_shutdown</i></a> server parameter.
+
+<p><b>xmlrpc_server_abyss_terminate()</b> is usable only when you use an
+explicit <b>xmlrpc_server_abyss_t</b> object, which became possible in
+Xmlrpc-c 1.14 (March 2008).
+
+<p>Before Xmlrpc-c 1.06 (June 2006), the server does not implement
+<b>system.shutdown</b> and there is no way to shut down the server, so
+<b>xmlrpc_server_abyss()</b> never returns (except if it fails to
+start the server at all).  And before Xmlrpc-c 1.14 (March 2008),
+<b>system.shutdown</b> can't actually interrupt anything the server is
+doing -- the server won't notice it is supposed to terminate as long
+as it is asleep waiting for an RPC.  So you normally have to call it
+twice -- once to request shutdown, and once to wake up the master
+thread so it notices the request.
+
+<p>The same is true on Windows until Xmlrpc-c 1.25 (December 2010).
+
+
+<h3 id="signals">Signals</h3>
+
+<p>There are some signals that affect the proper operation of an Abyss
+server.  Because signals are process-global entities,
+<b>libxmlrpc_server_abyss</b> cannot take care of these for you.
+However, the library does provide convenience functions that do what
+most programs want and saves you a lot of work.
+
+<p>One important class of signals is SIGPIPE.  By default, a Unix
+operating system sends a SIGPIPE signal to your process when it
+attempts to write to a socket that has been closed from the other end.
+By default, that signal then causes the OS to terminate your process.
+Writing to sockets is how an Abyss server sends responses to clients,
+so this means if a client hangs up on you, you die.  Therefore, you
+almost certainly want to tell the OS not to send these signals.  The
+way you do that is rather messy: you call a system function that
+ostensibly tells the OS to ignore signals of class SIGPIPE, but it
+really tells the OS to handle closed sockets in a whole different
+way that doesn't involve signals.
+
+<p><a
+href="#server_abyss_setup_sig"><b>xmlrpc_server_abyss_setup_sig()</b></a> does
+that.
+
+<p>Another important class is SIGCHLD.  Some versions of
+<b>libxmlrpc_abyss</b> generate servers that fork a new process to handle each
+HTTP request.  This is not the usual way (normally, it uses POSIX or Windows
+threads), but some systems need it.  On such a system, when one of these
+processes dies, the OS sends a SIGCHLD signal to the Abyss dispatcher process,
+which is the process from which you called
+<b>xmlrpc_server_abyss_run_server()</b>.
+
+<p>Abyss generally needs to know that this signal arrived, so (if you have a
+forking Abyss) you need to set up a signal handler for SIGCHLD signals and
+have it call <b>ServerHandleSigchld()</b>.  You also must call
+<b>xmlrpc_server_abyss_use_sigchld()</b> before you run the Abyss server to
+declare that your program intends to deliver those signals thusly.  If you
+don't have the signal handler, and therefore don't call
+<b>xmlrpc_server_abyss_use_sigchld()</b>, Abyss will make do with polling
+occasionally to see who is still alive.  This hurts performance and resource
+usage, so you should work that way only if signals just don't work in your
+environment.
+
+<p>The SIGCHLD handler must reap the dead child; that's not part of
+<b>ServerHandleSigchld()</b>'s responsibilities.
+
+<p>Note that it's OK to pass <em>all</em> the SIGCHLD signals to
+Abyss, whether they are for an Abyss child or not.  Abyss ignores SIGCHLD
+signals from a processes that don't belong to it.
+
+<b>xmlrpc_server_abyss_setup_sig()</b> takes care of all that for you.
+
+<p>Bear in mind that signal behavior is global.  What you set up for the
+benefit of Abyss may affect non-Abyss code in the same process.
+
+<p>There is no such thing as a signal on Windows, so you don't need to
+worry about them.  On Windows, <b>xmlrpc_server_abyss_setup_sig()</b>
+does nothing.
+
+<p>But <b>xmlrpc_server_abyss_setup_sig()</b> is not for everyone.  If
+your process receives SIGCHLD signals that don't belong to Abyss, and
+needs to see them, you can't use <b>xmlrpc_server_abyss_setup_sig()</b>
+because it would swallow up all SIGCHLD signals.  You must set up your
+own signal handlers as described above in that case.
+
+
+<h3 id="daemonizing">Daemonizing</h3>
+
+<p>You probably want your XML-RPC server to run as a daemon, quite
+independent of the process that started it running.
+<b>xmlrpc_server_abyss()</b> does nothing to separate the server from
+the process that invoked it, so you'll want to take care of that
+before calling it.  In fact, while it's customary for Unix server
+programs to daemonize themselves, it's actually a lot more sensible
+for the entire server program to be oblivious to its process context.
+A separate program should create the daemon and have it execute the
+server program.
+
+<p>Whether you use a separate general purpose daemon program to launch
+your XML-RPC server program or you have your XML-RPC server program
+daemonize itself before calling <b>xmlrpc_server_abyss()</b>, here are
+some things you should think about resetting for the server:
+
+<ul>
+<li>set real and effective userids and group ids
+<li>reduce process privileges (e.g. Linux capabilities)
+<li>make a new process
+<li>make a new process group and session
+<li>close open files (e.g. Standard Input/Output/Error)
+<li>change current directory
+<li>clear environment variables
+<li>disassociate the controlling terminal
+</ul>
+
+
+<h3 id="configfile">Deprecated &quot;config file&quot; Style Interface</h3>
+
+<p>The deprecated style is higher level than the preferred one.
+You supply an Abyss configuration file and the library routine parses
+it for parameters, forks a new process, and sets up the process
+environment for the Abyss server (including for example setting the
+userid) in addition to actually executing the server.  
+
+<p>The preferred style is down at the level that a program that uses
+the <b>libxmlrpc_server_abyss</b> API probably is.  You supply all
+parameters in data structures in memory.  The library function runs
+the Abyss server, but expects you to have set up the process
+environment beforehand.
+
+<p>You choose the deprecated style by setting <i>config_file_name</i>
+in the parameter structure to non-null.
+
+<p>On Unix, <b>xmlrpc_server_abyss()</b> creates a new process for the
+server, separated in the usual ways from the process that created it
+so that it can continue as an independent process.  (This separation
+is sometimes called &quot;backgrounding&quot; or
+&quot;daemonizing&quot;).  <b>xmlrpc_server_abyss()</b> returns after
+starting the server, and your program can then exit.  On other
+platforms, this function performs the server functions itself, and
+never returns.
+
+<p><i>config_file_name</i> is the filename of an Abyss configuration
+file.  Use Abyss documentation to learn the full format of this file.
+Here is an example of a working Abyss configuration file we have used
+in examples:
+<pre>
+Port 8080
+LogFile /tmp/xmlrpc_abyss.log
+PidFile /tmp/abyss.pid
+</pre>
+
+<p><i>runfirst</i> is a function that <b>xmlrpc_server_abyss()</b>
+runs in the server process before starting the Abyss server.  You can
+use this to set up the server process in ways that you can't from the
+parent process.  <i>runfirst_arg</i> is an argument (opaque to
+Xmlrpc-c) that gets passed to <i>runfirst</i>.
+
+<p>The runfirst function is a convenient way to add to the function of
+<b>libxmlrpc_server_abyss</b>, but if you have a program sophisticated
+enough to need it, you might find you really need to assume the job of
+building the server process yourself and not use
+<b>xmlrpc_server_abyss()</b> at all.  This style of server is
+described <a href="#ownabyss">here</a>.
+
+<h3 id="wireprotocol">Wire Protocol</h3>
+
+<p>This section gives some information on the protocol that the XML-RPC
+server follows in its communication with clients.
+
+<p>The most basic fact is, of course, that the protocol is XML-RPC.  However,
+that protocol is ambiguous in a number of ways, so more needs to be said.
+Also, Xmlrpc-c deviates in some ways where you are better off not following
+the XML-RPC spec verbatim.
+
+<p>In addition to what is stated here, a server you build using
+<b>libxmlrpc_server_abyss</b> employs protocol interpretations and
+deviations implemented by <a href="libxmlrpc.html"><b>libxmlrpc</b></a>,
+because <b>libxmlrpc_server_abyss</b> uses <b>libxmlrpc</b>.   For example,
+the meaning of the various data types and extensions for types such as
+64 bit integer is determined by <b>libxmlrpc</b> .
+
+
+<h4 id="contenttype">HTTP Content Type</h4>
+
+<p>In HTTP, a document (request or response) has a &quot;content type,&quot;
+which it declares with a <b>content-type</b> HTTP header field.  In XML-RPC,
+that content type is <b>text/xml</b>, and must be declared.
+
+<p>But <b>libxmlrpc_server_abyss</b> doesn't pay any attention to content type
+in calls it receives.  It assumes the content is an XML-RPC call, which in
+HTTP terms implies it is <b>text/xml</b>, regardless of what
+the <b>content-type</b> header field says, or if it is present at all.  This
+way, an incorrectly implemented client (and we have seen one, which declares
+content type <b>text/plain</b>) will work.
+
+<p>Before Xmlrpc-c 1.25 (December 2010), the server fails any call that
+does not declare a content type of <b>text/xml</b>.
+
+
+<h2 id="notes">Notes</h2>
+
+<p>This section contains special topics of interest to users of the
+facilities described above.
+
+
+<h3 id="httpauth">HTTP Authentication</h3>
+
+<P>HTTP authentication is the concept of the XML-RPC client, as an
+HTTP client, identifying and authenticating itself to the XML-RPC server,
+as an HTTP server, using features of the HTTP protocol.
+
+<p><b>libxmlrpc_server_abyss</b> provides no facilities for doing any of that.
+
+<p>This is a typical drawback of using the simple Abyss server.  The world of
+HTTP is much larger than Abyss knows or could be expected to know in future
+verisons.  For this reason, many people use a plugin to a more serious HTTP
+server (like Apache) to do XML-RPC serving.  Xmlrpc-c does provide some
+facilities that are useful for creating or working with such a plugin.
+<a href="libxmlrpc_server_cgi.html"><b>libxmlrpc_server_cgi</b></a> helps you
+make an XML-RPC server out of CGI
+programs.  <a href="libxmlrpc_server.html"><b>libxmlrpc_server</b></a>
+contains method registry
+services.  <a href="libxmlrpc.html"><b>libxmlrpc.html</b></a> provides
+facilities for parsing and generating the XML for XML-RPC calls and responses.
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>The trace facilities described here write messages to the Standard
+Error file descriptor via the Standard Error stream of the standard C
+library (<b>stderr</b>).  So make sure you have one.  Many server
+processes don't (they explicitly close the one that the system setup
+code provides).
+
+<p>If you set the <b>XMLRPC_TRACE_ABYSS</b> environment variable to 1,
+<b>libxmlrpc_server_abyss</b>'s Abyss request handler prints a message
+to Standard Error each time Abyss calls it.
+
+<p>You can also use the <a
+href="libxmlrpc_server.html#trace_xml">XMLRPC_TRACE_XML</a>
+environment variable to trace the handler's calls to the
+<b>libxmlrpc_server</b> registry.
+
+<p>Set Abyss' <b>ABYSS_TRACE_CONN</b> environment variable to 1 to
+cause Abyss to print to Standard Error the raw HTTP requests 
+and responses.
+(New in Xmlrpc-c 1.03, June 2005, for requests only; responses added
+in Xmlrpc-c 1.05 (March 2006)).
+
+<p>If you need even lower level tracing, Abyss'
+<b>ABYSS_TRACE_SOCKET</b> environment variable traces the individual
+socket service calls (e.g.  shows you the data returned by a call to
+the Unix C library'es recv() function).
+
+</body>
+</html>

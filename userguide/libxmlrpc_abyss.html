@@ -1,0 +1,2306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_abyss</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc_abyss</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C</a>.
+
+<p>The <b>libxmlrpc_abyss</b> library provides functions to create a
+whole HTTP server.  While such a server is useful as an XML-RPC
+server, this library in particular has nothing to do with XML-RPC.
+You could use it to create an ordinary web server, like a small
+Apache.
+
+<p>The functions of <b>libxmlrpc_abyss</b> are collectively knows
+as Abyss.  See <a href="#history">History Of Abyss</a> for an explanation
+of why Abyss has a name.
+
+<p>Abyss cannot handle an SSL connection (https).  It would be relatively
+easy to modify Abyss to do so; if you're interested, see
+<a href="#channels">Channels</a>.
+
+<p>If you use it for an XML-RPC server, you'll want to use
+<a href="libxmlrpc_server_abyss.html"><b>libxmlrpc_server_abyss</b></a>
+as well.
+
+<p>This chapter is incomplete.  It covers only some Abyss functions.
+For complete information, the Xmlrpc-c example code, interface header
+files, and source code are the best you can do.
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#history">History of Abyss</a>
+<li><a href="#headerfile">Interface Header File</a>
+<li><a href="#linking">Linking</a>
+<li><a href="#persistent">Persistent Connections</a>
+<li><a href="#channels">Channels</a>
+<ul>
+  <li><a href="#TChannel">TChannel</a>
+  <ul>
+    <li><a href="#ChannelUnixCreateFd">ChannelUnixCreateFd()</a>
+    <li><a href="#ChannelDestroy">ChannelDestroy()</a>
+    </ul>
+  <li><a href="#TChanSwitch">TChanSwitch</a>
+  <ul>
+    <li><a href="#ChanSwitchUnixCreate">ChanSwitchUnixCreate()</a>
+    <li><a href="#ChanSwitchUnixCreateIpV6Port">
+        ChanSwitchUnixCreateIpV6Port()</a>
+    <li><a href="#ChanSwitchUnixCreate2">ChanSwitchUnixCreate2()</a>
+    <li><a href="#ChanSwitchUnixCreateFd">ChanSwitchUnixCreateFd()</a>
+    <li><a href="#ChanSwitchDestroy">ChanSwitchDestroy()</a>
+    </ul>
+  </ul>
+<li><a href="#sockets">Sockets</a>
+  <ul>
+  <li><a href="#unix_constructors">Unix Abyss Socket Constructors</a>
+  <li><a href="#winsock_constructors">Winsock Abyss Socket Constructors</a>
+  <li><a href="#socket_destructor">Socket Destructor</a>
+  </ul>
+<li><a href="#globalconst">Global Constants</a>
+  <ul>
+  <li><a href="#abyssinit">AbyssInit</a>  
+  <li><a href="#abyssterm">AbyssTerm</a>  
+  </ul>
+<li><a href="#createrun">Creating and Running a Server</a>
+  <ul>
+  <li><a href="#ServerCreate"><b>ServerCreate()</b></a>
+  <li><a href="#ServerCreateSwitch"><b>ServerCreateSwitch()</b></a>
+  <li><a href="#ServerCreateSocket2"><b>ServerCreateSocket2()</b></a>
+  <li><a href="#ServerCreateSocket"><b>ServerCreateSocket()</b></a>
+  <li><a href="#ServerCreateNoAccept"><b>ServerCreateNoAccept()</b></a>
+  <li><a href="#ServerSetName"><b>ServerSetName()</b></a>
+  <li><a href="#ServerSetFilesPath"><b>ServerSetFilesPath()</b></a>
+  <li><a href="#ServerSetLogFileName"><b>ServerSetLogFileName()</b></a>
+  <li><a href="#ServerSetKeepaliveTimeout">
+      <b>ServerSetKeepaliveTimeout()</b></a>
+  <li><a href="#ServerSetKeepaliveMaxConn">
+      <b>ServerSetKeepaliveMaxConn()</b></a>
+  <li><a href="#ServerSetTimeout"><b>ServerSetTimeout()</b></a>
+  <li><a href="#ServerSetAdvertise"><b>ServerSetAdvertise()</b></a>
+  <li><a href="#ServerSetMaxConn"><b>ServerSetMaxConn()</b></a>
+  <li><a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog()</b></a>
+  <li><a href="#ServerRun"><b>ServerRun()</b></a>
+  <li><a href="#ServerRunOnce"><b>ServerRunOnce()</b></a>
+  <li><a href="#ServerRunOnce2"><b>ServerRunOnce2()</b></a>
+  <li><a href="#ServerRunChannel"><b>ServerRunChannel()</b></a>
+  <li><a href="#ServerRunConn2"><b>ServerRunConn2()</b></a>
+  <li><a href="#ServerRunConn"><b>ServerRunConn()</b></a>
+  </ul>
+<li><a href="#terminating">Terminating an Abyss Server</a>
+  <ul>
+  <li><a href="#ServerTerminate"><b>ServerTerminate()</b></a>
+  <li><a href="#ServerResetTerminate"><b>ServerResetTerminate()</b></a>
+  </ul>
+<li><a href="#handlers">HTTP Request Handlers</a>
+  <ul>
+  <li><a href="#managinghandlers">Managing Handlers</a>
+    <ul>
+      <li><a href="#ServerAddHandler3"><b>ServerAddHandler3()</b></a>
+      <li><a href="#ServerAddHandler2"><b>ServerAddHandler2()</b></a>
+      <li><a href="#ServerAddHandler"><b>ServerAddHandler()</b></a>
+      <li><a href="#ServerDefaultHandler"><b>ServerDefaultHandler()</b></a>
+    </ul>
+  <li><a href="#requesthandlerservice">Request Handler Services</a>
+    <ul>
+      <li><a href="#SessionGetRequestInfo"><b>SessionGetRequestInfo()</b></a>
+      <li><a href="#SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></a>
+      <li><a href="#RequestAuth"><b>RequestAuth()</b></a>
+    </ul>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+  <ul>
+  <li><a href="#standard_error">Standard Error</a>
+  <li><a href="#abyss_trace_conn">ABYSS_TRACE_CONN environment variable</a>
+  <li><a href="#abyss_trace_channel">ABYSS_TRACE_CHANNEL environment variable</a>
+  <li><a href="#abyss_trace_switch">ABYSS_TRACE_SWITCH environment variable</a>
+  </ul>
+</ul>
+
+<h2 id="history">History of Abyss</h2>
+
+<p>The history of the Abyss HTTP server is worth knowing:
+
+<p>Originally, Abyss was a separately developed and distributed open
+source web server.  Its point was to be a lightweight web server for
+those who didn't need all of Apache's power.  The Xmlrpc-c project
+exploited Abyss for its HTTP server needs, and included a copy of the
+code in the Xmlrpc-c package for convenience.  That was 2001.
+
+<p>Subsequently, work on the Abyss open source project terminated and
+its creator began to develop Abyss as proprietary software.  It is still
+(2005) available as such.
+
+<p>Therefore, the Xmlrpc-c project continued developing a fork of
+Abyss strictly for purposes of Xmlrpc-c.  We should probably change
+the name of the Xmlrpc-c fork eventually, but for now it is still just
+called Abyss.
+
+<p>The Abyss open source project apparently never produced any documentation,
+and that's why there is very little here today.
+
+
+<h2 id="headerfile">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/abyss.h&gt;</B> header file declares the interface to
+<b>libxmlrpc_abyss</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_abyss</b> library is <b>libxmlrpc_abyss.a</b> or
+<b>libxmlrpc_abyss.so</b>.  The classic linker option to cause the
+library to be linked into your program is <tt>-l xmlrpc_client</tt>.
+These are hints; you'll have to modify this according to conventions
+of your particular platform.  You'll also have to figure out where the
+library resides and how to make your linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_abyss</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+
+<h2 id="persistent">Persistent Connections</h2>
+
+<p>Persistent connections is a feature of HTTP (new in HTTP 1.1)
+in which multiple HTTP requests can happen over the same TCP
+connection to save time and resources.
+
+<p>In classic HTTP operation, a client makes a TCP connection to the
+server, they conduct one transaction, then they close the connection.
+If a client needs to do 10 transactions in a row (e.g. a user at a web
+browser clicks on 10 successive links), it involves 10 separate TCP
+connections.
+
+<p>With persistent connections, after the client and server complete a
+transaction, they keep the TCP connection open for a while.  If during that
+time the client decides to do another request on the same server, it just
+uses the existing connection.
+
+<p>For a connection to be kept open in this way, the client must request
+it in the previous request, and the server must agree.  And either
+side may close the idle connection at any time.
+
+<p>Abyss does persistent connections.
+
+<p>If you use Abyss in the way that you call Abyss to accept and process a
+single connection from a channel switch (e.g. by calling
+<b>ServerRunOnce</b>), Abyss ignores any client request for a
+persistent connection; it closes the connection and returns to your
+program as soon as it has processed one HTTP request.
+
+<p>Abyss limits the number of requests it will allow on a single TCP
+connection.  By default, the maximum is 30, but you can control it with <a
+href="#ServerSetKeepaliveMaxConn"><b>ServerSetKeepaliveMaxConn</b></a> and the
+<b>keepalive</b> configuration file option.  Likewise, Abyss limits the period
+that it will keep a TCP connection open anticipating a subsequent request.
+The default is 15 seconds, but you can control it with <a
+href="#ServerSetKeepaliveTimeout"><b>ServerSetKeepaliveTimeout</b></a>.
+
+
+<h2 id="channels">Channels</h2>
+
+<p>A channel is what Abyss uses to communicate with a client.  A
+channel is just a pipe that carries bytes back and forth, in one
+stream in each direction.  It's a lot like a TCP connection.  The way
+Abyss uses channels, the stream is HTTP.
+
+<P>Abyss' channel concept is abstract enough that a channel could be
+implemented any number of ways using any of various network protocols,
+or OS inter-process communication facilities, or carrier pigeons.  But
+in practice, the only kinds of channel Abyss implements are built upon
+a TCP connection so Abyss can implement true HTTP.
+
+<p>People often express interest in an XML-RPC server based on
+Xmlrpc-c Abyss that can do SSL.  Abyss today cannot do that because
+the only type of channel implemented is straight TCP.  But the channel
+abstraction makes it easy to extend Abyss with an alternative type of
+channel that speaks SSL (perhaps using the OpenSSL library).  If you
+need SSL capability, you should consider doing that and contributing the
+code to the project.
+
+<p>A channel switch is an entity that sets up a channel between two
+parties that want to talk to each other.  Somehow one party identifies
+the other and says he wants a channel and the switch negotiates and
+creates a connection between them.  In the case of an Abyss HTTP
+server, with TCP-based channels, the channel switch is what listens
+for TCP connection requests from clients, negotiates the TCP
+connection, and ultimately creates a channel out of the TCP connection
+and passes that channel to an Abyss HTTP request handler.
+
+<p>In some ways of using Abyss,
+e.g. <b>ServerCreate()</b>/<b>ServerRun()</b>, you never see the
+channels and switches.  Abyss creates them under the covers as
+necessary.  In other applications,
+e.g. <b>ServerCreateSwitch()</b>/<b>ServerRun)</b>, your code creates
+a channel switch and Abyss code takes and processes the channels it
+creates as clients connect via the switch.  In still others,
+e.g. <b>ServerCreateNoAccept()/ServerRunChannel()</b>, you create a
+channel (probably via some means more rudimentary than an Abyss
+channel switch) and pass that channel to Abyss so Abyss can handle
+HTTP requests that arrive over that channel.
+
+<p>Associated with every channel is a record of &quot;channel
+information.&quot; The meaning of the contents of that record are
+entirely dependent on the type of channel.  It is metadata about the
+channel; the information is not necessary for transmitting the byte
+streams, but may be useful in dealing with the content of the streams.
+Typically, the information tells who is on the other far side of the
+channel.  You typically hand the channel information to someone along
+with the channel.
+
+<p>Channels and channel switches were new in Xmlrpc-c 1.07 (October
+2006).  There are two earlier generations of client/server
+communication control.  In Xmlrpc-c 1.06, there are <a
+href="#sockets"><i>sockets</i></a>, and before that you use native
+Operating system entities such as POSIX socket file descriptors.  The
+channel abstraction allows us to expand Abyss to fit more
+applications.  For example, it makes is easy to add SSL capability.
+
+<p>The macro <B>HAVE_CHANSWITCH</B> tells a C program that the
+<b>libxmlrpc_abyss</b> is new enough to have channels and channel
+switches.
+
+
+<h3 id="TChannel">TChannel</h3>
+
+<p><b>TChannel</b> is the C type for an Abyss channel.  There are
+various types of TChannels; they all look the same from the outside
+but are implemented differently.  For example, one type (the only one
+implemented today) uses Unix stream sockets and TCP to send and
+receive its byte streams, while another might use Winsock.  Another
+type will use an Openssl socket in order to permit SSL (https)
+communications with clients.
+
+<p>You create a TChannel by calling a constructor function for the
+particular type of TChannel you want.  The constructor function has
+arguments that make sense for that particular type.  Any TChannel
+you create you must destroy after Abyss no longer needs it.  You do
+that with the type-independent function <b>ChannelDestroy()</b>.
+
+<p>Note that in some modes of operation, you don't have to create a
+TChannel at all; Abyss services do that all under the covers.
+
+
+<h4 id="ChannelUnixCreateFd"><b>ChannelUnixCreateFd()</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+  TChannel channelP;
+  struct abyss_unix_chaninfo * channelInfoP;
+  const char * error;
+  int fd;
+
+  fd = socket(...);
+  bind(fd, ...);
+  listen(fd, 16);
+  accept(fd, NULL, NULL);
+
+  ChannelUnixCreateFd(fd, &amp;channelP, &amp;channelInfoP, &amp;error);
+
+  ...
+
+  ChannelDestroy(channelP);
+  free(channelInfoP);
+
+</code>
+</pre>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    ChannelUnixCreateFd(int                           fd,
+                        TChannel **                   channelPP,
+                        struct abyss_unix_chaninfo ** channelInfoPP,
+                        const char **                 errorP);
+</code>
+</pre>
+
+<p>This function creates a channel that uses a Unix (POSIX) stream socket
+and thereby TCP connection to transmit its byte streams back and forth.
+You supply a connected stream socket by file descriptor for the channel
+to use.
+
+<p>Note that POSIX sockets are screwy in that they are both channels and
+channel switches; they treat these very different functions as modes of
+a single entity.  So it is important that the socket you pass to
+<b>ChannelUnixCreateFd()</b> be in the &quot;connected&quot; state.  You
+can't make a channel out of any other kind.
+
+<p><i>fd</i> is the file descriptor of the socket.
+
+<p>The function returns the handle of the channel it creates as
+*<i>channelPP</i>.
+
+<p>The function returns as *<i>channelInfoPP</i> a pointer to a
+structure that identifies what's at the other end of channel
+(to wit, the peer's IP address and TCP port number).  This
+structure is in malloc'ed memory; you must free it when you are done
+with it.  A typical use of this structure is to pass it to
+<b>ServerRunChannel()</b> and then have an HTTP request handler get
+and use it with <b>SessionGetChannelInfo()</b>.  The type of
+information is specific to a Unix type channel and has this format:
+
+<pre>
+<code>
+    struct abyss_unix_chaninfo {
+        size_t peerAddrLen;
+        struct sockaddr peerAddr;
+    };
+</code>
+</pre>
+
+<p>A type like the above is defined in
+<b>&lt;xmlrpc-c/abyss_unixsock.h&gt;</b>.
+
+<p>If the function succeeds, it returns a null pointer as *<i>errorP</i>.
+If it fails, it generates a text string explaining why, in malloc'ed storage,
+and returns the pointer to it as *<i>errorP</i>.  You must free this
+storage when you are done with it.  When the function fails, no other
+return values are valid and nothing else is allocated or created.
+
+
+<h4 id="ChannelDestroy"><b>ChannelDestroy()</b></h4>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    ChannelDestroy(TChannel * channelP);
+</code>
+</pre>
+
+<p>This function destroys a TChannel object of any type.
+
+
+<h3 id="TChanSwitch">TChanSwitch</h3>
+
+<p><b>TChanSwitch</b> is the C type for an Abyss channel switch.
+There are various types of TChanSwitches; they all look the same from
+the outside but are implemented differently.  For example, one type
+(the only one implemented today) switches Unix socket-based channels,
+using a POSIX stream listen socket to hook up with clients.  Another
+type could switch Winsock-based channels; another type could use an
+Openssl socket in order to permit SSL (https) communications with
+clients.
+
+<p>You create a TChanSwitch by calling a constructor function for the
+particular type of TChanSwitch you want.  The constructor function has
+arguments that make sense for that particular type.  Any TChanSwitch
+you create you must destroy after Abyss no longer needs it.  You do
+that with the type-independent function <b>ChanSwitchDestroy()</b>.
+
+<p>Note that in some modes of operation, you don't have to create a
+TChanSwitch at all; Either Abyss services create one under the covers
+or you do the switching your own way and pass ready-made channels to
+Abyss.
+
+
+<h4 id="ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    ChanSwitchUnixCreate(8080, &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    ChanSwitchUnixCreate(uint16_t       portNumber,
+                         TChanSwitch ** chanSwitchPP,
+                         const char **  errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections
+that clients request and generates a unix-type channel based on each.
+It's like a POSIX socket in listen mode.
+
+<p>The switch accepts connections requested of IP Version 4 TCP port
+<i>portNumber</i>, via any network interface, to any IP address.  If you want
+to listen on a particular network interface (at a particular IP address), even
+an IP Version 6 one, use the
+newer <a href="#ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></a>.
+
+
+<h4 id="ChanSwitchUnixCreateIpV6Port">
+  <b>ChanSwitchUnixCreateIpV6Port</b></h4>
+
+<p>This is the same
+as <a href="#ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></a> except that
+it listens for IP Version 6 connections.
+
+<p>This was new in Xmlrpc-c 1.29 (December 2011).
+
+
+<h4 id="ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    uint32_t const localhostIpAddr = 0x7f000001;
+
+    struct sockaddr_in sockaddr;
+    sockaddr.sin_family      = AF_INET;
+    sockaddr.sin_addr.s_addr = htonl(localhostIpAddr);
+    sockaddr.sin_port        = htons(8080);
+
+    ChanSwitchUnixCreate2(PF_INET, (const struct sockaddr *)&amp;sockaddr,
+                          sizeof(sockaddr), &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    ChanSwitchUnixCreate2(int                     protocolFamily,
+                          const struct sockaddr * sockAddrP,
+                          socklen_t               sockAddrLen,
+                          TChanSwitch **          chanSwitchPP,
+                          const char **           errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections
+that clients request and generates a unix-type channel based on each.
+It's like a POSIX socket in listen mode.
+
+<p>The switch accepts connections requested of the TCP port (or ports)
+identified by the conventional POSIX socket address pointed to by
+<i>sockAddrP</i>, whose size in bytes is <i>sockAddrLen</i>.  It accepts them
+in the POSIX network protocol <i>protocolFamily</i> (for example,
+<b>PF_INET</b> for IP Version 4).
+
+<p>These data structure types are defined in POSIX header file
+&lt;sys/socket.h&gt;, with implementations for particular protocols in other
+header files.  IP (Versions 4 and 6) is covered by &lt;netinet/in.h&gt;.
+These are a little tricky to use, and we don't explain any further here because
+that trickiness is not specific to Xmlrpc-c.  If you know how to code a
+program using a POSIX <b>bind()</b> call, you can code one using
+<b>ChanSwitchUnitCreate2()</b>.
+
+<p>A far easier to use alternative if you just want to listen on a particular
+TCP port on every IP Version 4 or 6 interface is 
+<a href="#ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate()</b></a>
+or <a href="#ChanSwitchUnixCreateIpV6Port">
+<b>ChanSwitchUnixCreateIpV6Port()</b></a>
+
+<p>This function was new in Xmlrpc-c 1.30 (March 2012).
+
+
+<h4 id="ChanSwitchUnixCreateFd"><b>ChanSwitchUnixCreateFd</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    int fd;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    fd = socket(...);
+    bind(fd, ...);
+
+    ChanSwitchUnixCreateFd(fd, &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    ChanSwitchUnixCreateFd(int            fd,
+                           TChanSwitch ** chanSwitchPP,
+                           const char **  errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch like
+<b>ChanSwitchUnixCreate()</b> does.  The difference is that you supply
+a bound socket (by file descriptor <i>fd</i>) for the switch to use.
+The switch listens on that socket for client connections.
+
+<p>This is handy when the server program does not have the privilege
+required to bind a socket to the desired port number (which means that
+<b>ChanSwitchUnixCreate()</b> would fail) -- a more privileged program
+can create and bind the socket and let the less privileged server
+program inherit the open socket.
+
+<p>The socket you supply must be bound to a local address (that determines
+which connection requests the operating system passes on to the channel
+switch), but must be idle -- not in connected or listening state.
+
+<p>You must ensure that the socket continues to exist (the file
+descriptor stays open) as long as the channel switch exists.  You must
+not access the socket in any way while the channel switch exists.
+
+<h4 id="ChanSwitchDestroy"><b>ChanSwitchDestroy()</b></h4>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    ChanSwitchDestroy(TChanSwitch * chanSwitchP);
+</code>
+</pre>
+
+<p>This function destroys a TChanSwitch object of any type.
+
+
+<h2 id="sockets">Sockets</h2>
+
+
+<P>Abyss sockets are relevant only to Xmlrpc-c 1.06.  Earlier versions
+use operating system sockets directly instead of the Abyss abstraction
+of a socket.  Later versions use two separate abstractions, one for a
+&quot;channel,&quot; and one for a &quot;channel switch&quot; instead
+(see <a href="#channel">Channels</a>).
+The Abyss socket abstraction continues to exist for backward
+compatibility in current Xmlrpc-c, though.
+
+<p>The rest of this chapter assumes Xmlrpc-c 1.06.
+
+<p>An Abyss server uses entities modelled after POSIX sockets to
+communicate with clients.  In fact, on a POSIX system, these Abyss
+sockets are based on actual POSIX sockets; i.e. the Abyss server uses
+POSIX sockets to communicate with clients.
+
+<p>There are ways to use <b>libxmlrpc_abyss</b> without ever seeing
+an Abyss socket.  But if you want to have any but the simplest Abyss
+server, you will use functions that take an Abyss socket as an argument
+and you will create and destroy Abyss sockets explicitly.
+
+<p>As in the POSIX model, there are two very different kinds of
+Abyss sockets, but they both have the same C type and are in some ways
+treated as the same kind of thing:
+
+<ul>
+<li>Listening socket:  This is an object that sets up connections with
+clients.  When it sets up a connection, it creates a read/write socket
+for it.
+
+<li>Read/write socket:  This is a simple communication channel between
+a client and server.  It is a pipe through which data flows in both
+directions.  Its endpoints are fixed for life
+
+</ul>
+
+<p>An Abyss socket, of either type, has type <b>TSocket</b>.
+
+<p>Using the same type for both causes confusion, just as it does for
+POSIX sockets; that's why newer Xmlrpc-c uses the two types
+TChanSwitch and TChannel instead.  TChanSwitch corresponds to a
+listening socket; TChannel corresponds to a Read/write socket.
+
+<p>This type was new in Xmlrpc-c 1.06 (July 2006).  Before that, a
+different type named <b>TSocket</b> existed.  It was just an alias
+(typedef) for whatever conventional socket class the operating system
+provides.  I.e. it was what <b>TOsSocket</b> is today.  To write code
+that works with both old and new Xmlrpc-c, don't use <b>TSocket</b> at
+all.  Use the regular name for the OS socket data type instead.
+E.g. for Unix, use &quot;int&quot;.
+
+<p>You always refer to a TSocket with a handle, which is simply a C
+pointer (<tt>TSocket *</tt>).
+
+<p>The TSocket type is designed to be an abstract type, with various
+implementations.  I.e. all TSockets do the same basic job of managing
+connections and transmitting data back and forth, but different
+TSockets may do it different ways.  Today, there are only two
+implementations: one uses TCP via a POSIX (Unix) socket and the other uses
+TCP via a Winsock socket.  In the future, there will probably be a
+TSocket implementation that uses SSL.  Note that while a true HTTP
+server must use TCP (and a true HTTPS server must use SSL), there
+could theoretically be a TSocket that uses an entirely different
+client/server communication method and you could use it to make an
+Abyss server that serves some variation on HTTP.
+
+<p>There are separate constructor functions for the individual
+Abyss socket implementations.
+
+<h3 id="unix_constructors">Unix Abyss Socket Constructors</h3>
+
+<p>These construct a Unix type Abyss socket, which is an Abyss socket
+based on a conventional Unix (POSIX) socket, such as you would create
+with a <B>socket()</B> C library call.  This type of Abyss socket, and
+thus these constructors, don't exist on a regular Windows system (but
+in an environment with suitable Unix emulation, they might).
+
+<h4 id="socketUnixCreateFd">SocketUnixCreateFd()</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    int socketFd;
+    TSocket * socketP;
+    socketFd = socket();
+    SocketUnixCreateFd(socketFd, &amp;socketP);
+    ...
+    SocketDestroy(socketP);
+</code>
+</pre>
+
+<P>This creates an Abyss socket out of a Unix (POSIX) socket, which you
+identify by its file descriptor.  The state of the socket, including
+whether it is a listening socket or a read/write socket, whether it is
+connected, and to what address it is bound, comes from the Unix socket.
+
+
+<h3 id="winsock_constructors">Winsock Abyss Socket Constructors</h3>
+
+<p>These construct a Windows type Abyss socket, which is an Abyss
+socket based on a conventional Windows (Winsock) socket.  This type of
+Abyss socket, and thus these constructors, don't exist on a Unix
+system.
+
+<h4 id="socketWinCreateWinsock">socketWinCreateWinsock()</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    SOCKET winsock;
+    TSocket * socketP;
+    winsock = socket();
+    SocketWinCreateWinsock(winsock, &amp;socketP);
+    ...
+    SocketDestroy(socketP);
+</code>
+</pre>
+
+<P>This creates an Abyss socket out of a Winsock socket you supply.
+The state of the socket, including whether it is a listening socket or
+a read/write socket, whether it is connected, and to what address it
+is bound, comes from the Winsock socket.
+
+
+<h3 id="socket_destructor">Socket Destructor</h3>
+
+<p>You must eventually destroy every socket you create.  There is one
+destructor for a socket, which works regardless of the implementation
+of the particular socket:
+
+<h4 id="socketDestroy">socketDestroy()</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    TSocket * socketP;
+    ...
+    SocketDestroy(socketP);
+</code>
+</pre>
+
+
+<h2 id="globalconst">Global Constants</h2>
+
+<p><b>libxmlrpc_abyss</b> has global constants that you must set up.
+The global initialization function is
+<b>AbyssInit()</b>.  The global termination function is
+<b>AbyssTerm()</b>.
+
+<p>See <a href="libgeneral.html#globalconst">Global Constants</a>
+for an explanation of why you need these and how to use them.
+
+<p>These functions were new in Xmlrpc-c 1.06 (July 2006).  In libraries
+older than that, there are separate global initialization functions for
+invidual components of the library and many of the functions don't
+actually use any global constants.
+
+
+<h3 id="abyssinit">AbyssInit</h3>
+
+<p>Example:
+
+<pre>
+<code>
+    const char * error;
+    AbyssInit(&amp;error);
+    if (error) {
+        fprintf(stderr, &quot;Could not initialize Abyss library! %s&quot;, error);
+        free(error);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    AbyssInit(const char ** errorP);
+</code>
+</pre>
+
+<p>This is <b>libxmlrpc_abyss</b>'s
+<a href="libgeneral.html#globalconst">global initialization function</a>.
+
+
+<h3 id="abyssterm">AbyssTerm</h3>
+
+<p>Example:
+
+<pre>
+<code>
+    AbyssTerm();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    AbyssTerm();
+</code>
+</pre>
+
+<p>This is <b>libxmlrpc_abyss</b>'s
+<a href="libgeneral.html#globalconst">global termination function</a>.
+
+
+<h2 id="createrun">Creating and Running a Server</h2>
+
+<p>There are various modes in which you can use <b>libxmlrpc_abyss</b>
+to make an HTTP server (XML-RPC or otherwise).
+
+<p>The simplest is to say on what TCP port you'd like to accept
+connections and have Abyss take over.  Abyss will listen for TCP
+connections, accept them as they come in, and process the HTTP
+transactions.  It will spawn threads as needed to handle the
+transactions so it can handle multiple transactions at once.  Your
+code never runs again until after the Abyss server has been shut down.
+For details on this mode, see <a href="#ServerRun"><b>ServerRun</b></a>.
+
+<p>If that's too much leash to give Abyss, in another mode you can
+have Abyss process a single transaction and then return.  Besides
+giving your code additional opportunity to participate in the
+serving, this lets your write a single threaded server program, i.e. a
+server that processes transactions serially.  For some servers, this
+helps you prevent transactions from interfering with each other.  See
+<a href="#ServerRunOnce"><b>ServerRunOnce</b></a>.
+
+<p>Instead of giving Abyss a port number on which to listen, you can
+give it a socket you bound yourself.  This is handy when you
+want Abyss to server a reserved port number, but don't want to give
+Abyss the privilege (typically superuser privilege) to bind a reserved
+port itself.
+
+<p>You can also take care of managing the connections in your own code
+and just call Abyss to process a transaction after the connection with
+the client is all set up.  See <a
+href="#ServerRunChannel"><b>ServerRunChannel()</b></a>.  This is useful
+for an Inetd-based server.
+
+
+<h3 id="ServerCreate"><b>ServerCreate()</b></h3>
+
+<p>Example:
+
+<pre>
+<code>
+    TServer abyssServer;
+    success = ServerCreate(&amp;abyssServer, "XmlRpcServer", 8080,
+                           &quot;/home/http/docs&quot;,
+                           &quot;/var/log/abyss&quot;);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    abyss_bool
+    ServerCreate(TServer *    serverP,
+                 const char * name,
+                 uint16_t     port,
+                 const char * filespath,
+                 const char * logfilename);
+</code>
+</pre>
+
+<p>This function creates an Abyss server.
+
+<p>The server is configured to listen for connections to a particular
+TCP port and accept those connections and process them.  However, the
+server does not run autonomously; i.e. it will not process any HTTP
+requests all by itself.  See e.g. <b>ServerRun()</b>.
+
+<p><i>serverP</i> is a pointer to a server handle you have allocated.
+<b>ServerCreate()</b> initializes the whole handle; its value on entry
+is meaningless.
+
+<p><i>name</i> is a textual name for human consumption.  I don't know
+exactly where this name shows up, but in general you can make up
+anything you like.
+
+<p><i>port</i> is the TCP port number on which the server is to listen
+for HTTP connections from clients.
+
+<p><i>filespath</i> is the name of the directory in which web page
+files live.  This is irrelevant for a pure XML-RPC server, but an
+Abyss server for an Abyss server that can also do basic web page
+serving, this is where the documents live.  For example, if
+<i>filespath</i> is &quot;/home/http&quot; and a client does an HTTP
+GET of &quot;http://myserver.com/dir1/mypage.html&quot;, the file that
+the Abyss server will send him is <b>/home/http/dir1/mypage.html</b>.
+
+<P><i>logfilename</i> is the filename of the file to which the Abyss
+server logs.
+
+
+<h3 id="ServerCreateSwitch"><b>ServerCreateSwitch()</b></h3>
+
+<p>Example:
+
+<pre>
+<code>
+    TServer abyssServer;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+    ChanSwitchUnixCreate(8080, &amp;chanSwitchP, &amp;error);
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create a channel switch!  %s&quot;, error);
+        free(error);
+    } else {
+        ServerCreateSwitch(&amp;abyssServer, &amp;chanSwitchP, &amp;error);
+        if (error) {
+            fprintf(stderr, &quot;Couldn't create a server!  %s&quot;, error);
+            free(error);
+        } else {
+            ServerSetName(&amp;abyssServer, &quot;XmlRpcServer&quot;);
+            ServerSetFilesPath(&amp;abyssServer, &quot;/home/http/docs&quot;,
+            ServerSetLogFileName(&amp;abyssServer, &quot;/var/log/abyss&quot;);
+        }
+        chanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerCreateSwitch(TServer *     serverP,
+                       TChanSwitch * socketP,
+                       const char ** errorP);
+</code>
+</pre>
+
+<p>This function creates an Abyss server.  It is the same as
+<b>ServerCreate()</b> except that instead of specifying a TCP port
+number on which to listen, you provide a <a href="#channels">channel
+switch</a>.  While <b>ServerCreate()</b> is limited to accepting
+connections in a very specific way, the channel switch could be much
+more flexible.
+
+<p>The server created has name &quot;unnamed&quot;, document root
+directory &quot;/htdocs&quot;, and no log file.  You can modify these
+properties with <b>ServerSetName()</b>, etc.
+
+<p>This function was new in Xmlrpc-c 1.07 (October 2006).  In older
+Xmlrpc-c, use <b>ServerCreateSocket2()</b> for a similar function.
+The macro <b>HAVE_CHANSWITCH</b> tells a C program that the
+<b>libxmlrpc_abyss</b> is new enough to have this function.
+
+
+<h3 id="ServerCreateSocket2"><b>ServerCreateSocket2()</b></h3>
+
+<p>Example:
+
+<pre>
+<code>
+    TServer abyssServer;
+    TSocket * socketP;
+    const char * error;
+    SocketUnixCreateFd(STDIN_FILENO, &amp;socketP);
+    ServerCreateSocket2(&amp;abyssServer, &amp;socketP, &amp;error);
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create a server!  %s&quot;, error);
+        free(error);
+    } else {
+        ServerSetName(&amp;abyssServer, &quot;XmlRpcServer&quot;);
+        ServerSetFilesPath(&amp;abyssServer, &quot;/home/http/docs&quot;,
+        ServerSetLogFileName(&amp;abyssServer, &quot;/var/log/abyss&quot;);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    abyss_bool
+    ServerCreateSocket2(TServer *     serverP,
+                        TSocket *     socketP,
+                        const char ** errorP);
+</code>
+</pre>
+
+<p>This function creates an Abyss server.  It is the same
+as <b>ServerCreate()</b> except that instead of specifying a TCP port
+number on which to listen, you provide a socket that is already bound
+to the proper TCP port.
+
+<p>This is handy when the server program does not have the privilege
+required to bind a socket to the desired port number -- a more
+privileged program can create and bind the socket and let the less
+privileged server program inherit the open socket.
+
+<p>The server created has name &quot;unnamed&quot;, document root
+directory &quot;/htdocs&quot;, and no log file.  You can modify these
+properties with <b>ServerSetName()</b>, etc.
+
+<p>This function was new in Xmlrpc-c 1.06 (July 2006).  In older
+Xmlrpc-c, use <b>ServerCreateSocket()</b> instead.  The macro
+<b>HAVE_SERVER_CREATE_SOCKET_2</b> tells a C program that the
+<b>libxmlrpc_abyss</b> is new enough to have this function.
+
+
+<h3 id="ServerCreateSocket"><b>ServerCreateSocket()</b></h3>
+
+<p>This function is obsolete.  Use <a
+href="#ServerCreateSwitch"><b>ServerCreateSwitch()</b></a> instead if
+possible.
+
+<p>Example:
+
+<pre>
+<code>
+    TServer abyssServer;
+    success = ServerCreateSocket(&amp;abyssServer, &quot;XmlRpcServer&quot;, 5,
+                                 &quot;/home/http/docs&quot;,
+                                 &quot;/var/log/abyss&quot;);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    abyss_bool
+    ServerCreateSocket(TServer *    serverP,
+                       const char * name,
+                       TOsSocket    socketFd,
+                       const char * filespath,
+                       const char * logfilename);
+</code>
+</pre>
+
+<p>This is the same as <b>ServerCreateSocket2()</b> except that you
+supply a Unix socket file descriptor instead of an Abyss socket handle
+and you can set the server name, document root directory, and
+log file name in the same call.
+
+<p><b>TOsSocket</b> is a typedef for the type of a conventional socket
+in the operating system in question.  I.e. it is <b>int</b> on Unix
+and <b>SOCKET</b> on Windows.  You should use <b>int</b> or
+<b>SOCKET</b> instead of <b>TOsSocket</b> in your program.
+
+
+<h3 id="ServerCreateNoAccept"><b>ServerCreateNoAccept()</b></h3>
+
+<p>Example:
+
+<pre>
+<code>
+    TServer abyssServer;
+    success = ServerCreateNoAccept(&amp;abyssServer, &quot;XmlRpcServer&quot;,
+                                   &quot;/home/http/docs&quot;,
+                                   &quot;/var/log/abyss&quot;);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    abyss_bool
+    ServerCreateNoAccept(TServer *    serverP,
+                         const char * name,
+                         const char * filespath,
+                         const char * logfilename);
+</code>
+</pre>
+
+<p>This function creates an Abyss server.  It is the same as
+<b>ServerCreate()</b> except that the server it creates cannot accept
+connections from clients.  Instead, you use server functions with it
+that supply as input an existing client connection.
+
+<p>For example, use <a href="#ServerRunChannel">
+<b>ServerRunChannel()</b></a> with this kind of server and supply a
+<a href="#channels">channel</a> to a client, which you created somehow.
+
+
+<h3 id="ServerSetName">ServerSetName</h3>
+
+<p>This function changes the name of a server.
+
+<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+more information.
+
+<h3 id="ServerSetFilesPath">ServerSetFilesPath</h3>
+
+<p>This function sets the root directory for HTTP documents a server
+will serve.
+
+<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+more information.
+
+<h3 id="ServerSetLogFileName">ServerSetLogFileName</h3>
+
+<p>This function changes the name of the file that the server will use
+as a log file.
+
+<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+more information.
+
+<h3 id="ServerSetKeepaliveTimeout">ServerSetKeepaliveTimeout</h3>
+
+<p>This function sets the amount of time the server will keep a TCP connection
+with a client open after completing an HTTP transaction, waiting for the next
+request from the client.  See <a href="#persistent">Persistent Connections</a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetKeepaliveTimeout(TServer * serverP,
+                              uint32_t  keepaliveTimeout);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>keepaliveTimeout</i> is the period, in seconds.  It must be greater
+than zero; the effect of zero on the keepalive timeout setting is
+undefined.
+
+<p>The setting affects future connections and may or may not affect
+existing connections.
+
+<p>The default period (in effect if you have never called this function) is 15
+seconds.
+
+<h3 id="ServerSetKeepaliveMaxConn">ServerSetKeepaliveMaxConn</h3>
+
+<p>This function sets the maximum number of requests Abyss will accept on a
+single TCP connection.  See <a href="#persistent">Persistent Connections</a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetKeepaliveMaxConn(TServer * serverP,
+                              uint32_t  keepaliveMaxConn);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>keepaliveMaxConn</i> is the number of requests.
+
+<p>This may or may not affect connections that already exist.
+
+<p>The default (in effect if you have never called this function) is 30
+requests.
+
+
+<h3 id="ServerSetTimeout">ServerSetTimeout</h3>
+
+<p>This function sets how long the server will wait for a client to send its
+request once the client has connected to the server.  If the client does not
+send a complete request within this time, the server aborts HTTP transaction
+and terminates the TCP connection.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetTimeout(TServer * serverP,
+                     uint32_t  timeout);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>timeout</i> is the period in seconds.
+
+<p>The default (in effect if you have never called this function) is 15
+seconds.
+
+<p>This was new in Xmlrpc-c 1.04 (November 2005).
+
+
+<h3 id="ServerSetAdvertise">ServerSetAdvertise</h3>
+
+<p>This function tells the server whether or not to indicated, via an
+HTTP &quot;Server&quot; header, in its responses, that the server is
+running Xmlrpc-c and which version of it.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetAdvertise(TServer *  serverP,
+                       abyss_bool advertise);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>advertise</i> is true to tell the server to send information
+about itself to clients; false not to.
+
+<p>The default (in effect if you have never called this function) is true.
+
+<p>This was new in Xmlrpc-c 1.04 (November 2005).
+
+
+<h3 id="ServerSetMaxConn">ServerSetMaxConn</h3>
+
+<p>This function sets the maximum number of connections (HTTP transactions)
+the server will allow simultaneously.   When there are this many, the server
+does not accept another one until an existing one ends.
+
+<p>This is meaningful only if you call a <b>libxmlrpc_abyss</b> subroutine
+that processes multiple HTTP requests at once,
+e.g. <a href="#ServerRun">ServerRun</a>.
+
+<p>While the server is not accepting connections because of this limit, the
+operating system still accepts TCP connections on the server's behalf and
+queues them.
+See <a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog</b></a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetMaxConn(TServer *    serverP,
+                     unsigned int maxConn);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>maxConn</i> is the maximum number of simultaneous connections.
+It must be greater than 0.
+
+<p>The default (in effect if you have never called this function) is 15.
+
+<p>This was new in Xmlrpc-c 1.32 (September 2012).
+
+
+<h3 id="ServerSetMaxConn">ServerSetMaxConnBacklog</h3>
+
+<p>This function sets the maximum number of TCP connections the operating
+system will accept on the server's behalf without the server accepting them
+from the operating system.  The server accepts TCP connections (presumably
+intended to be HTTP transactions) and queues them for the server to accept
+when it is ready.  If the number queued reaches this limit, the operating
+system refuses, via the TCP protocol, any additional connection attempts.
+
+<p>In a server that processes HTTP requests one at a time (such as
+with <a href="#ServerRunOnce"><b>ServerRunOnce</b></a>, connections queue in
+the operating system while the server processes the current request and if the
+server cannot keep up, this limit comes into play.
+
+<p>In a server that processes multiple HTTP requests in parallel (such
+as with <a href="#ServerRun"><b>ServerRun</b></a>, the limit on
+the number of simultaneous HTTP transactions it will allow affects the total
+backlog as seen by clients.
+See <a href="#ServerSetMaxConn"><b>ServerSetMaxConn</b></a>.  The total number
+of requests that could arrive in a burst without any getting turned away is
+the sum of those two limits.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerSetMaxConnBacklog(TServer *    serverP,
+                            unsigned int maxConnBacklog);
+</code>
+</pre>
+
+<p><i>serverP</i> is the handle of the server in question.
+
+<p><i>maxConnBacklog</i> is the maximum TCP connection backlog in the
+operating system.  It must be greater than 0.
+
+<p>The default (in effect if you have never called this function) is 15.
+
+<p>This was new in Xmlrpc-c 1.32 (September 2012).
+
+
+<h3 id="ServerRun"><b>ServerRun()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+...
+ServerRun(&amp;abyssServer);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerRun(TServer * serverP);
+</code>
+</pre>
+
+<p>This function causes an Abyss server to run until shut down.  It
+accepts HTTP connections as clients request them and processes them.
+It typically processes multiple connections simultaneously.
+(Use <a href="#ServerSetMaxConn"><b>ServerSetMaxConn</b></a> to control
+how many).
+
+<p>The function does not normally return until the server's life is
+over.  It returns if something bad enough to prevent it from serving
+RPCs happens.  It returns also if you explicitly <a href="#terminating">
+terminate the server</a>.
+
+<p><b>ServerRun()</b> is usable only on a server object that was
+created to accept connections on its own, i.e. one created with
+<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  Furthermore,
+the server must have been initialized to accept connections, which
+means you called <b>ServerInit()</b>.  <b>ServerRun()</b> fails if
+you give it a server object that doesn't meet these requirements.
+
+<p>While running, Abyss spawns threads to handle multiple HTTP
+requests at once.  There is generally a new thread for each client
+connection.  Note that with HTTP persistent connections, it is
+possible for a single client connection to carry multiple HTTP
+requests, in serial fashion.  These threads are POSIX threads on a
+Unix platform and Windows threads on Windows.  Your request handlers
+may use the associated locking and other threading facilities to
+coordinate with each other.  The threads that run the request handlers
+and the thread that invokes <b>ServerRun()</b> are all in the same
+process, so share the same memory, etc.
+
+<p>There is an alternative form of Abyss that uses POSIX forking for
+the threading.  The Xmlrpc-c source package provides a &quot;configure&quot;
+option to generate that alternative.  Forking Abyss handles separate
+connections in separate processes, and never the same process as the
+one that called <b>ServerRun()</b>, so your request handlers all see a
+copy of the original process' memory as of ServerRun() time, but any
+updates one makes are private to that connection.
+
+
+<h3 id="ServerRunOnce"><b>ServerRunOnce()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+...
+ServerRunOnce(&amp;abyssServer);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerRunOnce(TServer * serverP);
+</code>
+</pre>
+
+<p>This function causes an Abyss server to process one HTTP connection
+(waiting for one if necessary).  It waits for the next connection on
+the server's listening socket, reads the HTTP POST request, executes
+the indicated RPC, and closes the connection.  Note that because the
+listening socket is perpetually listening, the operating system will
+accept and queue connections on its own.  <b>ServerRunOnce()</b>
+processes a connection that the operating previously accepted.
+
+<p>(<a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog</b></a>
+controls how many connections the operating system will queue before
+refusing them).
+
+<p><b>ServerRunOnce()</b> is a good way to make sure your server
+executes no more than one RPC at a time, when your method function is
+written to be single threaded.  It is also a good way to ensure that
+all RPCs execute against the same memory, as opposed to running in
+separate processes.  And it's the easiest to debug.  All new server
+programs should start out using this interface, before graduating to
+the more demanding <b>ServerRun()</b> approach.
+
+<h4>Example</h4>
+<pre>
+<code>
+    unsigned int const portNumber = 8080;
+
+    TServer abyssServer;
+    xmlrpc_registry * registryP;
+    xmlrpc_env env;
+    
+    xmlrpc_env_init(&amp;env);
+
+    registryP = xmlrpc_registry_new(&amp;env);
+
+    xmlrpc_registry_add_method(
+        &amp;env, registryP, NULL, "sample.add", &amp;sample_add, NULL);
+
+    MIMETypeInit();
+
+    ServerCreate(&amp;abyssServer, "XmlRpcServer", portNumber), NULL, NULL);
+    
+    xmlrpc_server_abyss_set_handlers(&amp;abyssServer, registryP);
+
+    ServerInit(&amp;abyssServer);
+
+    setupSignalHandlers();
+
+    while (1) {
+        printf("Waiting for next RPC...\n");
+
+        ServerRunOnce(&amp;abyssServer);
+    }
+
+</code>
+</pre>
+
+
+<p><b>ServerRunOnce()</b> is usable only on a server object that was
+created to accept connections on its own, i.e. one created with
+<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  Furthermore,
+the server must have been initialized to accept connections, which
+means you called <b>ServerInit()</b>.  <b>ServerRunOnce()</b> fails if
+you give it a server object that doesn't meet these requirements.
+
+<p><b>ServerRunOnce()</b> aborts waiting for a connection request and
+returns immediately if the process receives a signal.  Note that
+unless you have a handler for that signal, the signal will probably
+kill the whole process, so set up a signal handler -- even one that
+does nothing -- if you want to exploit this.  But before Xmlrpc-c 1.06
+(June 2006), signals have no effect -- there is no way to make
+<b>ServerRunOnce</b> abort the wait and return.
+
+<p>Before Xmlrpc-c 1.04 (November 2005), ServerRunOnce() initiated the
+connection processing in the background, returning to Caller
+immediately.  But it worked correctly only on a system that does
+threading with Unix &quot;fork.&quot; On others, behavior was
+undefined.
+
+
+<h3 id="ServerRunOnce2"><b>ServerRunOnce2()</b></h3>
+
+<p>Don't use <b>ServerRunOnce2()</b>.  Use <b>ServerRunOnce()</b> instead.
+
+<p><b>ServerRunOnce2()</b> was invented as an extension to
+ServerRunOnce() during a period of design upheaval in 2005.
+ServerRunOnce() was originally intended to fork a new process to process
+an HTTP connection and return immediately.  ServerRunOnce2() was
+supposed to give the caller a choice of doing that or processing the
+connection in the foreground.
+
+<p>But it really isn't practical to process a connection in the background,
+so today <b>ServerRunOnce()</b> processes in the foreground and
+<b>ServerRunOnce2()</b> does too, ignoring its background/foreground
+argument.  ServerRunOnce2() exists only so some programs that were coded
+to use it will continue to work without change.
+
+<p><b>ServerRunOnce2()</b> was new in Xmlrpc-c 1.01 (January 2005) and
+became foreground-only in Xmlrpc-c 1.04 (November 2005).  In between,
+the background feature worked correctly only on systems that do threading
+via a Unix &quot;fork.&quot;
+
+
+<h3 id="ServerRunChannel"><b>ServerRunChannel()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+    TChannel * channelP;
+    const char * error;
+    ChannelUnixCreateFd(&amp;channelP, STDIN_FILENO);
+    ServerRunChannel(&amp;abyssServer, &amp;channelP, NULL, &amp;error);
+    if (error) {
+        fprintf(stderr, &quot;Couldn't run the server.  %s&quot;, error);
+        free(error);
+    }
+    ...
+    ChannelDestroy(channelP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerRunChannel(TServer *     serverP,
+                 TSocket *     channelP,
+                 void *        channelInfoP,
+                 const char ** errorP);
+</code>
+</pre>
+
+<p>This function causes an Abyss server to process one HTTP request
+from the <a href="#channels">channel</a> you supply.  For normal HTTP,
+the channel must be new -- with nothing having been read or written
+through it yet.  <b>ServerRunChannel()</b> reads an HTTP request from
+the channel, performs it, and writes the response to the channel.
+
+<p>This would be useful for an Inetd application.  Inetd is a server
+common on Unix systems that listens for connections on various ports
+simultaneously.  When it gets one, it accepts it and forks a process
+and execs a program that provides whatever service is supposed to be
+available on the port in question.  For example, Inetd might be
+configured to accept connections to the FTP port, among others.  When
+someone tries to connect to the FTP port, Inetd accepts the connection
+and forks a process running an FTP server program.  It continues
+listening for further FTP connections and forks other FTP server
+processes to handle any others.
+
+<p>Inetd passes the connected stream socket to the processor program
+as its Standard Input.  The processor program must be designed to
+expect a connected stream socket on its Standard Input.  One way to
+construct such a program is to have it build an Abyss channel
+out of Standard Input with <b>ChannelUnixCreateFd()</b> and then
+run <b>ServerRunChannel()</b> with the Abyss channel as an argument.
+Have the program simply exit when ServerRunChannel() returns.
+
+<p><b>ServerRunChannel</b> does not use HTTP persistent connections.  I.e.  it
+tells the client to close the TCP connection immediately after receiving the
+response and does the same itself after sending the response.  It is designed
+to be used with a channel that carries exactly one HTTP transaction.
+
+<p><b>ServerRunChannel()</b> is usable only on a server object that
+was created to use user-supplied connections, i.e. one created with
+<b>ServerCreateNoAccept()</b>.  <b>ServerRunChannel()</b> fails if you
+give it a server object that doesn't meet this requirement.
+
+<p>The <i>serverP</i> argument identifies the server that you want to
+process HTTP requests from the channel, and <i>channelP</i>
+identifies the channel.
+
+<p><i>channelInfoP</i> is a pointer to a structure of information
+about the channel <i>channelP</i>.  The structure is opaque to Abyss;
+it doesn't care what information is in it.  But your HTTP request
+handler code, which handles a request received over this channel,
+might later ask Abyss for this information, and know how to interpret
+it.  (It would use <b>SessionGetChannelInfo()</b> to get the
+information).  Typically, the structure includes information about the
+guy on the other end of the channel (the HTTP client), such as his IP
+address.
+
+<p>You can specify a null pointer for <i>channelInfoP</i> to indicate
+that you are not supplying any channel information.
+
+<p>This function was new in Xmlrpc-c 1.07 (October 2006).  In older
+Xmlrpc-c, use <b>ServerRunConn2()</b> instead.  The macro
+<b>HAVE_CHANSWITCH</b> tells a C program that the
+<b>libxmlrpc_abyss</b> is new enough to have this function.
+
+
+<h3 id="ServerRunConn2"><b>ServerRunConn2()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+    TSocket * connectedSocketP;
+    const char * error;
+    SocketUnixCreateFromFd(&amp;connectedSocketP, STDIN_FILENO);
+    ServerRunConn2(&amp;abyssServer, &amp;socketP, &amp;error);
+    if (error) {
+        fprintf(stderr, &quot;Couldn't run the server.  %s&quot;, error);
+        free(error);
+    }
+    ...
+    SocketDestroy(connectedSocketP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerRunConn2(TServer * serverP,
+               TSocket * connectedSocketP);
+</code>
+</pre>
+
+<p>This function causes an Abyss server to process one HTTP request
+from the read/write Abyss socket you supply.  For normal HTTP, the
+socket must be for a new TCP connection, with nothing having been read
+or written on the connection yet.  <b>ServerRunConn2()</b> reads an
+HTTP request from the socket, performs it, and writes the response to
+the socket.
+
+<p>This is useful in the same applications
+as <a href="#ServerRunChannel">ServerRunChannel()</a> and works the same way
+except as described here.  It's a little simpler
+than <b>ServerRunChannel()</b> and exists in older versions of Xmlrpc-c.
+
+<p>This function was new in Xmlrpc-c 1.06 (July 2006).  In older
+Xmlrpc-c, use <b>ServerRunnConn()</b> instead.  The macro
+<b>HAVE_SERVER_RUN_CONN_2</b> tells a C program that the
+<b>libxmlrpc_abyss</b> is new enough to have this function.
+
+
+<h3 id="ServerRunConn"><b>ServerRunConn()</b></h3>
+
+<p>This function is obsolete.  Use <a
+href="#ServerRunConn2"><b>ServerRunConn2()</b></a> instead if possible.
+
+<p>Example:
+<pre>
+<code>
+ServerRunConn(&amp;abyssServer, STDIN_FILENO);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerRunConn(TServer * serverP,
+              TOsSocket connectedSocket);
+</code>
+</pre>
+
+<p>This function causes an Abyss server to process one HTTP request
+from the already-connected socket you supply.  The socket must be
+in the TCP connected state at entry, with nothing having been read or
+written on the connection yet.  <b>ServerRunConn()</b> reads an HTTP
+request from the socket, performs it, writes the response to the
+socket, shuts down the connection, and closes the socket.
+
+<p>You use this the same way you use <b>ServerRunConn2()</b>,
+except you use the Stanard Input file descriptor directly instead of
+creating an Abyss socket.
+
+<p><b>TOsSocket</b> is a typedef for the type of a conventional socket
+in the operating system in question.  I.e. it is <b>int</b> on Unix
+and <b>SOCKET</b> on Windows.  You should use <b>int</b> or
+<b>SOCKET</b> instead of <b>TOsSocket</b> in your program.
+
+<h2 id="terminating">Terminating an Abyss Server</h2>
+
+<h3 id="ServerTerminate"><b>ServerTerminate()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+
+static void
+sigtermHandler(int const signalClass) {
+
+  ServerTerminate(&amp;abyssServer);
+}
+
+struct sigaction mysigaction;
+mysigaction.sa_flags = 0;
+mysigaction.sa_handler = sigtermHandler;
+SIGACTION(SIGTERM, &amp;mysigaction, NULL);
+
+...
+
+ServerRun(&amp;abyssServer);
+
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerTerminate(TServer * serverP);
+</code>
+</pre>
+
+<p>This function causes an Abyss server that is running to terminate,
+and to terminate immediately if it starts running in the future.
+
+<p>Because a program that starts a server running does not regain
+control as long as the server is running, this is meant to be called
+from a separate thread or signal handler or from an Abyss HTTP request
+handler.
+
+<p>If you have a signal handler that calls <b>ServerTerminate()</b> and the
+process receives a signal while the server is running, the server will
+terminate (<b>ServerRun()</b> or the like will return) soon after the signal
+handler returns.  If the server is processing an HTTP request when the process
+receives the signal, it will not terminate until it is done with that
+request.
+
+<p>You can call this from an Abyss HTTP request handler, as long
+as that request handler is running in the same process that waits for
+and accepts new connections.  If, on the other hand, you are running
+Abyss in a mode in which it processes connections in the background and
+you have a system in which it does that by way of a Unix fork, a
+<b>ServerTerminate()</b> from inside an Abyss HTTP request handler has
+no effect.
+
+<p>If you are running the server in a mode in which it processes
+connections in the background (i.e. in separate threads or processes),
+<b>ServerTerminate()</b> affects only the foreground thread that waits
+for, accepts, and dispatches new connections.  The background threads
+that process connections continue normally to completion in their own
+time.
+
+<p>This function was new in Xmlrpc-c 1.06 (June 2006).  Before that, there is
+no way to terminate a running Abyss server.  Before Xmlrpc-c 1.14 (March 2008)
+on Unix and Xmlrpc-c 1.25 (December 2010) on Windows, <b>ServerTerminate()</b>
+does not take effect until after the server has accepted another connection
+from a client or a signal handler (including the one that
+calls <b>ServerTerminate()</b>) returns (i.e. <b>ServerTerminate()</b> does
+not wake up a sleeping server).
+
+
+<h3 id="ServerResetTerminate"><b>ServerResetTerminate()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+
+...
+
+ServerResetTerminate(&amp;abyssServer);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerResetTerminate(TServer * serverP);
+</code>
+</pre>
+
+<p>This function resets the termination requested status of an Abyss
+server that you previously set with <b>ServerTerminate()</b>.  As long
+as termination is requested, the server will stop as soon as you
+start it (e.g. <b>ServerRunOnce()</b> will return immediately without
+processing any connection).
+
+<p>You can use this function if, after you have terminated a server by
+calling <b>ServerTerminate()</b>, you want to start it running again.
+
+<p>You can also use this to abort a previously requested termination.
+If, though you called <b>ServerTerminate()</b>, the server is still
+running because it is still processing a connection,
+<b>ServerResetTerminate()</b> will cause it to forget about the
+termination request and keep running even after it is finally done
+with that connection.
+
+<p>This function was new in Xmlrpc-c 1.06 (June 2006).
+
+
+<h2 id="handlers">HTTP Request Handlers</h2>
+
+<p>By default, Abyss implements HTTP requests from clients in
+conventional web server ways.  For example, when the server gets an
+HTTP GET request from a client, the server sends the file named in the
+request (which typically contains a web page in HTML) back to the
+client.
+
+<p>But you can make an Abyss server handle an HTTP request any way you
+like by installing an HTTP request handler.  You might install a
+handler for GET requests that generates web page contents
+computationally instead of just pulling them out of a file.
+
+<p>In particular, you make an XML-RPC server out of an Abyss server by
+installing an HTTP request handler for POST requests.  That handler
+interprets the document sent by the client as an XML-RPC call,
+executes the XML-RPC method it specifies, and sends the XML-RPC result
+back as the HTTP response document.
+
+<p>Abyss itself knows nothing about XML-RPC.  Another component of
+Xmlrpc-c (<b>libxmlrpc_server_abyss</b>) installs the necessary HTTP
+request handlers to make the server an XML-RPC server.
+
+<p>Abyss passes to your HTTP request handler a handle for the Abyss
+session for the HTTP request you are supposed to handle.  Abyss
+provides various services to give you the information about that
+session that you need to handle the request.  For example, you can
+find out the contents of various HTTP headers and get the body of the
+request.  Other services let your handler tell Abyss how to complete
+the request.  For example, you can supply the HTTP response body.
+
+<p>You register with Abyss any number of HTTP request handlers.  Each
+handler is responsible for examining the HTTP request and deciding
+whether it is the appropriate handler for it.  If it is not, the
+handler returns with an indication of that fact and Abyss tries a
+different handler.
+
+<p>If none of your handlers claims the HTTP request, Abyss uses a
+default handler.  By default, the default handler is a builtin one,
+but you can replace it with one of your own.
+
+<p>When an Abyss server terminates, it calls the termination function
+of every HTTP request handler that has one.
+
+
+<h3 id="managinghandlers">Managing Handlers</h3>
+
+<p>You declare the set of HTTP request handlers (not counting those
+that are built into Abyss) for a server by calling
+<b>ServerAddHandler3()</b> for each.  You must do this before running
+the server (e.g. by calling <b>ServerRun()</b>).  You cannot remove a
+handler.
+
+
+<p>A <em>default</em> HTTP request handler is a different thing.
+
+<p>You declare your default HTTP request handler with <a
+href="#ServerDefaultHandler"><b>ServerDefaultHandler()</b></a>.  If
+you don't, the server supplies a built-in default HTTP request handler
+of its own that does basic web site serving.
+
+<p>The argument of <b>ServerDefaultHandler()</b> is a function pointer
+of type <b>THandlerDflt</b>:
+
+<pre>
+<code>
+    typedef abyss_bool (*THandlerDflt) (TSession *);
+</code>
+</pre>
+
+<p>The return code is either historical or for future expansion.  The
+server does not use it, but you should return TRUE.  Your default HTTP
+request handler does not have the option of failing or refusing.  It
+must generate an HTTP response, even if that response indicates that
+the whole request has gone pear-shape.
+
+<p>The function must use at most 128K of program stack space.
+
+<p>You can set the default HTTP request handler multiple times; only
+the last one counts.  You can even use <b>ServerDefaultHandler()</b>
+to restore the built-in handler after having set something else.
+
+
+<h4 id="ServerAddHandler3"><b>ServerAddHandler3()</b></h4>
+
+<p>Example:
+<pre>
+<code>
+    TServer server;
+    static void
+    handleRequest(void *        const handler,
+                  TSession *    const sessionP,
+                  abyss_bool *  const handledP) {
+
+        ResponseStatus(sessionP, 500);  /* HTTP server error */
+        ResponseError2(sessionP, &quot;Handler is just an example&quot;);
+        *handledP = TRUE;
+    }
+    abyss_bool succeeded;    
+
+    struct ServerReqHandler3 {
+        .handleReq = handleRequest;
+    } handler;
+
+    ServerCreate(&amp;server, ...);
+
+    ServerAddHandler3(&amp;server,
+                      &amp;handler,
+                      &amp;succeeded);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    typedef void (*termHandlerFn)(void *);
+    
+    typedef void (*handleReq3Fn)(void *,
+                                 TSession *,
+                                 abyss_bool *);
+
+    struct ServerReqHandler3 {
+        handleReq3Fn  handleReq;
+        void *        userdata;
+        size_t        handleReqStackSize;
+        termHandlerFn term;
+    };
+    
+    void
+    ServerAddHandler3(TServer *                        serverP,
+                      const struct ServerReqHandler3 * handlerP,
+                      abyss_bool *                     successP);
+</code>
+</pre>
+
+<p>This function adds an <a href="#handlers">HTTP request handler</a>
+to an Abyss server.
+
+<p><i>serverP</i> is the handle of the Abyss server to which you are adding
+the handler.
+
+<p><i>handlerP</i> points to a structure the describes your handler.  The
+structure has no higher meaning -- it is just a convenient way to pass
+arguments to <b>ServerAddHandler3</b>.  It is designed so that the
+value that means &quot;not present&quot; for any optional member is
+represented as zero bits.
+
+<ul>
+
+  <li><i>handleReq</i> is the function that the server calls when there is an
+  HTTP request to handle, as described at the beginning of
+  <a href="#handlers">HTTP Request Handlers</a>.
+
+  <p>Its first argument is the value of the <i>userdata</i> member (below).
+  Its second argument is the handle for the Abyss session in which the
+  request is happening.  The third is a pointer to a variable in which
+  the handler function returns &quot;true&quot; if it has handled the
+  request and &quot;false&quot; if it is not the appropriate handler
+  for that request.
+  </li>
+
+  <li><i>userdata</i> is a value that the server passes to the
+  <i>handleReq</i> and <i>term</i>.  It means nothing to Abyss; it should
+  mean something to your code.</li>
+  
+  <li><i>handleReqStackSize</i> is the amount in bytes of stack space
+  <i>handleReq</i> may use.  If you make this too small, results are
+  unpredictable -- often you get memory corruption.  If you make it too
+  large, you may waste memory.  Zero means you don't know, which causes
+  Abyss to assume 128K.</li>
+  
+  <li><i>term</i> is the function that the server calls when the server
+  terminates, as described at the beginning of <a href="#handlers">HTTP
+  Request Handlers</a>.  NULL  means none.
+
+  <p>The function's argument is the value of the <i>userdata</i> member
+  (see above).
+  </li>
+</ul>
+
+<p><i>successP</i> is a pointer to a return variable.
+<b>ServerAddHandler3()</b> returns <b>TRUE</b> if it successfully adds
+the handler; <b>FALSE</b> otherwise.
+
+<p>Note that the arguments do not tell what kind of HTTP requests the
+handler handles.  The server passes <i>every</i> request to the
+handler and the code of the handler function (<b>myHandlerFunc()</b>
+in the example above) decides whether this handler is the right one
+for that request.  (This is explained in detail above).
+
+<p>This function was new in Xmlrpc-c 1.16 (September 2008).  With older
+Xmlrpc-c, use <a href="#ServerAddHandler2"><b>ServerAddHandler2()</b></a>
+
+
+<h4 id="ServerAddHandler2"><b>ServerAddHandler2()</b></h4>
+
+<P>This is obsolete.  Use <a
+href="#ServerAddHandler3"><b>ServerAddHandler3()</b></a> instead if
+possible.
+
+<p>Prototype:
+
+<pre>
+<code>
+    typedef void (*handleReq2Fn)(struct URIHandler2 *,
+                                 TSession *,
+                                 abyss_bool *);
+
+    typedef struct URIHandler2 {
+        initHandlerFn init;
+        termHandlerFn term;
+        handleReq2Fn  handleReq2;
+        URIHandler    handleReq1;  /* deprecated */
+        void *        userdata;
+    } URIHandler2;
+
+    void
+    ServerAddHandler2(TServer *     srvP,
+                      URIHandler2 * handlerP,
+                      abyss_bool *  successP);
+</code>
+</pre>
+
+<p>This function adds an <a href="#handlers">HTTP request handler</a>
+to an Abyss server.
+
+<i>srvP</i> is the handle of the Abyss server to which you are adding
+the handler.
+
+<i>handlerP</i> is a pointer to a description of the handler.  It
+is the same as the identically named argument to
+<b>ServerAddHandler3</b> except that it lacks the stack size
+member and it has an <i>init</i> member.  <i>init</i> is a pointer
+to the initialization function (see below).  NULL means none.
+
+<i>successP</i> is a pointer to a return variable.
+<b>ServerAddHandler2()</b> returns <b>TRUE</b> if it successfully adds
+the handler; <b>FALSE</b> otherwise.
+
+<p>This is a rather odd interface (one of the reasons it's obsolete
+because it sort of treats the <b>URIHandler2</b> structure as an
+object.  In an earlier design, it was a pointer to that structure that
+got passed to the request handler and initialization
+&quot;methods.&quot; Now, what gets passed is a pointer to a copy of
+that structure, so that the caller of <b>ServerAddHandler2</b> doesn't
+have to keep it around, and the only practical member of the structure
+for the &quot;method&quot; to access is <i>userdata</i>.
+
+<p>When an Abyss server begins to run, it calls the initialization
+function of each HTTP request handler that has one.  The
+initialization function returns a success or failure indication, and
+if it returns failure, Abyss never uses that handler.  It doesn't have
+much practical use, but fits logically with the original object
+oriented nature of this interface.
+
+<p>When an Abyss server terminates, it calls the termination function
+of every HTTP request handler that has one and whose initialization
+function returned success.
+
+<p><b>ServerAddHandler2()</b> was new in Xmlrpc-c 1.03 (June 2005).
+In older Xmlrpc-c, use <a
+href="#ServerAddHandler"><b>ServerAddHandler()</b></a>.
+
+<h4 id="ServerAddHandler"><b>ServerAddHandler()</b></h4>
+
+<P>This is obsolete.  Use <a
+href="#ServerAddHandler3"><b>ServerAddHandler3()</b></a> instead if
+possible.
+
+
+<h4 id="ServerDefaultHandler"><b>ServerDefaultHandler()</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+    TServer server;
+
+    static abyss_bool
+    myDefaultHandler(TSession * const serverP) {
+        ResponseStatus(sessionP, 500);  /* HTTP server error */
+        ResponseError2(sessionP, &quot;Handler is just an example&quot;);
+        return TRUE;
+    }
+
+    ServerCreate(&amp;server, ...);
+
+    ServerDefaultHandler(&amp;server, myDefaultHandler);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ServerDefaultHandler(TServer *    serverP,
+                         THandlerDflt handler);
+</code>
+</pre>
+
+<p>This function sets the <a href="#handlers">default HTTP request
+handler</a> for a server.
+
+<p>When you create a server, its default HTTP request handler is a built-in
+one.  You can use this function to override that.  You can call this
+function multiple times for the same server, and only the last one has
+effect.
+
+<p><i>serverP</i> identifies the server whose default HTTP request handler
+you are setting.
+
+<p><i>handler</i> is a function pointer for your handler function.
+Specify NULL to select the built-in one.  (Since that's the default,
+the only time you would need this is when for some reason you have
+previously set the default HTTP request handler to something else).
+
+<P>Your <i>handler</i> function may use up to 128K of stack space.
+
+
+<h3 id="requesthandlerservice">Request Handler Services</h3>
+
+<p>This section describes Abyss services that an HTTP Request Handler
+can call.
+
+<p>Each of these functions takes an Abyss session handle as an
+argument.  An Abyss session is the entity Abyss uses to track a single
+HTTP request.  Abyss passes the relevant handle to your HTTP request
+handler as an argument.
+
+<h4 id="SessionGetRequestInfo"><b>SessionGetRequestInfo()</b></h4>
+
+<p>This function gets a variety of information about the HTTP request,
+mainly from the HTTP headers.
+
+<p>Example:
+
+<pre>
+<code>
+    TRequestInfo * requestInfoP;
+
+    SessionGetRequestInfo(abyssSessionP, &amp;requestInfoP);
+
+    if (requestInfoP-&gt;method == m_get)
+        printf(&quot;Request for file name '%s'!&quot;, requestInfoP-&gt;uri);
+
+    free(requestInfoP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    SessionGetRequestInfo(TSession *            sessionP,
+                          const TRequestInfo ** requestInfoPP);
+    
+</code>
+</pre>
+
+
+<h4 id="SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></h4>
+
+<p>This function gets information about the channel over which the
+HTTP request is being conducted.  For example, in a typical server, it
+tells you the IP address and TCP port number of the HTTP client.
+
+<p>Example:
+
+<pre>
+<code>
+    struct abyss_unix_chaninfo * chanInfoP;
+    SessionGetChannelInfo(abyssSessionP, &amp;(void*)chanInfoP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+    void
+    SessionGetChannelInfo(TSession * sessionP,
+                          void **    channelInfoPP);
+<code>
+
+</code>
+</pre>
+
+<p>The value *<i>channelInfoPP</i> that the function returns is a
+pointer to a structure whose format and contents is entirely dependent
+on the type of channel in use, and a particular handler should be
+designed to expect the channel to be of a particular type.  The same
+code that adds that handler to the Abyss server also determines what
+sort of channel that Abyss server will use to talk to clients.
+
+<p>If the channel over which the HTTP request is being conducted is
+one that your program supplied with <b>ServerRunChannel()</b>, the
+channel information returned is the information you supplied as an
+argument to <b>ServerRunChannel()</b>.
+
+<p>If the channel was created by a Unix type channel switch, the
+information returned is a <b>struct abyss_unix_chaninfo</b>.
+
+<p><b>SessionGetChannelInfo()</b> returns a pointer to storage owned
+by the Abyss server.  You must access it only while the handler
+function that called the function is running, and you do not
+explicitly release it or free the memory.
+
+<p><b>SessionGetChannelInfo()</b> was new in Xmlrpc-c 1.07 (October
+2006).  Before that, there is no way for an HTTP request handler to
+find out information such as the IP address of the client.
+
+
+<h4 id="RequestAuth"><b>RequestAuth()</b></h4>
+
+<p>This function authenticates the requester, in a very simplistic fashion.
+
+<p>If the request specifies basic authentication (via an Authorization header)
+with username and password equal to values you specify, <b>RequestAuth()</b>
+considers the requester authentic.  Otherwise, it doesn't.
+
+<p>Note that you ask about exactly one username; if you have a database of
+known users, you have to call <b>RequestAuth()</b> once for every user
+until one of them passes authentication.
+
+<p>When <b>RequestAuth()</b> doesn't authenticate the user, it sets up
+an authorization failure reponse (HTTP response status 401) that says the
+user must supply an identity.
+
+<p>Once <b>RequestAuth()</b> has determined that the requester is authentic,
+a <b>SessionGetRequestInfo()</b> tells you the requester's username.
+
+
+<p>Example:
+
+<pre>
+<code>
+    bool authenticated;
+
+    authenticated = RequestAuth(abyssSessionP, &quot;mydomain&quot;,
+                                &quot;johnsmith&quot;, &quot;passw0rd&quot;)
+
+    if (authenticated)
+        processRequest(abyssSessionP);
+
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    bool
+    RequestAuth(TSession *   const sessionP,
+                const char * const credential,
+                const char * const user,
+                const char * const pass) {
+</code>
+</pre>
+
+<p><i>sessionP</i> identifies the session in which the request in question
+is executing.
+
+<p><i>credential</i> names the user identity domain in which you expect the
+username the user supplied to exist.  The only effect of this argument is that
+when <b>RequestAuth()</b> prepares a failure response due to lack of
+authentication, that response tells the user to supply a username in this
+domain.
+
+<p><i>user</i> and <i>pass</i> are the single username and password the user
+must have supplied with the HTTP request in order for <b>RequestAuth()</b> to
+consider the identity authentic.
+
+<p>The return value is true if the identity is authentic; false otherwise.
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>This section describes some facilities and techniques for debugging
+programs that use <b>libxmlrpc_abyss</b>.
+
+<h3 id="standard_error">Standard Error</h3>
+
+<p>The trace facilities described here write messages to the Standard
+Error file descriptor via the Standard Error stream of the standard C
+library (<b>stderr</b>).  So make sure you have one.  Many server
+processes don't (they explicitly close the one that the system setup
+code provides).
+
+<h3 id="abyss_trace_conn">ABYSS_TRACE_CONN environment variable</h3>
+
+<p>If you set the <b>ABYSS_TRACE_CONN</b> environment variable to
+<b>1</b>, the Abyss server will print messages to Standard Error showing
+you the activity on each HTTP connection.  In particular, it shows you
+the HTTP data flow: headers and body of both request and response.
+
+<p>If your server is an XML-RPC server based on
+<b>libxmlrpc_server_abyss</b> and you don't have any reason to
+question the HTTP part of the protocol, you may prefer to use <a
+href="libxmlrpc_server.html#debugging"> facilities of
+<b>libxmlrpc_server</b></a> to print just the XML-RPC XML (i.e. the
+HTTP request and response bodies).
+
+<h3 id="abyss_trace_channel">ABYSS_TRACE_CHANNEL environment variable</h3>
+
+<p>If you set the <b>ABYSS_TRACE_CHANNEL</b> environment variable to
+<b>1</b>, the Abyss server will print messages to Standard Error
+showing <a href="#channels">channel</a>-level operation.  You will see
+where channels get created and destroyed.  You will see each read and
+write of the channel, but you won't see the contents (To see the data,
+use the higher level
+<b>ABYSS_TRACE_CONN</b> trace).  This is mainly useful if you suspect
+something funny with the network.
+
+<h3 id="abyss_trace_switch">ABYSS_TRACE_SWITCH environment variable</h3>
+
+<p>If you set the <b>ABYSS_TRACE_SWITCH</b> environment variable to
+<b>1</b>, the Abyss server will print messages to Standard Error
+showing the operation of <a href="#channels">channel switches</a>.
+This is mainly useful if you suspect something funny with the network.
+
+</body>
+</html>

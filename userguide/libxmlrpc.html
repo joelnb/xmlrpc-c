@@ -1,0 +1,2926 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C</a>.
+
+<p><b>libxmlrpc</b> provides fundamental services that are useful in
+XML-RPC clients and servers.  For example, it contains functions that
+manipulate the various data types defined by XML-RPC.  You use these
+services with every other Xmlrpc-c library (except
+<b>libxmlrpc_abyss</b>), and those libraries also use <b>libxmlrpc</b>
+internally.  Few Xmlrpc-c applications use only <b>libxmlrpc</b>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Almost everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.  But you will find that the official
+specification of the protocol is riddled with ambiguity and other usability
+problems.  <a href="http://effbot.org/zone/xmlrpc-errata.htm">This page</a>
+adds to it and accurately describes most so-called &quot;XML-RPC&quot;
+clients and servers.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#libraryinit">Initializing the Library</a>
+<li><a href="#xmlrpc_value">XML-RPC Values</a>
+  <ul>
+    <li><a href="#valueshare">Sharing</a>
+    <li><a href="#valuetype">Types Of Values</a>
+    <ul>
+      <li><a href="#stringtype">String</a>
+      <li><a href="#bytestringtype">Byte String</a>
+      <li><a href="#datetimetype">Datetime</a>
+      <li><a href="#extensiontype">XML-RPC Extension Types</a>
+      <li><a href="#nonxmlrpctype">Non-XML-RPC Types</a>
+      <li><a href="#typemanip">Type Manipulations</a>
+    </ul>
+    <li><a href="#refcount">Reference Counting</a>
+    <li><a href="#creatingxmlrpcvalue">Creating An Xmlrpc_value</a>
+    <ul>
+      <li><a href="#creatingsimple">Creating A Simple Xmlrpc_value</a>
+      <ul>
+        <li><a href="#number">Number</a>
+        <li><a href="#boolean">Boolean</a>
+        <li><a href="#string">String</a>
+        <li><a href="#datetime">Date/Time</a>
+        <li><a href="#bits">Bits</a>
+        <li><a href="#cptr">Arbitrary C Object</a>
+      </ul>
+      <li><a href="#creatingarray">Creating An Array</a>
+      <ul>
+        <li><a href="#xmlrpc_array_new"><b>xmlrpc_array_new()</b></a>
+        <li><a href="#xmlrpc_array_append_item">
+            <b>xmlrpc_array_append_item()</b></a>
+      </ul>
+      <li><a href="#creatingstructure">Creating A Structure</a>
+      <ul>
+        <li><a href="#xmlrpc_struct_new"><b>xmlrpc_struct_new()</b></a>
+        <li><a href="#xmlrpc_struct_set_value">
+            <b>xmlrpc_struct_set_value()</b></a>
+      </ul>
+      <li><a href="#buildvalue"><b>xmlrpc_build_value()</b></a>
+    </ul>
+    <li><a href="#interpreting">Interpreting An Xmlrpc_value</a>
+      <ul>
+        <li><a href="#interpretingsimple">
+             Interpreting A Simple Xmlrpc_value</a>
+        <ul>
+          <li><a href="#interpretnumber">Number</a>
+          <li><a href="#interpretboolean">Boolean</a>
+          <li><a href="#interpretstring">String</a>
+          <li><a href="#interpretdatetime">Date/Time</a>
+          <li><a href="#interpretbits">Bits</a>
+          <li><a href="#interpretnil">Nil</a>
+          <li><a href="#interpretcptr">C Pointer</a>
+        </ul>
+
+        <li><a href="#interpretingarray">Interpreting An Array</a>
+        <li><a href="#interpretingstructure">Interpreting A Structure</a>
+        <li><a href="#decomposevalue"><b>xmlrpc_decompose_value()</b></a>
+        <li><a href="#parsevalue"><b>xmlrpc_parse_value()</b></a>
+      </ul>
+    <li><a href="#formatstring">Format Strings</a>
+      <ul>
+        <li><a href="#simpleformat">Simple Format Specifiers</a>
+        <li><a href="#compoundformat">Compound Format Specifiers</a>
+      </ul>
+  </ul>
+<li><a href="#xmlencodedecode">XML Encoding And Decoding</a>
+  <ul>
+    <li><a href="#limit">Resource Limits</a>
+      <ul>
+        <li><a href="#limit_set"><b>xmlrpc_limit_set()</b></a>
+        <li><a href="#limit_get"><b>xmlrpc_limit_get()</b></a>
+      </ul>
+    <li><a href="#xmlencoding">XML Encoding</a>
+      <ul>
+        <li><a href="#serialize_call"><b>xmlrpc_serialize_call()</b></a>
+        <li><a href="#serialize_call2"><b>xmlrpc_serialize_call2()</b></a>
+        <li><a href="#serialize_response">
+            <b>xmlrpc_serialize_response()</b></a>
+        <li><a href="#serialize_response2">
+            <b>xmlrpc_serialize_response2()</b></a>
+        <li><a href="#serialize_fault"><b>xmlrpc_serialize_fault()</b></a>
+        <li><a href="#serialize_params2"><b>xmlrpc_serialize_params2()</b></a>
+        <li><a href="#serialize_value2"><b>xmlrpc_serialize_value2()</b></a>
+      </ul>
+    <li><a href="#xmldecoding">XML Decoding</a>
+      <ul>
+        <li><a href="#parse_value_xml"><b>xmlrpc_parse_value_xml</b></a>
+        <li><a href="#parse_call"><b>xmlrpc_parse_call()</b></a>
+        <li><a href="#parse_response"><b>xmlrpc_parse_response2()</b></a>
+        <li><a href="#parse_response"><b>xmlrpc_parse_response()</b></a>
+      </ul>
+      <li><a href="#xmlcharacter">Character Set/Encoding</a>
+  </ul>
+<li><a href="#jsonencodedecode">JSON Encoding And Decoding</a>
+  <ul>
+    <li><a href="#jsonencoding">JSON Encoding</a>
+    <li><a href="#jsondecoding">JSON Decoding</a>
+  </ul>
+<li><a href="#version">Library Version</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc.h&gt;</B> header file declares the interface
+to <b>libxmlrpc</b> and many other things described in this chapter.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the <b>libxmlrpc</b>
+library is <b>libxmlrpc.a</b> or <b>libxmlrpc.so</b>.  The classic
+linker option to cause the library to be linked into your program is
+<tt>-l xmlrpc</tt>.  These are hints; you'll have to modify this
+according to conventions of your particular platform.  You'll also
+have to figure out where the library resides and how to make your
+linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+
+<h2 id="libraryinit">Initializing the Library</h2>
+
+<p>Any program that uses <b>libxmlrpc</b> should invoke
+<b>xmlrpc_init</b> as it starts up and <b>xmlrpc_term</b> as it shuts down.
+It should call <b>xmlrpc_init</b> while the program is still one thread, before
+it has generated any additional ones, and should call <B>xmlrpc_term</B> when
+the program is once again one thread, having joined with any others.  The
+call to <b>xmlrpc_init</b> must be before any other call to a <b>libxmlrpc</b>
+function or a function of any other Xmlrpc-c library that depends upon
+<b>libxmlrpc</b>, except that the program may (and must)
+call <b>xmlrpc_env_init</b> beforehand, since <b>xmlrpc_init</b> uses an
+<a href="libxmlrpc_util.html#env">error environment variable</a>.  Likewise,
+there must be no call to such a function after <b>xmlrpc_term</b>.
+
+<p>Examples:
+
+<pre>
+<code>
+    xmlrpc_env env;
+    xmlrpc_env_init(&amp;env);
+    xmlrpc_init(&amp;env);
+    ...
+    xmlrpc_term();
+</code>
+</pre>
+
+<p>A program may call these more than once; the number of <b>xmlrpc_term</b>
+calls must match the number of <b>xmlrpc_init</b> calls and only the first
+<b>xmlrpc_init</b> call and the last <b>xmlrpc_term</b> call has effect.
+(The only reason you'd want to call them more than once is if you have a
+modular program.  For example, if you have multiple libraries that each uses
+<b>libxmlrpc</b>, each library would initialize and
+terminate <b>libxmlrpc</b>).
+
+<p>While these calls are logically required, there's actually little
+practical reason for them.  The functions did not exist before 
+Xmlrpc-c 1.33 (December 2012), so most programs do not call them, and nothing
+has changed yet to make them more necessary.  However, that could change in
+future releases.
+
+<p>Xmlrpc-c does not itself maintain any static state and probably never will,
+so the only reason for these functions is that libraries that Xmlrpc-c uses
+do, and it is through these functions that Xmlrpc-c initializes and terminates
+those libraries.
+
+<p>As of Xmlrpc-c 1.33, the only known effect of not doing <b>xmlrpc_init</b>
+and <b>xmlrpc_term</b> is that a program that uses a version of Xmlrpc-c that
+uses <b>libxml2</b> for XML parsing will appear to leak memory if you don't
+initialize and terminate the library.  A memory allocation analyzer such as
+Valgrind will show that as the program exits, it still has memory allocated.
+This doesn't matter, of course, but it does complicate your search for more
+significant memory leaks.
+
+
+<h2 id="xmlrpc_value">XML-RPC Values</h2>
+
+<p>The C type <b>xmlrpc_value</b> is an XML-RPC value (i.e. what you
+could represent with a &lt;value&gt; XML element).  But Xmlrpc-c uses this
+type for a few things besides values that will end up in an XML-RPC stream.
+
+<p>Examples of the kinds of value that an XML-RPC value could be are:
+
+<ul>
+<li>An integer
+<li>An array of text strings
+<li>A structure consisting of two integers and an array of text strings
+</ul>
+
+<p>Do not confuse XML-RPC types with the various C types the Xmlrpc-c
+libraries define and use.  For example, <b>&lt;xmlrpc-c/base.h&gt;</b>
+defines a typedef <b>xmlrpc_bool</b> to represent a boolean value,
+simply as an integer where 0 means false and 1 means true.  This has
+nothing to do with the boolean XML-RPC type, which represents a
+boolean value in a much more complex way.
+
+<h3 id="valueshare">Sharing</h3>
+
+<p><b>xmlrpc_value</b> is designed for cheap copies by just copying a pointer.
+This has two major ramifications:
+
+<ul>
+<li><b>xmlrpc_value</b> is read-only.
+<li>Before Xmlrpc-c 1.33 (December 2012), you must not access an
+<b>xmlrpc_value</b> from two threads simultaneously.
+</ul>
+
+<p>The read-only requirement says that after you've constructed an
+<b>xmlrpc_value</b>, you must not modify it.  For the purposes of this
+read-only requirement, we define two phases of the life of
+an <b>xmlrpc_value</b>: construction and use.  During construction, you can
+modify the object as much as you want, for example you could iteratively add
+elements to an array.  But during this phase, you must not <em>use</em> the
+value for anything.  During the use phase, you can use the value, but not
+modify it (except to change its reference count).  An example of an illegal
+use of <b>xmlrpc_value</b> would be to create an array of 4 elements and use
+it as a parameter to an XML-RPC call, then add 2 more elements and use it as a
+parameter to a second XML-RPC call.
+
+<p>In the construction phase, <b>xmlrpc_value</b> is not thread-safe, so don't
+try to have multiple threads construct an <b>xmlrpc_value</b> without
+serializing their accesses to the object (it would be weird to want to,
+anyway).
+
+<p>The libraries do not enforce this read-only two-phase requirement, but if
+you fail to observe it, you may have unpredictable results.
+
+<p>The simultaneous thread access limitation for early Xmlrpc-c flows from the
+fact that the cheap copies mentioned above involve reference counts, which get
+modified even in the use phase.  Before Xmlrpc-c 1.33, there is no
+serialization in the library for the reference counts, so to avoid undefined
+behavior, you can't ever manipulate the reference count of
+an <b>xmlrpc_value</b> from two threads at once.  And because Xmlrpc-c
+libraries manipulate these reference counts all the time internally and you
+can't know when that is, the discipline you must observe is never to have two
+threads simultaneously working in the same universe of
+<b>xmlrpc_value</b>s.  For example, if thread X were to look up an element of
+Array A, while Thread Y looks up an element of Array B, that could cause a
+problem if there is any chance there is a value V that was added to both
+arrays, since both arrays probably contain a pointer to V.  On the other hand,
+if Thread X built Array A out of <B>xmlrpc_value</B>s it created itself that
+no other thread knows about, and Thread Y similarly built Array B out of
+private <b>xmlrpc_value</b>s, then there is no chance of interference and the
+threads can proceed independently.
+
+
+<h3 id="valuetype">Types Of Values</h3>
+
+<p>XML-RPC was designed to make remote procedure calls look a lot like
+traditional in-program procedure calls, so the value types are meant
+to be very similar to the types you find in common programming
+languages.  The types fit fairly well with those commonly used in C
+programs.
+
+<p>An XML-RPC value has one of the following basic types.  Type
+<b>xmlrpc_type</b> is the type of an XML-RPC value.  These names
+are C macros for the corresponding value of a <b>xmlrpc_type</b>
+variable.
+
+<dl>
+<dt><b>XMLRPC_TYPE_INT      </b>
+<dd>An integer, 32 bit precision
+<dt><b>XMLRPC_TYPE_I8       </b>
+<dd>An integer, 64 bit precision
+<dt><b>XMLRPC_TYPE_BOOL     </b>
+<dd>A boolean (logical; true/false) value
+<dt><b>XMLRPC_TYPE_DOUBLE   </b>
+<dd>A floating point number
+<dt><b>XMLRPC_TYPE_DATETIME </b>
+<dd>Identifies a point in time
+<dt><b>XMLRPC_TYPE_STRING   </b>
+<dd>A text string
+<dt><b>XMLRPC_TYPE_BASE64   </b>
+<dd>A byte string
+<dt><b>XMLRPC_TYPE_NIL      </b>
+<dd>A non-value or absence of a value
+<dt><b>XMLRPC_TYPE_STRUCT   </b>
+<dd>A structure, analogous to a C struct.  A set of (name, XML-RPC value) 
+pairs.
+<dt><b>XMLRPC_TYPE_ARRAY    </b>
+<dd>An array of XML-RPC values
+<dt><b>XMLRPC_TYPE_C_PTR    </b>
+<dd>A pointer to a C variable.  This is meaningful only in the context of
+a particular running instance of a C program.
+</dl>
+
+Note that two of these basic types are compositions of XML-RPC values,
+so the definition is recursive and there is an infinite variety
+of XML-RPC values based on these basic types.
+
+<p>These types are largely self-explanatory, and we will not describe
+them all in detail, but some require more explanation.
+
+<h4 id="stringtype">String</h4>
+
+<h5>Definition</h5>
+
+<p>A string is, roughly speaking, a string of text such as
+&quot;hello world.&quot;  But there are some complex details you may
+need to know to use them in some cases.
+
+<p>An XML-RPC string is a sequence of characters and line delimiters.
+The characters can be any XML character except linefeed (aka LF, aka
+newline).  An XML character is any Unicode character except the
+control characters (those with code points 0 - 31), plus carriage
+return, line feed, and tab.
+
+<p>That's clear enough, but the situation is actually a lot less
+clear.  If you read the XML-RPC spec, you don't find those words in
+it, and in fact you find words that seem to say something quite
+different: &quot;Any characters are allowed in a string except &lt;
+and &amp;, which are encoded as &amp;lt; and &amp;amp;. A string can
+be used to encode binary data.&quot; I say the spec must be
+interpreted as if that whole sentence never happened.  There is a much
+more important requirement elsewhere in the spec that an XML-RPC
+message be an XML document, and this sentence conflicts with that.
+The sentence is actually gibberish in XML terminology:  The part about
+encoding binary data is OK, but it fails to specify a code in which to
+encode the binary data, and the one simple code that comes to mind is
+impossible in XML because of the fact there are some 8 bit numbers
+that are not legal XML characters.  For example, there is no XML
+character with code point 0.  Finally, it doesn't make any sense to
+have a string type that contains &quot;binary data&quot; because
+XML-RPC has another type just for that.
+
+<p>Consensus among people who have studied XML-RPC and XML is that the
+sentence quoted above should simply be read out of the XML-RPC spec.
+
+<p>The XML requirement, and common sense, then, lead you to the
+definition at the top of this section.
+
+<p>If you want to represent arbitrary 8 bit bytes, don't consider using
+an XML-RPC string for it.  See <a href="#bits">Bits</a> instead.
+
+<p>The definition speaks of a line delimiter.  Do not attempt to
+interpret this as a character or sequence of characters.  For the
+purposes of the definition, it is merely an abstract entity.
+Naturally, when we have to represent a line delimiter (for example, in
+the argument to a function that creates an <b>xmlrpc_value</b> object,
+or in an XML-RPC message) we will use characters to do so, but those
+characters are not the delimiter itself -- they are merely an encoding
+of it.
+
+<p>And now, I will modify the ideal definition above to get to the
+actual definition used in Xmlrpc-c.  The modifications make it more
+universally usable, if less clean.  The modification I make is to add
+to the set of possible characters all the missing control characters
+except line feed.  The main reason this extension is necessary is
+because of all the people who interpreted the poorly drafted XML-RPC
+spec differently and expected strings to be useful for transmitting
+arbitrary bytes masquerading as a UTF-8 encoding of a string.  Note
+that linefeed is still missing from the modified definition, but that
+is not a problem because the line delimiter can naturally take its
+place.
+
+<p>Beware: if you take advantage of this extension and send an XML-RPC
+message containing a string that contains, for example, a NUL (0x00)
+character, your XML-RPC message will not be a legal XML document and
+as a result, your XML-RPC partner may choke on it.  If you have a choice,
+stick to the pure definition of string and just don't ever create a
+string with the extended characters in it.
+
+<p>Now that we've covered what type of information can be represented
+by an XML-RPC string (and therefore a string <b>xmlrpc_value</b>), the
+following sections look at how one communicates that information to
+and from Xmlrpc-c library routines.
+
+<h5>Creating</h5>
+
+<p>The Xmlrpc-c functions that create a string <b>xmlrpc_value</b>
+take conventional C character arrays as the argument that describes
+the value of the string.
+
+<p>In these arrays, some functions recognize any of the three
+conventional ASCII line delimiters as line delimiters: CR, LF, and
+CRLF.  Some functions recognize only LF, which makes CR available
+to represent a CR character.
+
+<p>In these arrays, some functions recognize a NUL character as an
+end of string delimiter, while others have an explicit length
+argument, which makes NUL available to represent a NUL character.
+
+<p>Some of the functions take UTF-8 character arrays, while some take
+wide character (<b>wchar_t</b>) UTF-16 arrays.  See
+<a href="libgeneral.html#characterencoding">Character Encoding</a>.
+
+<p>ASCII character arrays are a subset of UTF-8 character arrays, so
+if you don't want to learn what UTF-8 and UTF-16 are all about, just
+stick to ASCII.  Note that all ASCII codes have zero for the high
+order bit of the byte, so if you're taking this easy route, make sure
+you never have a one in your high order bit.
+
+
+<h5>Examining</h5>
+
+<p>To extract the value of a string <b>xmlrpc_value</b> for use in your
+program, there are functions that are pretty much the converse of the
+creator functions described above.  The output is a character array in
+the same formats as the arguments to the creator functions.
+
+<p>For line delimiters, you can choose whether to get them as LF,
+CR, or CRLF.  LF is generally your best choice.
+
+<p>Before Xmlrpc-c 1.11 (June 2007), if you created a string
+<b>xmlrpc_value</b> directly (as opposed to extracting it from an
+XML-RPC message), these functions returned as line delimiters whatever
+you used in the argument to the creator function.
+
+
+<h5>Sending</h5>
+
+<p>When an Xmlrpc-c facility sends a string value in an XML-RPC
+message (or just encodes one for use in such a message), it
+represents the value as a sequence of XML characters which is the
+content of an XML <b>string</b> element, as specified by XML-RPC.
+
+<p>Xmlrpc-c represents each character of the XML-RPC string with the
+corresponding XML character (and if it's one of the extended
+characters, represents it &quot;as if&quot; it were a legal XML
+character).  It represents a line delimiter as a linefeed XML
+character.  As the contents of an XML element, the value cannot
+contain a '&lt;' or '&amp;' XML character, so instead Xmlrpc-c uses an
+XML entity reference (&amp;lt;, &amp;amp;) for those.  Similarly, an
+XML CR character has special meaning as a line delimiter (or half of
+one), so Xmlrpc-c uses an XML character reference (&amp;x0d;) for
+that.  Xmlrpc-c also uses an entity reference for '&gt;' (&amp;gt;),
+just for symmetry.
+
+<p>Remember that there is no such thing as a linefeed character in an
+XML-RPC string, so there is no question about how to represent that in
+an XML-RPC message.
+
+<p>To represent a line delimiter, Xmlrpc-c uses a linefeed XML character.  XML
+allows all three kinds of line delimiters: CR, LF, and CRLF.  You may think it
+would be a good idea to give the user control of which of these to use,
+especially since the <b>xmlrpc_value</b> creator functions recognize those
+same three delimiters.  But it really wouldn't help; it would just confuse.
+That's because XML clearly specifies that all three are equivalent, and
+mandates that an XML processor always render a line delimiter to its client as
+an LF.
+
+<p>Due to some unfortunate bad draftsmanship in the XML spec, the use
+in this section of the term &quot;XML character&quot; might be
+confusing.  In the XML spec, &quot;character&quot; is defined
+circularly, such that &quot;&lt;&quot; encodes a less-than character,
+but the ampersand, ell, tee, and semicolon that compose the code are
+also called characters.  But common sense should tell you what I mean.
+
+<p>Before Xmlrpc-c 1.11 (June 2007), Xmlrpc-c sends whatever line
+delimiter sequence you used in the argument to the function you used
+to create the <b>xmlrpc_value</b>.
+
+
+<h5>Receiving</h5>
+
+<p>When an Xmlrpc-c facility receives a string value in an XML-RPC
+message (or just decodes one from such a message), it interprets
+XML characters which are the content of an XML <b>string</b>
+element, as specified by XML-RPC.
+
+<p>Xmlrpc-c logically processes those characters as specified by
+XML (as an XML processor).  In the resulting character stream,
+Xmlrpc-c recognizes LF as a line delimiter and everything else as
+the corresponding XML-RPC string character.  In the case of an
+extended character (e.g. NUL), it recognizes the XML character it
+would be if it were a legal XML character.
+
+<p>N.B. Section 2.11 of the XML spec, which says the XML processor
+presents any of the three conventional line ending sequences (CR, LF,
+CRLF) in an XML document to its client as LF.
+
+
+<h4 id="bytestringtype">Byte String</h4>
+
+<h5>Definition</h5>
+
+<p>A byte string is an ordered sequence of bits, a multiple of 8 bits
+in length.  XML-RPC gives no meaning whatsoever to the bits.  An example
+of what this would be useful for is a GIF image.
+
+<p>The XML-RPC specification refers to this data type as
+&quot;base64,&quot; unfortunately, and inconsistently, confusing a
+data type with an encoding of a data type.
+
+<h5>Creating</h5>
+
+<p>The Xmlrpc-c functions that create a byte string
+<b>xmlrpc_value</b> take an array of unsigned characters and an
+unsigned integer for length as the arguments that describe the value
+of the byte string.  (In fact, in general Xmlrpc-c considers a signed
+character to be a character of text (or sometimes a byte of a
+multibyte encoding of a character of text) and an unsigned character to
+be an arbitrary byte).
+
+<h5>Examining</h5>
+
+<p>To extract the value of a byte string <b>xmlrpc_value</b> for use in your
+program, there are functions that are pretty much the converse of the
+creator functions described above.  The output is an unsigned character
+array and unsigned integer length.
+
+
+<h5>Sending</h5>
+
+<p>When an Xmlrpc-c facility sends a byte string value in an XML-RPC
+message (or just encodes one for use in such a message), it
+represents the value as a sequence of XML characters which is the
+content of an XML <b>base64</b> element, as specified by XML-RPC.
+
+<p>As specified by XML-RPC, Xmlrpc-c encodes the byte string in base64
+code.  XML-RPC isn't any more specific about what that code is, but
+Xmlrpc-c uses the code described by RFC 4648, with an XML line
+delimiter after every 76 characters (of code).
+
+<h5>Receiving</h5>
+
+<p>When an Xmlrpc-c facility receives a byte string value in an XML-RPC
+message (or just decodes one from such a message), it interprets
+XML characters which are the content of an XML <b>base64</b>
+element, as specified by XML-RPC.
+
+<p>As specified by XML-RPC, Xmlrpc-c decodes the byte string as base64.
+XML-RPC isn't any more specific about what that code is, but
+Xmlrpc-c uses the code described by RFC 4648, with an XML line
+delimiters anywhere within.  The line delimiters have no effect on the
+value Xmlrpc-c interprets.
+
+
+<h4 id="datetimetype">Datetime</h4>
+
+<h5>Definition</h5>
+
+<p>A datetime identifies an instant -- a point in time.
+
+<p>Note that this is not relative to some other time (such as the
+beginning of the day) and is not relative to a local (sun-based) time
+standard.  It's a simple point in time.
+
+<p>XML-RPC provides for indicating a datetime to one second
+granularity; The precision is infinite, but you can identify only
+the instants between the one-second periods of the UTC time scale.
+
+<p>Xmlrpc-c implements an extension of the XML-RPC datetime type that
+has microsecond granularity.
+
+
+<h5>Creating</h5>
+
+<p>The Xmlrpc-c functions that create a datetime <b>xmlrpc_value</b>
+take a variety of Unix standard datetime representations as arguments
+(e.g. <b>time_t</b>, <b>struct timeval</b>).  Where the argument
+specifies a datetime that cannot be represented in true XML-RPC
+(i.e. one that identifies a non-whole-second instant), Xmlrpc-c uses
+its XML-RPC extension.
+
+
+<h5>Examining</h5>
+
+<p>To extract the value of a datetime <b>xmlrpc_value</b> for use in your
+program, there are functions that are pretty much the converse of the
+creator functions described above.  Where you don't provide for extraction
+of the full precision of the value (e.g. the value is 01:05:06.3 and you
+use a function that extracts with one second granularity), the functions
+round down.
+
+
+<h5>Sending</h5>
+
+<p>When an Xmlrpc-c facility sends a datetime value in an XML-RPC
+message (or just encodes one for use in such a message), it represents
+the value as a <b>dateTime.iso8601</b>, as specified by XML-RPC.
+
+<p>Where that's not possible because the datetime is between whole
+seconds, Xmlrpc-c still uses <b>dateTime.iso8601</b>, but uses a
+natural extension of the XML-RPC format for its contents: the text
+representing the next earlier whole second datetime is followed by a
+decimal point and standard decimal fraction digits.  For example,
+&quot;20080628T18:48:05.123000 &quot;.  Xmlrpc-c always uses six
+digits after the decimal point, and rounds down if you specify a
+datetime that requires more than that.  But Xmlrpc-c always uses true
+XML-RPC (no decimal point and fraction) when it can.
+
+
+<h5>Receiving</h5>
+
+<p>When an Xmlrpc-c facility receives a datetime value in an XML-RPC
+message (or just decodes one from such a message), it interprets
+XML characters which are the content of an XML <b>dateTime.iso8601</b>
+element, as specified by XML-RPC.
+
+<p>Furthermore, Xmlrpc-c recognizes the subsecond extension described
+above.  It understands any number of digits (except 0) after the
+decimal point, but functions that query the value round the value down
+to a microsecond.
+
+
+<h4 id="extensiontype">XML-RPC Extension Types</h4>
+
+<p>The <b>XMLRPC_TYPE_NIL</b> type is <em>not</em> a type you can represent
+in XML-RPC.  But there is a common extension of XML-RPC that defines such
+a type (with the XML element type &quot;nil&quot;).  This type was new in
+Xmlrpc-c 1.02 (April 2005).
+
+<p>The same is true for <b>XMLRPC_TYPE_I8</b> This type was new in
+Xmlrpc-c 1.07 (October 2006).  In versions of Xmlrpc-c new enough to
+have this type, the interface header file declares macro
+XMLRPC_HAVE_I8.
+
+
+<h4 id="nonxmlrpctype">Non-XML-RPC Types</h4>
+
+<p>The <b>XMLRPC_TYPE_C_PTR</b> type is <em>not</em> a type you can represent
+in XML-RPC or any known extension of it.  This type exists because you may
+find it convenient to use <b>xmlrpc_value</b> in your program for objects
+not directly related to your use of XML-RPC.  (In fact, some people use it
+in a program that that doesn't involve XML-RPC at all).
+
+<p><b>XMLRPC_TYPE_CPTR</b> represents a pointer to an arbitrary C variable,
+much like a C <b>void *</b>.
+
+<P>You can optionally supply a destructor function when you construct
+the <b>xmlrpc_value</b>.  <b>libxmlrpc</b> calls that as it destroys
+the <b>xmlrpc_value</b>, so you can take advantage of <b>xmlrpc_value</b>
+reference counting to have self-destroying objects of any kind.
+
+<p>The destructor option was new in Xmlrpc-c 1.25 (December 2010).
+
+
+<h4 id="typemanip">Type Manipulations</h4>
+
+<p><b>xmlrpc_value_type()</b> returns the type (type <b>xmlrpc_type</b>)
+of a specified XML-RPC value.
+
+<p><b>xmlrpc_type_name()</b> gives a short textual name for a given
+type, e.g. <code>xmlrpc_type_name(XMLRPC_TYPE_INT)</code> returns the
+string &quot;INT&quot;.  This text is meant only to be displayed for
+humans.
+
+<p><B>XMLRPC_TYPE_CHECK()</B> <a href="libxmlrpc_util.html#throwerror">throws an
+error</a> if a given Xmlrpc-c value is not of a given type.
+
+<p>There is such a thing as an <b>xmlrpc_value</b> that is not valid.
+To <a href="libxmlrpc_util.html#assert">assert</a> that you (the coder) know that
+is not the case, you can use <b>XMLRPC_ASSERT_VALUE_OK()</b>.
+
+<p><b>XMLRPC_ASSERT_ARRAY_OK()</b> <a href="libxmlrpc_util.html#assert">asserts</a>
+that you (the coder) know that the indicated <b>xmlrpc_value</b> is valid and
+is an array.
+
+
+
+<h3 id="refcount">Reference Counting</h3>
+
+<p>An <b>xmlrpc_value</b> object has a reference count.  The program
+is allowed to access the <b>xmlrpc_value</b> object only when its
+reference count is positive.  An Xmlrpc-c library call that leaves the
+reference count of an <b>xmlprc_value</b> object zero also frees any
+resources (to wit, memory) that back the object.
+
+<p>Any Xmlrpc-c library function that returns a pointer to an
+<b>xmlrpc_value</b> object to you adds a reference to the object to
+cover your use of that pointer.  You own that reference.  You are
+responsible for releasing it eventually.  This includes functions that
+create an <b>xmlrpc_value</b> object.  A brand new object, returned to
+you, has a reference count of 1.
+
+<p>Note that when a function fails, it never returns any object to
+you.
+
+<p>Some older Xmlrpc-c library functions return pointers to 
+<b>xmlrpc_value</b> objects without adding a reference.  These are
+deprecated and have been replaced with proper reference counting
+alternatives.  This manual clearly identifies such functions.
+
+<p>When you stop using a reference to an object, decrease its
+reference count with <b>xmlrpc_DECREF()</b>.
+
+<p>When you create another reference to an object (e.g. by making a
+copy of its handle), you should increase the reference count with
+<b>xmlrpc_INCREF()</b>.
+
+<p>Whenever you pass an <b>xmlrpc_value</b> object to an Xmlrpc-c
+library function, the function might cause some other object to 
+refer to it, and consequently add a reference.
+
+<p>When you pass an <b>xmlrpc_value</b> object to an Xmlrpc-c function,
+just as when you do anything else with one, you must own a reference
+to it.
+
+
+<H3 id="creatingxmlrpcvalue">Creating An Xmlrpc_value</H3>
+
+<h4 id="creatingsimple">Creating A Simple Xmlrpc_value</h4>
+
+<p>The following functions create a simple (i.e. not array or structure)
+<b>xmlrpc_value</b>.
+
+<p>The function of these should be obvious.  Each creates a certain type
+of <b>xmlrpc_value</b>.
+
+<p>Each of these functions creates an <b>xmlrpc_value</b> with a 
+reference count of one, to cover your reference to it.  Be sure you
+decrement the reference count when you are done with it.
+
+<p>There are no functions to alter the value of an existing
+<b>xmlrpc_value</b>.  Since the object is supposed to represent an
+actual value, as opposed to a place to store a value, setting one
+doesn't make sense.  If you need to represent a different value from
+the one you have, you should destroy the old one and create a new one.
+
+<p>None of these &quot;new&quot; functions existed before Xmlrpc-c 1.02
+(April 2005).  In older versions, you use <b>xmlrpc_build_value()</b>
+instead.
+
+<h5 id="number">Number</h5>
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_int_new(xmlrpc_env * const envP,
+                   int          const intValue);
+    
+    xmlrpc_value *
+    xmlrpc_i8_new(xmlrpc_env * const envP,
+                  long long    const intValue);
+    
+    xmlrpc_value *
+    xmlrpc_double_new(xmlrpc_env * const envP,
+                      double       const doubleValue);
+</code>
+</pre>
+
+<p><b>xmlrpc_int_new()</b> generates a value whose type is an integer 
+of 32 bit precision (called &lt;int&gt; or &lt;i4&gt; in XML-RPC XML).
+
+<p><b>xmlrpc_double_new()</b> generates a value whose type is a double
+precision floating point number type value (called &lt;double&gt; in
+XML-RPC XML, equivalent to type &quot;double&quot; in C).
+
+<p><b>xmlrpc_i8_new()</b> generates a value whose type is an integer
+of 64 bit precision (called &lt;double&gt; in extended XML-RPC XML,
+equivalent to type &quot;long long&quot; in C).  Note that there is no
+such type in XML-RPC, but there is in a common extension to XML-RPC.
+
+<p><b>xmlrpc_i8_new()</b> was new in Xmlrpc-c 1.07 (October 2006).
+Before that, there was no defined way to represent 64 bit integers.
+In versions of Xmlrpc-c new enough to have this function, the macro
+<b>XMLRPC_HAVE_I8</b> is defined in the interface header file.
+
+
+<h5 id="boolean">Boolean</h5>
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_bool_new(xmlrpc_env * const envP,
+                    xmlrpc_bool  const boolValue);
+</code>
+</pre>
+
+
+<h5 id="string">String</h5>
+
+<p>Examples:
+
+<pre>
+<code>
+    xmlrpc_value * myStringP;
+
+    myStringP = xmlrpc_string_new(&amp;env, &quot;hello world&quot;);
+
+    myStringP = xmlrpc_string_new_lp(&amp;env, &quot;hello\0world&quot;, 11);
+
+    myStringP = xmlrpc_string_new_f(&amp;env, &quot;The result is %d&quot;, 7);
+
+    va_list args;
+    va_start(args, format);
+    myStringP = xmlrpc_string_new_va(&amp;env, &quot;The result is %d&quot;, args)
+    va_end(args) 
+
+    myStringP = xmlrpc_string_new_cr(&amp;env, &quot;hello world\r&quot;);
+
+    myStringP = xmlrpc_string_new_lp(&amp;env, &quot;\0\r\n&quot;, 3);
+</code>
+</pre>
+
+
+<p>Overview:
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_string_new(xmlrpc_env * const envP,
+                      const char * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_new_lp(xmlrpc_env * const envP, 
+                         size_t       const length,
+                         const char * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_new_f(xmlrpc_env * const envP,
+                        const char * const format,
+                        ...);
+
+    xmlrpc_value *
+    xmlrpc_string_new_va(xmlrpc_env * const envP,
+                         const char * const format,
+                         va_list            args);
+
+    xmlrpc_value *
+    xmlrpc_string_w_new(xmlrpc_env *    const envP,
+                        const wchar_t * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_w_new_lp(xmlrpc_env *    const envP, 
+                           size_t          const length,
+                           const wchar_t * const stringValue);
+
+    xmlrpc_value *
+    xmlrpc_string_new_cr(xmlrpc_env * const envP,
+                         const char * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_new_lp_cr(xmlrpc_env * const envP, 
+                            size_t       const length,
+                            const char * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_w_new_cr(xmlrpc_env *    const envP,
+                           const wchar_t * const stringValue);
+    
+    xmlrpc_value *
+    xmlrpc_string_w_new_lp_cr(xmlrpc_env *    const envP, 
+                              size_t          const length,
+                              const wchar_t * const stringValue);
+
+</code>
+</pre>
+
+<p>First, you should understand just what a string is, because it's
+not exactly the same a C string.  See the mind-numbing explanation of
+the XML-RPC string fiasco in the <a href="#stringtype">String</a>
+section.  There is a safe harbor, though.  You can ignore that section
+as long as you aren't interested in any string that is composed of
+multiple lines or contains ASCII control characters, including LF and
+CR.  In that case, XML-RPC strings and Xmlrpc-c string
+<b>xmlrpc_value</b>s are just what you would expect them to be.
+
+<p><b>xmlrpc_string_new()</b> takes as an argument a null-terminated string
+of <a href="libgeneral.html#characterencoding">UTF-8-encoded</a> text.  (Note
+that an ASCII string is a UTF-8 string, so if you don't want to know what
+UTF-8 is, just supply ASCII).  In that argument, any of the three common line
+delimiter sequences (LF (linefeed, newline), CR (carriage return), and CRLF)
+denotes a line delimiter (CRLF is always one line delimiter, never two).
+There is no way to specify a NUL, CR or LF character as part of the text.
+
+<p><b>xmlrpc_string_new_lp()</b> is a little different in that it
+takes the string and its length as arguments and works with strings
+that contain NUL characters.
+
+<P><b>xmlrpc_string_new_cr()</b> is the same as <b>xmlrpc_string_new()</b>
+except that only an LF (newline) character denotes a line delimiter.
+CR is just another character.  This function was new in Xmlrpc-c
+1.11 (June 2007).
+
+<p>Similarly, <b>xmlrpc_string_new_lp_cr()</b> is the same as
+<b>xmlrpc_string_new_lp()</b> except CR is a regular character.  With
+this function, you can specify any UTF-8 character except LF.  (But if
+you just consider a line delimiter to be LF, then you have the full
+set).  This function was new in Xmlrpc-c 1.11 (June 2007).
+
+<p><b>xmlrpc_string_new_f()</b> takes as arguments a a printf-style
+format string followed by printf-style substitution arguments, but
+otherwise is like <b>xmlrpc_string_new()</b>.
+
+<p><b>xmlrpc_string_new_va()</b> is the same as <b>xmlrpc_string_new_f()</b>
+except that it takes the substitution arguments as a varargs argument
+(like <b>vsprintf()</b>).
+
+<p><b>xmlrpc_string_new_f()</b> and <b>xmlrpc_string_new_va()</b>
+were new in Xmlrpc-c 1.10 (March 2007).
+
+<p><b>xmlrpc_string_w_new()</b> is like <b>xmlrpc_string_new()</b>
+except you specify the contents with UTF-16 characters instead of
+UTF-8.
+
+<p><b>xmlrpc_string_w_new_lp()</b>, <b>xmlrpc_string_w_new_cr()</b>,
+and <b>xmlrpc_string_w_new_lp_cr()</b> are similarly related to their
+non-w counterparts.
+
+
+<h5 id="datetime">Date/Time</h5>
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_datetime_new(xmlrpc_env *    const envP,
+                        xmlrpc_datetime const value);
+    
+    xmlrpc_value *
+    xmlrpc_datetime_new_sec(xmlrpc_env * const envP,
+                            time_t       const value);
+
+    xmlrpc_value *
+    xmlrpc_datetime_new_timeval(xmlrpc_env *   const envP,
+                                struct timeval const value);
+
+    xmlrpc_value *
+    xmlrpc_datetime_new_timespec(xmlrpc_env *    const envP,
+                                 struct timespec const value);
+
+    xmlrpc_value *
+    xmlrpc_datetime_new_usec(xmlrpc_env * const envP,
+                             time_t       const secs,
+                             unsigned int const usecs);
+
+    xmlrpc_value *
+    xmlrpc_datetime_new_str(xmlrpc_env * const envP,
+                            const char * const value);
+    
+</code>
+</pre>
+
+<p>Many of these functions are capable of generating datetimes with subsecond
+granularity, but XML-RPC is <em>not</em> capable of expressing datetimes to
+this granularity.  That means if you specify a datetime which is not at a
+whole second boundary, any message you make from it
+<strong>will not be true XML-RPC</strong>.  Rather, it will use a protocol
+invented for Xmlrpc-c.  So any partner that uses Xmlrpc-c will understand it,
+but any other XML-RPC partner probably will not.  To use standard XML-RPC,
+you can use all these functions, but you must make sure to specify a
+whole-second datetime (i.e. set the microsecond part to zero).
+
+<p><b>xmlrpc_datetime_new()</b> takes as an argument an <b>xmlrpc_datetime</b>
+value, which represents a datetime as follows:
+
+<pre>
+<code>
+    typedef struct {
+        unsigned int Y;   /* 1-   */
+        unsigned int M;   /* 1-12 */
+        unsigned int D;   /* 1-31 */
+        unsigned int h;   /* 0-23 */
+        unsigned int m;   /* 0-59 */
+        unsigned int s;   /* 0-59 */
+        unsigned int u;   /* 0-999999 */
+    } xmlrpc_datetime;
+</code>
+</pre>
+
+<p>The integer values are year AD, month, day, hour, minute, second, and
+microseconds.  Note that it cannot represent datetimes before AD 1.  If the
+values of the members don't describe a valid date, e.g. they say 01:76 on
+February 30, the datetime value you construct represents an arbitrary
+datetime.
+
+<p><b>xmlrpc_datetime_new()</b> was new in Xmlrpc-c 1.20 (September 2009).
+
+<p><b>xmlrpc_datetime_new_sec()</b> takes as an argument a
+<b>time_t</b> value representing a datetime.  <b>time_t</b> is a
+traditional Unix way of expressing a datetime with one second
+precision.  It consists of the number of seconds since 1969 UTC, not
+counting leap seconds, as a 32 bit number.  It cannot represent times
+before 1970 or after mid-2038.  If you need to represent one of those
+times, use <b>xmlrpc_datetime_new()</b> instead.
+
+<p><b>xmlrpc_datetime_new_sec()</b> was new with Xmlrpc-c 1.03 (June 2005).
+
+<p><b>xmlrpc_datetime_new_timeval()</b> is the same thing, but its
+argument is the slightly less traditional <b>struct timeval</b> type,
+which is capable of expressing datetimes to microsecond granularity.
+
+<p><b>xmlrpc_datetime_new_timeval()</b> was new with Xmlrpc-c 1.15
+(June 2008).
+
+<p><b>xmlrpc_datetime_new_timeval()</b> is the same thing, but its
+argument is the even slightly less traditional <b>struct timespec</b> type,
+which is capable of expressing datetimes to nanosecond granularity.
+
+<p><b>xmlrpc_datetime_new_timespec()</b> was new with Xmlrpc-c 1.15
+(June 2008).
+
+<p><b>xmlrpc_datetime_new_usec()</b> lets you specify a datetime to
+microsecond granularity using two arguments: <i>secs</i> is the whole-second
+time in traditional Unix form; <b>usecs</b> is the number of microseconds
+past that.  <b>usecs</b> must be less than one million.
+
+<p><b>xmlrpc_datetime_new_usec()</b> was new with Xmlrpc-c 1.15
+(June 2008).
+
+<p><b>xmlrpc_datetime_new_str()</b> takes as an argument the datetime
+value as a string, in the same format as is used in the XML.  For
+example, &quot;19980717T14:08:55&quot;.  You'll note that this isn't
+terribly useful or normal.  It's this way because it was easy to
+implement.  Use the other functions if you can.
+
+
+
+<h5 id="bits">Bits</h5>
+
+<p>You represent arbitrary bits with a <a href="#bytestringtype">byte
+string</a> data type.
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_base64_new(xmlrpc_env *          const envP,
+                      unsigned int          const length,
+                      const unsigned char * const bytestringValue);
+</code>
+</pre>
+
+<p>If you're confused by the distinction between data type and XML
+encoding, then you might think that the argument here is a string of
+base64 code.  It is not.  It is an arbitrary byte string.  Every
+3 of these bytes corresponds to 4 base64 characters in the XML
+encoding.  See the examples of <b>xmlrpc_decompose_value()</b> to
+understand.
+
+<p>Note that the name of the function is for backward compatibity with a 
+historical mistake.  <b>xmlrpc_bytestring_new</b> would be a more
+appropriate name.
+
+<h5 id="nil">Nil</h5>
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_nil_new(xmlrpc_env * const envP);
+</code>
+</pre>
+
+<p>This creates a nil value -- representing absence of a value.
+
+<p>Note that there is no such type in XML-RPC, but there is in a common
+extension to XML-RPC.
+
+<h5 id="cptr">Arbitrary C Object</h5>
+
+<p>Examples:
+
+<pre>
+<code>
+    struct color {
+        unsigned int red;
+        unsigned int green;
+        unsigned int blue;
+    };
+
+    struct color backgroundColor;
+    xmlrpc_value * valueP;
+
+    valueP = xmlrpc_cptr_new(&amp;env, &amp;backgroundColor);
+</code>
+</pre>
+
+
+<pre>
+<code>
+    struct color {
+        unsigned int red;
+        unsigned int green;
+        unsigned int blue;
+    };
+
+    struct color * backgroundColorP = malloc(sizeof(struct color));
+
+    xmlrpc_value * valueP;
+
+    static void
+    destroy(void * const context,
+            void * const objectP)
+    {
+         free(objectP)
+    }
+
+    valueP =
+        xmlrpc_cptr_new_dtor(&amp;env, &amp;backgroundColor, &amp;destroy, NULL);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_cptr_new(xmlrpc_env * envP,
+                    void *       value);
+</code>
+</pre>
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_cptr_new_dtor(xmlrpc_env *        envP,
+                         void *              objectP,
+                         xmlrpc_cptr_dtor_fn dtor,
+                         void *              dtorContext);
+        
+</code>
+</pre>
+
+<p>This creates a pointer to an arbitrary C object.
+
+<p>The second form identifies a destructor.  This destructor gets called as
+the <b>xmlrpc_value</b> gets destroyed (by the library call that reduces its
+reference count to zero).  <i>dtor</i> points to a destructor
+function, with the followinng prototype:
+
+<pre>
+<code>
+  void
+  myDestructor(void * context,
+               void * objectP);
+</code>
+</pre>
+
+<p>If <i>dtor</i> is null, there is no destructor.
+
+<p><i>context</i> is the value <i>dtorContext</i> you provided when you
+constructed the <b>xmlrpc_value</b>, meaningful only to you.  It might be, for
+example, the handle of a memory pool to which the object's memory should be
+returned when destroyed.
+
+<p><i>objectP</i> is the pointer to the C object (<em>not</em> a pointer to
+the <b>xmlrpc_value</b>).
+
+<p><i>dtorContext</i> is meaningless when <i>dtor</i> is null.
+
+<p><b>xmlrpc_cptr_new_dtor</b> was new in Xmlrpc-c 1.25 (December 2010).
+
+<p>Note that there is no such type in XML-RPC.  This facility is not for use
+in XML-RPC communication.
+
+
+<h4 id="creatingarray">Creating An Array</h4>
+
+<p><b>xmlrpc_array_new()</b> creates an empty array <b>xmlrpc_value</b>.
+
+<p><b>xmlrpc_array_append_item()</b> adds an item to the end of an
+array.
+
+
+<h5 id="xmlrpc_array_new"><b>xmlrpc_array_new()</b></h5>
+
+Example:
+
+<pre>
+<code>
+    xmlrpc_env env;
+    xmlrpc_value * myArrayP;
+
+    xmlrpc_env_init(&amp;env);
+
+    myArrayP = xmlrpc_array_new(&amp;env);
+
+    ...
+
+    xmlrpc_DECREF(myArrayP);
+
+    xmlrpc_env_clean(&amp;env);
+
+</code>
+</pre>
+
+<p>Overview:
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_array_new(xmlrpc_env * const envP);
+</code>
+</pre>
+
+<p>This generates a new XML-RPC value object of type array, size 0
+(no elements).  You can use <a href="#xmlrpc_array_append_item">
+<b>xmlrpc_array_append_item()</b></a> to add items to it.
+
+<p>You have a reference to the new XML-RPC value; you must ultimately
+release that with <b>xmlrpc_DECREF()</b>.  When there are no more
+references to the object, it ceases to exist.
+
+<p><b>xmlrpc_array_new()</b> was new in Xmlrpc-c 1.02 (April 2005).
+Before that, use <b>xmlrpc_build_value()</b> to create an array.
+
+<h5 id="xmlrpc_array_append_item"><b>xmlrpc_array_append_item()</b></h5>
+
+Example:
+
+<pre>
+<code>
+    xmlrpc_value * myArrayP;
+    xmlrpc_value * itemP;
+
+    myArrayP = xmlrpc_array_new(&amp;env);
+
+    itemP = xmlrpc_string_new(&amp;env, &quot;This is array item 0&quot;);
+
+    xmlrpc_array_append_item(&amp;env, myArrayP, itemP);
+
+    xmlrpc_DECREF(itemP);
+</code>
+</pre>
+
+<p>Overview:
+
+<pre>
+<code>
+    void
+    xmlrpc_array_append_item(xmlrpc_env   * const envP,
+                             xmlrpc_value * const arrayP,
+                             xmlrpc_value * const valueP);
+</code>
+</pre>
+
+<p>This adds an item to an XML-RPC value object of type array.  The
+array size grows by one and the new item becomes the last item (the
+one with the highest index) in the array.
+
+<p>The array refers to your <b>*</b><i>valueP</i> by reference, and
+adds to its reference count.  That means if you modify <b>*</b><i>valueP</i>,
+you modify the value of the array.  And if you release all other
+references to <b>*</b><i>valueP</i>, it continues to exist as long as
+the array does.
+
+
+<h4 id="creatingstructure">Creating A Structure</h4>
+
+<p><b>xmlrpc_struct_new()</b> creates a structure <b>xmlrpc_value</b>
+that has no members.
+
+<p><b>xmlrpc_struct_set_value_v()</b> sets the value of the named
+member of a structure.  If a member by that name already exists, it
+changes the value.  If a member by that name does not exist, it adds
+one.
+
+<p>With <b>xmlrpc_struct_set_value_v()</b>, you specify the member
+name with an <b>xmlrpc_value</b> object, which is the most natural
+thing to do.  But it can be cumbersome in coding to build the
+<b>xmlrpc_value</b> for the name, when it's normally a string and you already
+have the string in a normal C data type.  So as a shortcut, you can
+use <b>xmlrpc_struct_set_value()</b>, which takes a
+null-terminated <a href="libgeneral.html#characterencoding">UTF-8</a> string
+(conventional C string) for the member name.
+
+<p>These functions create references to the <b>xmlrpc_value</b> you
+supply (as opposed to copying their contents), but they add to the
+<b>xmlrpc_value</b>'s reference count to account for it.  I.e.  they
+do not &quot;borrow&quot; your reference -- you may terminate your
+reference as soon as the function returns.
+
+<h5 id="xmlrpc_struct_new"><b>xmlrpc_struct_new()</b></h5>
+
+Example:
+
+<pre>
+<code>
+    xmlrpc_env env;
+    xmlrpc_value * myStructP;
+
+    xmlrpc_env_init(&amp;env);
+
+    myStructP = xmlrpc_struct_new(&amp;env);
+
+    ...
+
+    xmlrpc_DECREF(myStructP);
+
+    xmlrpc_env_clean(&amp;env);
+
+</code>
+</pre>
+
+<p>Overview:
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_struct_new(xmlrpc_env * const envP);
+</code>
+</pre>
+
+<p>This generates a new XML-RPC value object of type structure, with
+no members.
+You can use <a href="#xmlrpc_struct_set_value">
+<b>xmlrpc_struct_set_value()</b></a> to add members to it.
+
+<p>You have a reference to the new XML-RPC value; you must ultimately
+release that with <b>xmlrpc_DECREF()</b>.  When there are no more
+references to the object, it ceases to exist.
+
+<p><b>xmlrpc_struct_new()</b> was new in Xmlrpc-c 1.02 (April 2005).
+Before that, use <b>xmlrpc_build_value()</b> to create a structure.
+
+<h5 id="xmlrpc_struct_set_value"><b>xmlrpc_struct_set_value()</b></h5>
+
+Example:
+
+<pre>
+<code>
+    xmlrpc_value * myStructP;
+    xmlrpc_value * memberValueP;
+
+    myStructP = xmlrpc_struct_new(&amp;env);
+
+    memberValueP = xmlrpc_double_new(&amp;env, 19.2);
+
+    xmlrpc_struct_set_value(&amp;env, myStructP,
+                            &quot;temperature&quot;, memberValueP);
+
+    xmlrpc_DECREF(memberValueP);
+</code>
+</pre>
+
+<p>Overview:
+
+<pre>
+<code>
+    void
+    xmlrpc_struct_set_value(xmlrpc_env   * const envP,
+                            xmlrpc_value * const structP,
+                            const char *   const key,
+                            xmlrpc_value * const valueP);
+</code>
+</pre>
+
+<p>This sets the value of a member in an XML-RPC value object of type
+structure, adding a member if one doesn't already exist with the specified
+key.
+
+<p>Note that structures have no order, so it does not matter in what order
+you add members to a structure.
+
+<p>The structure refers to your <b>*</b><i>valueP</i> by reference, and
+adds to its reference count.  That means if you modify <b>*</b><i>valueP</i>,
+you modify the value of the structure.  And if you release all other
+references to <b>*</b><i>valueP</i>, it continues to exist as long as
+the structure does.
+
+
+<h4 id="buildvalue">xmlrpc_build_value()</h4>
+
+<p><b>xmlrpc_build_value()</b> is a higher level mechanism for creating an
+<b>xmlrpc_value</b> than the functions described above, which you can use to
+create a complex value (e.g. a structure of arrays of structures and strings)
+in one easy subroutine call.
+
+<p>You supply a variety of values as ordinary C expressions and a
+format string describing the structure of a (probably composite)
+<b>xmlrpc_value</b> and <b>xmlrpc_build_value()</b> creates the
+<b>xmlrpc_value</b> accordingly.  It is analogous to standard Unix
+sprintf().
+
+<p>See <a href="#formatstring">Format Strings</a> to understand
+how this function works.
+
+
+<p>Examples:
+
+<pre>
+<code>
+xmlrpc_value *sevenP, *piP, *temperaturesP;
+
+sevenP = xmlrpc_build_value(&amp;env, &quot;i&quot;, 7);
+
+piP = xmlrpc_build_value(&amp;env, &quot;d&quot;, 3.14159);
+
+temperaturesP = xmlrpc_build_value(&amp;env, 
+                                   &quot;({s:d,s:d}{s:d,s:d}{s:d,s:d})&quot;, 
+                                   &quot;min&quot;, 0.2,
+                                   &quot;max&quot;, 20,
+                                   &quot;min&quot;, 0.5,
+                                   &quot;max&quot;, 31.9,
+                                   &quot;min&quot;, 5.75,
+                                   &quot;max&quot;, 35.9
+                                  );
+
+-- Use the values --
+
+xmlrpc_DECREF(sevenP);
+xmlrpc_DECREF(piP);
+xmlrpc_DECREF(temperaturesP);
+
+</code>
+</pre>
+
+<p>Or, you can use <b>xmlrpc_build_value_va()</b>, which is the same thing
+except is uses a <b>va_list</b> argument in place of the variable number
+of arguments.
+
+<p>With some compilers, you need to cast the arguments after the format
+string with the type that the format string indicates (see
+<a href="#formatstring">format string specification</a>) in order to 
+avoid some varargs weirdness.
+
+<p>If you want to build an array and your program does not know until run time
+how many elements the array is to have, or what types of elements, you cannot
+build it using <b>xmlrpc_build_value()</b> because the number of function
+arguments has to be fixed at compile time (and the va_list variation doesn't
+help, because a legitimate va_list variable must be generated from a C
+function argument list, which is fixed at compile time).  Instead, see <a
+href="#creatingarray">Creating An Array</a> and do it the long way.
+
+<p>The same consideration applies to a structure when your program doesn't
+know until run time how many and what type of members there are to be.  See <a
+href="#creatingstructure">Creating A Structure</a>.
+
+<p>Eric Kidd says this translation scheme between XML-RPC and C is
+borrowed from Python's external C API.
+
+
+<h3 id="interpreting">Interpreting An Xmlrpc_value</h3>
+
+<p>Often, XML-RPC values just get passed around from one function to
+another opaquely and your code does not need to understand the value at
+all.  But when you need to process the value, there are functions to
+translate an <b>xmlrpc_value</b> object into normal C data types.
+The best example of where you would do this is in code you write for
+an XML-RPC server to implement some XML-RPC method.  Your code will
+receive the parameters of the XML-RPC call as <b>xmlrpc_value</b> objects and
+your code will need to do things with the values they represent.
+
+<p>The first step in interpreting a value is often determining what type
+is is, because you'll use different facilities to interpret a string
+than to interpret an array of integers.  You can use <a href="#typemanip">
+<b>xmlrpc_value_type()</b></a> for that.
+
+<p>On the other hand, in many cases your code expects a string value and if it
+was passed anything else, it's just going to fail.  In that case, there's no
+need for you to check the type; just treat it like a string and the Xmlrpc-c
+function you call to interpret it will fail with an error string indicating
+what is supposed to be a string isn't.
+
+
+<h4 id="interpretingsimple">Interpreting A Simple Xmlrpc_value</h4>
+
+<P>These are the basic functions for extracting the value of a simple
+(not array or structure) <b>xmlrpc_value</b> into an ordinary C data
+structure.
+
+<p>The functions of these are pretty obvious.  Each function is for a
+particular <b>xmlrpc_value</b> type.  If you call it on an
+<b>xmlrpc_value</b> of a different type, it fails with a fault
+code of <b>XMLRPC_TYPE_ERROR</b>
+
+<p>None of these &quot;read&quot; functions existed before Xmlrpc-c
+1.02 (April 2005).  In older versions, you use
+<b>xmlrpc_parse_value()</b> instead.
+
+<h5 id="interpretnumber">Number</h5>
+
+<pre>
+<code>
+void 
+xmlrpc_read_int(xmlrpc_env *         const envP,
+                const xmlrpc_value * const valueP,
+                int *                const intValueP);
+
+xmlrpc_read_i8(xmlrpc_env *         const envP,
+               const xmlrpc_value * const valueP,
+               long long *          const intValueP);
+
+void
+xmlrpc_read_double(xmlrpc_env *         const envP,
+                   const xmlrpc_value * const valueP,
+                   xmlrpc_double *      const doubleValueP);
+</code>
+</pre>
+
+<p><b>xmlrpc_read_i8()</b> was new in Xmlrpc-c 1.07 (October 2006).
+Before that, there was no defined way to represent 64 bit integers.
+In versions of Xmlrpc-c new enough to have this function, the macro
+<b>XMLRPC_HAVE_I8</b> is defined in the interface header file.
+
+
+<h5 id="interpretboolean">Boolean</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_bool(xmlrpc_env *         const envP,
+                 const xmlrpc_value * const valueP,
+                 xmlrpc_bool *        const boolValueP);
+</code>
+</pre>
+
+<h5 id="interpretdatetime">Date/Time</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_datetime(xmlrpc_env *         const envP,
+                     const xmlrpc_value * const valueP,
+                     xmlrpc_datetime *    const timeValueP);
+
+void
+xmlrpc_read_datetime_sec(xmlrpc_env *         const envP,
+                         const xmlrpc_value * const valueP,
+                         time_t *             const timeValueP);
+
+void
+xmlrpc_read_datetime_timeval(xmlrpc_env *        const envP,
+                            const xmlrpc_value * const valueP,
+                            struct timeval *     const timeValueP);
+
+void
+xmlrpc_read_datetime_timespec(xmlrpc_env *         const envP,
+                              const xmlrpc_value * const valueP,
+                              struct timespec *    const timeValueP);
+
+void
+xmlrpc_read_datetime_usec(xmlrpc_env *         const envP,
+                          const xmlrpc_value * const valueP,
+                          time_t *             const secsP,
+                          unsigned int *       const usecsP);
+
+void
+xmlrpc_read_datetime_8601(xmlrpc_env *         const envP,
+                          const xmlrpc_value * const valueP,
+                          const char **        const iso8601ValueP);
+
+void
+xmlrpc_read_datetime_str(xmlrpc_env *         const envP,
+                         const xmlrpc_value * const valueP,
+                         const char **        const stringValueP);
+</code>
+</pre>
+
+<p><b>xmlrpc_read_datetime()</b> gets you the datetime value as an
+<b>xmlrpc_datetime</b> value, which represents the datetime in UTC-like
+year, month, day, ..., seconds, microseconds format.  For details, see
+<a href="#datetime"><b>xmlrpc_datetime_new()</b></a>.
+
+<P><b>xmlrpc_read_datetime()</b> was new in Xmlrpc-1.20 (September 2009).
+
+<p><b>xmlrpc_read_datetime_sec()</b> gets you the datetime value as a
+<b>time_t</b> value.  <b>time_t</b> is a traditional Unix way of
+expressing a datetime with one second precision.  It consists of the
+number of seconds since 1969 UTC, not counting leap seconds, as a 32
+bit number.  It cannot represent times before 1970 or after mid-2038.
+If you expect a datetime may be one of those times, use
+<b>xmlrpc_read_datetime()</b> instead.  If the datetime is not a whole
+second boundary (which can be true only if the value came from a partner
+that implements an extension of XML-RPC, because XML-RPC provides only for
+whole-second datetimes), the <b>time_t</b> value you get is of the next
+earlier whole second datetime.
+
+<P><b>xmlrpc_read_datetime_sec()</b> was new in Xmlrpc-1.03 (June 2005).
+
+<p><b>xmlrpc_read_datetime_sec()</b> before Xmlrpc-1.10 (March 2007)
+is not thread-safe because it manipulates the TZ environment variable.
+So you cannot call it while another thread in your process might be
+using or modifying TZ -- for example, another thread that calls
+<b>xmlrpc_read_datetime_sec()</b>.  You can work around this by using
+<b>xmlrpc_read_datetime_str()</b> and parsing the output yourself.
+
+<p><b>xmlrpc_read_datetime_timeval()</b> is like
+<b>xmlrpc_read_datetime_sec()</b> except that it extracts the value as
+the slightly less traditional Unix type <b>struct timeval</b>, which
+is capable of expressing a datetime to microsecond granularity.
+Note that XML-RPC is <em>not</em> capable of representing a datetime
+to this granularity, so when you receive a datetime from a true XML-RPC
+partner, you will always see a whole second datetime.  But if your
+partner is using Xmlrpc-c, it is using an extension of XML-RPC that is
+capable of sending finer granularity datetimes.
+
+<p><b>xmlrpc_read_datetime_timeval()</b> was new with Xmlrpc-c 1.15
+(June 2008).
+
+<p><b>xmlrpc_read_datetime_timespec()</b> is like
+<b>xmlrpc_read_datetime_timeval()</b> except that it extracts the
+value as the even slightly less traditional Unix type <b>struct
+timespec</b>, which is capable of expressing a datetime to nanosecond
+granularity.
+
+<p><b>xmlrpc_read_datetime_timespec()</b> was new with Xmlrpc-c 1.15
+(June 2008).
+
+<p><b>xmlrpc_read_datetime_usec()</b> reads a datetime as two values:
+*<i>secsP</i> is the next earlier whole second in time_t form and
+*<i>usecsP</i> is the number of microseconds past that.  Note the
+discussion above about whether you're likely to see subsecond
+datetimes.
+
+<p><b>xmlrpc_read_datetime_usec()</b> was new with Xmlrpc-c 1.15 (June 2008).
+
+<p><b>xmlrpc_read_datetime_8601</b> reads a datetime in ISO 8601 format, which
+is a string.  The ISO 8601 standard provides for many ways to represent a
+particular datetime; the particular one this function returns is as in the
+following example: <code>19930214T131030,250000Z</code> (13:10:30.25 on
+February 14, 1993).  There are always 4 digits for the year.  There are always
+6 digits after the comma (microseconds).  Midnight is hour 0, not 24.
+
+<p><b>xmlrpc_read_datetime_8601</b> was new in Xmlrpc-c 1.31 (June 2012).
+
+<p>A datetime <b>xmlrpc_value</b>, due to implementation laziness, is
+capable of being invalid -- it exists but does not indicate a
+datetime.  This would happen if you create it with
+<b>xmlrpc_datetime_new_str()</b> and supply an argument that does not
+have the required format.  In practice, you see this when using the
+Xmlrpc-c client facilities and a broken XML-RPC server.  The broken
+server sends invalid XML-RPC in that a datetime value does not have
+the required format.  The client facilities use it to create an
+invalid <b>xmlrpc_value</b>.  When you have an invalid datetime
+<b>xmlrpc_value</b>, <b>xmlrpc_read_datetime_sec()</b> usually fails,
+but may read an arbitrary datetime.  <b>xmlrpc_read_datetime_str()</b>
+simply returns whatever garbage string was used to create the
+<b>xmlrpc_value</b>.
+
+<p><b>xmlrpc_read_datetime_str()</b> gets you the datetime value as
+a string, in the same format as is used in the XML.  For example,
+&quot;19980717T14:08:55&quot;.  You'll note that this isn't terribly
+useful or normal.  It's this way because it was easy to implement.
+Use <b>xmlrpc_read_datetime_sec()</b> if you can.
+
+
+<h5 id="interpretstring">String</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_string(xmlrpc_env *         const envP,
+                   const xmlrpc_value * const valueP,
+                   const char **        const stringValueP);
+
+void
+xmlrpc_read_string_lp(xmlrpc_env *         const envP,
+                      const xmlrpc_value * const valueP,
+                      size_t *             const lengthP,
+                      const char **        const stringValueP);
+void
+xmlrpc_read_string_crlf(xmlrpc_env *         const envP,
+                        const xmlrpc_value * const valueP,
+                        const char **        const stringValueP);
+
+void
+xmlrpc_read_string_lp_crlf(xmlrpc_env *         const envP,
+                           const xmlrpc_value * const valueP,
+                           size_t *             const lengthP,
+                           const char **        const stringValueP);
+
+void
+xmlrpc_read_string_w(xmlrpc_env *     const envP,
+                     xmlrpc_value *   const valueP,
+                     const wchar_t ** const stringValueP);
+
+void
+xmlrpc_read_string_w_lp(xmlrpc_env *     const envP,
+                        xmlrpc_value *   const valueP,
+                        size_t *         const lengthP,
+                        const wchar_t ** const stringValueP);
+
+void
+xmlrpc_read_string_w_crlf(xmlrpc_env *     const envP,
+                          xmlrpc_value *   const valueP,
+                          const wchar_t ** const stringValueP);
+
+void
+xmlrpc_read_string_w_lp_crlf(xmlrpc_env *     const envP,
+                             xmlrpc_value *   const valueP,
+                             size_t *         const lengthP,
+                             const wchar_t ** const stringValueP);
+
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    const char * cvalue;
+    xmlrpc_read_string(&amp;env, &amp;value, &amp;cvalue);
+    ...
+    free((void *)cvalue);
+</code>
+</pre>
+
+<p>First, understand the meaning of the <a href="#stringtype">string
+data type</a>,
+
+<p><b>xmlrpc_read_string()</b> extracts a string value as a conventional C
+Unicode <a href="libgeneral.html#characterencoding">UTF-8</a> null-terminated
+string.  If the value in question contains a NUL character, it cannot be
+represented as a null-terminated string, so <b>xmlrpc_read_string()</b> fails.
+
+<p>These subroutines return the string in newly malloc'ed memory, pointed to
+by *<i>stringValueP</i>, that you must eventually free.  Sometimes, the OS
+function you use to free memory is declared to take a pointer to something
+non-constant as its argument, so because *<i>stringValueP</i> is a pointer to
+a constant, you might get a compiler warning about a type mismatch.  To avoid
+that, you can use a cast as in the example above.
+
+<p>In a string value you examine with the functions in this section,
+you get an array of UTF-8 characters as output.  In that array, lines
+are delimited by a Unix newline (ASCII Line Feed, aka LF) character.
+LF is not used any other way.
+
+<p>Before Xmlrpc-c 1.11 (June 2007), if you created a string
+<b>xmlrpc_value</b> directly (as opposed to extracting it from an
+XML-RPC message), this function returned as line delimiters whatever
+you used in the argument to the creator function.
+
+<p><b>xmlrpc_read_string_lp()</b> is a little different in that it
+returns the string and its length and works with strings that contain
+NUL characters.
+
+<p><b>xmlrpc_read_string_crlf()</b> is the same as
+<b>xmlrpc_read_string()</b> except that in the string it returns,
+a line delimiter is represented by the pair of character CR and LF (CRLF)
+instead of just LF.  Though LF is still not used any other way in this
+string, CR may be present to represent a CR character as well as followed
+by LF to represent a line delimiter.  This function was new in 
+Xmlrpc-c 1.11 (June 2007).
+
+<p>Similarly, <b>xmlrpc_read_string_lp_crlf()</b> is the same as
+<b>xmlrpc_read_string_lp()</b> except line delimiters are CRLF.
+
+<p><b>xmlrpc_read_string_w</b>, <b>xmlrpc_read_string_w_lp()</b>.
+<b>xmlrpc_read_string_w_crlf()</b>, and
+<b>xmlrpc_read_string_w_lp_crlf()</b>are like their
+<b>xmlrpc_read_string</b> counterparts except that they return wide
+characters (UTF-16) instead of UTF-8.
+
+
+<h5 id="interpretbits">bits</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_base64(xmlrpc_env *           const envP,
+                   const xmlrpc_value *   const valueP,
+                   unsigned int *         const lengthP,
+                   const unsigned char ** const bytestringValueP);
+
+void
+xmlrpc_read_base64_size(xmlrpc_env *           const envP,
+                        const xmlrpc_value *   const valueP,
+                        size_t *               const lengthP);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    const unsigned char * cvalue;
+    unsigned int length;
+    xmlrpc_read_base64(&amp;env, &amp;value, &amp;length, &amp;cvalue);
+    ...
+    free((void *)cvalue);
+
+    xmlrpc_read_base64_size(&amp;env, &amp;value, &amp;length);
+</code>
+</pre>
+
+<p><b>xmlrpc_read_base64()</b> returns the value of a byte string
+<b>xmlrpc_value</b> as an array of plain bytes.  The array is in
+malloc'ed storage, which you must eventually free.
+
+<p>Sometimes, the OS function you use to free memory is declared to take a
+pointer to something non-constant as its argument, so because
+*<i>bytestringValueP</i> is a pointer to a constant, you might get a compiler
+warning about a type mismatch.  To avoid that, you can use a cast as in the
+example above.
+
+
+<p><b>xmlrpc_read_base64_size()</b> was new in Xmlrpc-c 1.03 (June
+2005).
+
+<h5 id="interpretnil">Nil</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_nil(xmlrpc_env *   const envP,
+                xmlrpc_value * const valueP);
+</code>
+</pre>
+
+<p><b>xmlrpc_read_nil()</b> is a little silly, since a nil value has
+no value, but it's there for completeness and does at least serve to
+validate that the <b>xmlrpc_value</b> has nil type.
+
+<h5 id="interpretcptr">C Pointer</h5>
+
+<pre>
+<code>
+void
+xmlrpc_read_cptr(xmlrpc_env *         const envP,
+                 const xmlrpc_value * const valueP,
+                 void **              const ptrValueP);
+</code>
+</pre>
+
+
+<h4 id="interpretingarray">Interpreting An Array</h4>
+
+<P>You can access an element of an array by index with
+<b>xmlrpc_array_read_item()</b>.  Use <b>xmlrpc_array_size()</b> to
+determine how many elements the array has.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_value * const myArrayP =
+        xmlrpc_build_value(envP, &quot;(ii)&quot;, 5, 7);
+
+    xmlrpc_value * firstElementP;
+    xmlrpc_int firstInt;
+
+    printf(&quot;Array has %u elements\n&quot;, xmlrpc_array_size(envP, myArrayP));
+        /* prints &quot;Array has 2 elements&quot; */
+    
+    xmlrpc_array_read_item(envP, myArrayP, 0, &amp;firstElementP);
+
+    xmlrpc_read_int(envP, firstElementP, &amp;firstInt);
+    printf(&quot;First element is %d\n&quot;, firstInt);
+        /* prints &quot;First element is 5&quot; */
+    xmlrpc_DECREF(firstElementP);
+</code>
+</pre>
+
+<p>There is also <b>xmlrpc_array_get_item()</b>, but it deprecated.  It
+was replaced by <b>xmlrpc_array_read_item()</b>.  The main difference is
+that <b>xmlrpc_array_get_item()</b> does not acquire a reference to the
+value it returns.
+
+<h5 id="xmlrpc_array_size">xmlrpc_array_size()</h5>
+
+<p>This returns the number of elements in the array identified by
+<i>arrayP</i>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    int 
+    xmlrpc_array_size(xmlrpc_env *         const envP, 
+                      const xmlrpc_value * const arrayP);
+</code>
+</pre>
+
+<p>The return value is of signed integer type for historical reasons;
+it cannot of course ever be negative.
+
+<p>The only way this can fail is if <i>arrayP</i> is not actually an
+array XML-RPC value.  So it is usually not worth checking *<i>envP</i>.
+
+
+<h5 id="xmlrpc_array_read_item">xmlrpc_array_read_item()</h5>
+
+<p>This extracts the value of one element of an XML-RPC array, by index.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_array_read_item(xmlrpc_env *         const envP,
+                           const xmlrpc_value * const arrayP,
+                           unsigned int         const index,
+                           xmlrpc_value **      const valuePP);
+</code>
+</pre>
+
+<p>This returns as *<i>valuePP</i> the element with index <i>index</i>
+of the array <i>arrayP</i> (The first element in the array has index
+0, the second has index 1, etc.).
+
+<p><b>xmlrpc_array_read_item()</b> fails with a
+<b>XMLRPC_INDEX_ERROR</b> fault code if the array is too small to
+contain the specified element.  You can check the size of the array
+with <a href="#xmlrpc_array_size"><b>xmlrpc_array_size()</b></a>.
+
+<p><b>xmlrpc_array_read_item()</b> fails if <i>arrayP</i> identifies
+something other than an array.  You can check its type with
+<a href="#typemanip"><b>xmlrpc_value_type()</b></a>.
+
+<p><b>xmlrpc_array_read_item()</b> was new in Xmlrpc-c 1.01 (January
+2005).
+
+
+<h4 id="interpretingstructure">Interpreting A Structure</h4>
+
+<p>You can access a member of a structure by name.  You can specify
+that name either as an <b>xmlrpc_value</b> or a simple null-terminated
+text string.
+
+<p>The <b>xmlrpc_struct_find_value</b> functions consider &quot;not found&quot;
+to be a normal result.  If a member of the structure with the specified
+key exists, it returns it as a handle to an <b>xmlrpc_value</b>.  If not,
+it returns NULL in place of that handle.
+
+<p>By contrast, the <b>xmlpc_struct_read_value</b> functions consider
+&quot;not found&quot; to be a failure (they return a failure
+indication with a <b>XMLRPC_INDEX_ERROR</b> fault code in the
+specified error environment variable).
+
+<p>When these functions return a value (as an <b>xmlrpc_value</b>), they
+increase the reference count to represent the caller's reference to it.
+The caller must eventually release that reference.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_value * const myStructP =
+        xmlrpc_build_value(envP, &quot;{%s:%d}&quot;, &quot;age&quot;, 32);
+
+    xmlrpc_value * ageP;
+
+    xmlrpc_struct_find_value(envP, myStructP, &quot;age&quot;, &amp;ageP);
+
+    if (ageP) {
+        xmlrpc_int age;
+        xmlrpc_read_int(envP, ageP, &amp;age);
+        printf(&quot;age is %d\n&quot;, age);
+        xmlrpc_DECREF(ageP);
+    } else
+        printf(&quot;There is no member named 'age'&quot;);
+
+    xmlrpc_DECREF(myStructP);
+</code>
+</pre>
+
+<p><b>xmlrpc_struct_find_value()</b> takes a null-terminated text string
+as a key.  You can't use it for a key that has NUL characters in it.
+
+<p><b>xmlrpc_struct_find_value_v()</b> takes a <b>xmlrpc_value</b> as
+a key value.  The value must be of string type, but in a future
+version, that restriction might be relaxed.
+
+<p><b>xmlrpc_struct_read_value()</b> and
+<b>xmlrpc_struct_read_value_v()</b> are similar.
+
+<p>All of these functions fail with fault code
+<b>XMLRPC_TYPE_ERROR</b> if the argument that is supposed to be the
+structure is an <b>xmlrpc_value</b> of some type other than structure.
+But they assume it is a valid <b>xmlrpc_value</b>.
+
+<p>The <b>xmlrpc_struct_get_value</b> functions are deprecated.  They
+used to be the only way to access a member of a structure.  They are like
+<b>xmlrpc_struct_read_value</b> except that they don't acquire a reference
+to the returned value.
+
+<p>If you just want to know whether a member by a certain name exists
+(and avoid a failure when you try to get its value), use
+<b>xmlrpc_struct_has_key_v()</b> and its shortcut
+<b>xmlrpc_struct_has_key()</b>.
+
+<p>You can read out the contents of a structure when you don't know
+the names of its members with <b>xmlrpc_struct_read_member()</b>.
+For the purposes of this function, the structure is organized like an
+array.  Each member has an integer index, from a consecutive set starting
+at zero, and an argument to <b>xmlrpc_struct_read_member()</b>
+specifies that index.  Use <b>xmlrpc_struct_size()</b>, described above,
+to determine how many members there are.
+
+<p>The mapping from index to member is not predictable, except that it
+is fixed as long as the structure does not change.
+
+<p>The <b>xmlrpc_struct_get_key_and_value()</b> is deprecated.  It was
+replaced by <b>xmlrpc_struct_read_member()</b>.  It is like
+<b>xmlrpc_struct_read_member()</b> except that it doesn't acquire a
+reference to the returned value.
+
+<p>To determine the size of a structure (number of members in it),
+use <b>xmlrpc_struct_size()</b>.
+
+
+<h4 id="decomposevalue">xmlrpc_decompose_value()</h4>
+
+<p><b>xmlrpc_decompose_value()</b> is a higher level mechanism for
+interpreting an <b>xmlrpc_value</b> than the functions described
+above.  
+
+<p>It is the opposite of <b>xmlrpc_build_value()</b> -- you give
+it a (probably composite) xmlrpc_value and a format string that
+describes its structure and it decomposes the xmlrpc_value and
+extracts the various values in it into variables you provide.  It is
+analogous to standard Unix sscanf().
+
+<p>See <a href="#formatstring">Format Strings</a> to understand
+how this function works.
+
+<p>Here is an example, which uses the <b>xmlrpc_value</b> objects that
+were created in the above example of <b>xmlrpc_build_value()</b>.
+
+<pre>
+<code>
+
+    xmlrpc_int seven;
+    
+    double pi;
+    
+    const char * employeeName[3];
+    
+    struct {double min;
+            double max;
+           } temp[3];
+    
+    unsigned char * binaryBlob;
+    size_t binaryBlobSize;
+    
+    xmlrpc_decompose_value(&amp;env, sevenP, &quot;i&quot;, &amp;seven);
+    
+    xmlrpc_decompose_value(&amp;env, piP, &quot;d&quot;, &amp;pi);
+    
+    xmlrpc_decompose_value(&amp;env, employeeNameP, &quot;(sss*)&quot;,
+                           &amp;employeeName[0],
+                           &amp;employeeName[1],
+                           &amp;employeeName[2]);
+    
+    xmlrpc_decompose_value(&amp;env, 
+                           temperaturesP,
+                           &quot;({s:d,s:d,*}{s:d,s:d,*}{s:d,s:d,*})&quot;, 
+                           &quot;min&quot;, &amp;temp[0].min,
+                           &quot;max&quot;, &amp;temp[0].max,
+                           &quot;min&quot;, &amp;temp[1].min,
+                           &quot;max&quot;, &amp;temp[1].max,
+                           &quot;min&quot;, &amp;temp[2].min,
+                           &quot;max&quot;, &amp;temp[2].max
+                      );
+    
+    xmlrpc_decompose_value(&amp;env, &quot;6&quot;, &amp;binaryBlob, &amp;binaryBlobSize);
+    
+</code>
+</pre>
+
+<p>There is also the va_list version, <b>xmlrpc_decompose_value_va()</b>.
+
+<p>The arguments after the format string are pointers to variables
+which <b>xmlrpc_decompose_value()</b> sets to describe the XML-RPC value.
+We call these pointed-to variables &quot;extraction variables.&quot;
+The types of the extraction variables must be as specified in the
+<a href="#formatstring">format string specification</a>.
+
+<p>The format specifier for the name of a structure member is an
+exception.  The argument that corresponds to that is an input, not
+an output like everything else.  The argument is a variable of the
+indicated type, not a pointer to such a variable.  The format
+specifier here says to extract the value of a particular named member
+of the structure.  The example above shows this.
+
+<p>The name of a structure member must be a string.  If it is anything
+else, <b>xmlrpc_decompose_value()</b> fails.
+
+<p>You may specify <b>*</b> (asterisk) as the last element of an
+array.  This stands for zero or more additional elements, and has no
+associated C data type.  That means the format string validly matches
+the XML-RPC array value, but the interpretation function ignores its
+tail.
+
+<p>Similarly, you may specify <b>*</b> as the last member of a
+structure to cause <b>xmlrpc_decompose_value()</b> to ignore the
+members you don't name.  Actually, in the present implementation, you
+<em>must</em> specify this asterisk.  That's because
+<b>xmlrpc_decompose_value()</b> is not capable of determining whether
+your format string extracts <em>all</em> the members of a structure,
+which is what no asterisk would imply.  Some day, this will get fixed.
+
+<p>When <b>xmlrpc_decompose_value()</b> returns an <b>xmlrpc_value</b> to you
+(for a format specifier of <b>A</b>, <b>S</b>, or <b>V</b>), it adds to
+the <b>xmlrpc_value</b>'s reference count to cover your reference.  Be sure
+to decrement the reference count when you are done referencing it.
+
+<p>For a format specifier that return strings and byte strings
+(<b>8</b>, <b>s</b>, <b>w</b>, and <b>6</b>),
+<b>xmlrpc_decompose_value()</b> allocates new memory for you with
+malloc().  Be sure to free it when you are done with it.
+
+<p>When <b>xmlrpc_decompose_value()</b> fails, it does not return anything,
+and therefore does not increase any reference count or allocate any 
+memory and the values of the extraction variables are undefined.
+
+
+<p><b>xmlrpc_decompose_value()</b> did not exist before Xmlrpc-C 1.02
+(April 2005).  In older releases, you use <b>xmlrpc_parse_value()</b>
+instead.
+
+<h4 id="parsevalue">xmlrpc_parse_value()</h4>
+
+<p>This deprecated function is the predecessor to
+<b>xmlrpc_decompose_value()</b>.  It's the same, but
+<b>xmlrpc_parse_value()</b> doesn't do proper memory management, as
+follows.
+
+<p>For a format specifier that return strings and byte strings
+(<b>8</b>, <b>s</b>, <b>w</b>, and <b>6</b>),
+<b>xmlrpc_parse_value()</b> returns a pointer into the <b>xmlrpc_value</b>'s
+internal representation.  That means you must coordinate your access
+to the string with the setting of and existence of the
+<b>xmlrpc_value</b>.  This isn't always easy.  But as long as you hold
+a reference to the <b>xmlrpc_value</b> which you give to
+<b>xmlrpc_parse_value()</b> and don't modify it at all, you should be
+safe to access the string.
+
+<p>For the <b>A</b>, <B>S</B>, and <b>V</b> format specifiers,
+<b>xmlrpc_parse_value()</b> returns a pointer to an
+<b>xmlrpc_value</b> object <strong>without a reference to it</strong>.
+This means you're in the same boat with these format specifiers as
+described for strings above.  You must make sure something else holds
+a reference to the object while you are using it.  (or at least until
+you can acquire one of your own).
+
+
+<h3 id="formatstring">Format Strings</h3>
+
+<p>The easiest functions for building and interpreting
+<b>xmlrpc_value</b> objects, which represent XML-RPC values, use a
+format string to describe the type of the XML-RPC value.  For example
+the format string might say that the XML-RPC value is an integer.  Or
+it might say it is an array of 4 dates.  This section explains how a
+format string describes the type of an XML-RPC value.
+
+<p>The format string also defines a translation between the XML-RPC
+value and a sequence of C-friendly data types that represent the same
+information.  For example, it might say that a floating point number
+translates to or from a C 'double' value, or that an array of 4 dates
+translates to or from 4 C time_t values.
+
+<p>When you call a function that <em>builds</em> an <b>xmlrpc_value</b>, you
+must supply arguments of the type prescribed here.  If you don't, the result
+is undefined.  (The function might fail, or generate some arbitrary value or
+generate an invalid value or make the program crash -- the reason the build
+functions don't validate it for you and avoid some of the worst of these
+possibilities is that it would be expensive).
+
+<p>When you call a function that <em>interprets</em> an <b>xmlrpc_value</b>,
+you must supply arguments which are <em>pointers to variables</em> of the type
+prescribed here.
+
+<p>A format string works a lot like the format string in a
+<b>printf()</b> or <b>scanf()</b> function call.
+
+<p>Examples of format strings:
+
+<table summary="format string examples">
+<tr>
+<th>format string 
+<th>type of XML-RPC value
+<tr>
+<td>i
+<td>integer
+<tr>
+<td>s
+<td>string
+<tr>
+<td>(iii)
+<td>Array of 3 integers
+<tr>
+<td>{s:i,s:d}
+<td>Structure with two elements.  The first has a string for a name
+(true of any XML-RPC structure)
+and an integer for a value.  The second has a string for a name and a
+floating point number for a value.
+<tr>
+<td>{s:i,s:(ss{s:s,s:d})}
+<td>A structure whose first element has a string for a name and an
+integer for a value, and whose second element has a string for a name and
+an array for a value.  That array's first two elements are strings.  Its
+third element is a structure.  That structure has two elements, both named
+by strings.  The value of the first is a string; the value of the second is
+a floating point number.
+</table>
+
+<P>A format string describes the type of one XML-RPC value.  But some
+types (array and structure) are compound types -- they are composed
+recursively of other XML-RPC values.  So a single format string might
+involve multiple XML-RPC values.
+
+<p>But first, lets look at the simple (not compound) format types.
+These are easy.  The format string consists of one of the strings in
+the table below.  The string is called a format specifier, and in
+particular a simple format specifier.  The table also tells what C
+type represents the value of that XML-RPC type when you use an
+Xmlrpc-c library routine to translate to or from ordinary C types.
+
+<h4 id="simpleformat">Simple Format Specifiers</h4>
+
+<p>The following table describes all of the simple format specifiers.
+A format string consists of either a single simple format specifier or
+a single compound format specifier.  The next section covers compound
+format specifiers.
+
+<table summary="simple format specifiers">
+<tr>
+<th>specifier
+<th>XML-RPC type
+<th>C type
+<tr>
+<td>i
+<td>32 bit integer (&lt;int&gt;)
+<td>xmlrpc_int
+<tr>
+<td>b
+<td>boolean (&lt;boolean&gt;)
+<td>xmlrpc_bool
+<tr>
+<td>d
+<td>double precision floating point number (&lt;double&gt;)
+<td>xmlrpc_double (double)
+<tr>
+<td>s
+<td>string (&lt;string&gt;)
+<td>const char * null-terminated UTF-8 string (doesn't work if string
+contains NUL).
+<tr>
+<td>s#
+<td>string (&lt;string&gt;)
+<td>const char * and size_t;  UTF-8 pointer/length string.
+<tr>
+<td>w
+<td>string (&lt;string&gt;)
+<td>const wchar_t *
+<tr>
+<td>w#
+<td>string (&lt;string&gt;)
+<td>const wchar_t * and size_t;  pointer/length string.
+<tr>
+<td>6
+<td>base64-encoded byte string (&lt;base64&gt;)
+<td>const unsigned char * and size_t;  The latter is the size in bytes.
+<tr>
+<td>t
+<td>date/time (&lt;dateTime.iso8601&gt;)
+<td>time_t
+<tr>
+<td>8
+<td>date/time (&lt;dateTime.iso8601&gt;)
+<td>const char *; null-terminated UTF-8 string pseudo-ISO 8601
+<tr>
+<td>p
+<td>none; an Xmlrpc-c extension for internal use.  A C pointer.
+<td>void *
+<tr>
+<td>n
+<td>nil (&lt;nil&gt; or &lt;ex:nil&gt;) (not an XML-RPC type, but a
+common extension of XML-RPC)
+<td>none
+<tr>
+<td>I
+<td>64 bit integer (&lt;i8&gt; or &lt;ex:i8&gt;) (not an XML-RPC type)
+<td>none
+<tr>
+<td>A
+<td>array (&lt;array&gt;)
+<td>xmlrpc_value *
+<tr>
+<td>S
+<td>structure (&lt;struct&gt;)
+<td>xmlrpc_value *
+<tr>
+<td>V
+<td>any simple or compound
+<td>xmlrpc_value *
+</table>
+
+<p>Note that any place you could use <b>A</b> or <b>S</b>, you could
+equivalently use <b>V</b>.  The difference is that the former fail
+when the XML-RPC value isn't of the indicated type, which is
+convenient in many cases.
+
+<p>The details of the correspondence between the XML-RPC values and
+the C data structure values is the same as for the individual
+constructor and extractor functions such as <b>xmlrpc_string_new()</b>
+for strings or <b>xmlrpc_read_int()</b> for integers.
+
+<p>The &quot;8&quot; format specifier isn't really meant to be useful;
+you'll prefer &quot;t&quot;.  At one time, &quot;8&quot; was the only
+way to specify a datetime, and that was only because the implementers
+were lazy.  (Note that the C representation and the XML-RPC
+representation are the same with this format specifier; that makes the
+code to implement it really easy).
+
+<p>With the <b>s#</b> and <b>w#</b> format specifiers, be careful to supply a
+<b>size_t</b> second argument.  If you supply an integer instead (and if you
+code a literal such as &quot;3&quot;, that's an integer), the compiler will
+won't complain, but it may generate the parameter list in the wrong format and
+you will get bizarre results at run time.
+
+<p>The &quot;t&quot; format specifier was new in Xmlrpc-c 1.12
+(September 2007).  Before that, you can use &quot;8&quot; instead.
+
+<P>The &quot;I&quot; format specifier was new in Xmlrpc-c 1.10
+(March 2007).  But as early as 1.07 (October 2006), you can use other
+functions to deal with 64 bit integer XML-RPC values.
+
+<p>The &quot;n&quot; format specifier and the nil type were new in
+Xmlrpc-c 1.02 (April 2005).
+
+
+<h4 id="compoundformat">Compound Format Specifiers</h4>
+
+<p>The simple format specifiers above are not sufficient to translate
+between an <b>xmlrpc_value</b> and ordinary C types.  The <b>A</b> and
+<b>S</b> format specifiers don't help, because the &quot;ordinary C
+type&quot; for those is itself an <b>xmlrpc_value</b>!  To build or
+interpret an XML-RPC array or structure, you need a compound format
+specifier.  
+
+<p>A compound format specifier is a string that contains other format
+specifiers (either compound or simple).
+
+<p><b>Array:</b> The compound format specifier for an array is the
+concatenation of specifiers for each of its elements, in index order, enclosed
+in &quot;()&quot; (i.e. parentheses).  For example: <tt>(iii)</tt> (an array
+of 3 integers) or <tt>(i(d))</tt> (an array with element 0 an integer, element
+1 an array of one floating point number).  <tt>()</tt> is an empty array.
+
+<p><b>Structure:</b> To specify a structure, enclose a string for each member
+of the structure in &quot;{}&quot; (i.e. braces), separated by commas.  The
+string for a member of a structure is a format specifier for the member name
+and a format specifier for the value, separated by a colon, e.g. <tt>s:i</tt>.
+An example of a complete format specifier for a structure
+is <tt>{s:i,s:i,s:d}</tt>.  This specifies a structure with 3 members, each
+with a string for a name.  Two of them have integer values; one has a floating
+point number value.  Note that members of a structure do not have order.
+<tt>{}</tt> specifies a structure with no elements (not generally useful, but
+legal).
+
+<p>Note that there is no rule that the member name must be a string.
+It could be anything.  <strong>But:</strong> in XML-RPC, the member
+name is a string, so if you build an exotic <b>xmlrpc_value</b> with a
+date as a member name and then try to use that <b>xmlrpc_value</b> as
+an RPC parameter (say, as an argument to <b>xmlrpc_client_call()</b>,
+you will fail.  (In the example, <b>xmlrpc_client_call()</b> would
+fail, telling you that you haven't supplied a valid XML-RPC
+parameter).
+
+<p>What C types does a compound format specifier specify for when the
+XML-RPC array or structure gets translated?  They are the set of C
+types that correspond to the constituent simple format specifiers.
+For example, the format string <tt>{s:s,s:(iii)}</tt>, specifies a
+single XML-RPC structure value that gets translated to or from six
+separate C types: 3 strings and 3 integers.
+
+<p>In case you're confused about the difference between &quot;()&quot;
+and &quot;A&quot;, here it is: The format strings <tt>(iii)</tt> and
+<tt>A</tt> both specify an XML-RPC array.  The former specifically
+specifies an array of 3 integers, while the latter could be any array
+at all.  But the most important difference is that when you use the
+format string to build the XML-RPC array from ordinary C data
+structures, <tt>(iii)</tt> builds it from three <b>xmlrpc_int</b>
+(essentially, <b>int</b>) variables, while <tt>A</tt> would build the
+very same array from a single <b>xmlprc_value</b> object.  This would
+be pretty useless all by itself, because the input and output are the
+same <b>xmlrpc_value</b>.  But if you consider the format strings
+<tt>((iii)(iii)(iii))</tt> and <tt>(AAA)</tt>, you can see the value.
+
+<p>The functions that use format strings to interpret an XML-RPC value
+define an extension to this format string format in which an asterisk
+('*') means &quot;ignore tail.&quot; See the descriptions of those
+functions for details.
+
+
+<h2 id="xmlencodedecode">XML Encoding And Decoding</h2>
+
+<p>These are functions for creating and interpreting XML streams that
+are part of an XML-RPC conversation.  You don't need these functions
+if you use the high level client and server functions.  Those take
+care of generating and interpreting XML without you ever seeing the
+XML.  
+
+<p>These functions are for programs that control the conversation at a
+lower level or implement a variation on XML-RPC.  For example, you
+might substitute some other method than HTTP to transmit the XML.
+(XML-RPC specifies HTTP).
+
+<p>An example of using these library routines to generate XML for
+an XML-RPC call is the program <b>gen_sample_add_xml</b> in the
+examples directory of the Xmlrpc-c source tree.  It writes to Standard
+Output the XML for the call that the <b>xmlrpc_sample_add_client</b>
+example client makes.  Here are the highlights:
+
+<pre>
+<code>
+    params = xmlrpc_build_value(&amp;env, &quot;(ii)&quot;, 
+                                (xmlrpc_int32) 5, (xmlrpc_int32) 7);
+    
+    xmlmemblockP = XMLRPC_MEMBLOCK_NEW(char, &amp;env, 0);
+
+    xmlrpc_serialize_call(&amp;env, xmlmemblockP, methodName, params);
+
+    fwrite(XMLRPC_MEMBLOCK_CONTENTS(char, xmlmemblockP), 
+           sizeof(char), 
+           XMLRPC_MEMBLOCK_SIZE(char, xmlmemblockP), 
+           stdout);
+
+    XMLRPC_MEMBLOCK_FREE(char, xmlmemblockP);
+
+    /* Dispose of our parameter array. */
+    xmlrpc_DECREF(params);
+</code>
+</pre>
+
+<p>In all the XML encoding functions, the XML comes back as a
+character array in the form of a <a href="libxmlrpc_util.html#memoryblock">memory
+block</a>.  You supply a memory block and the encoding function
+appends characters to it.  For some strange reason, the XML decoding
+functions aren't symmetrical.  They take the XML as a regular C
+character array and a length.
+
+<p>The decoding functions that return an <b>xmlrpc_value</b> object
+add a reference to the object to represent the caller's use of it
+(so the caller must eventually release it).  The encoding functions
+copy instead of refer to input objects, so they never add references.
+
+<p>The XML that these functions generates always uses UTF-8 character
+encoding (as in &quot;&lt;?xml encoding=&quot;UTF-8&quot;?&gt;).
+
+<p>Strings in the Xmlrpc-c interface also are always encoded in
+<a href="libgeneral.html#characterencoding">UTF-8</a>, so if you take some XML
+and convert it naively to a C string (i.e. use the same bytes and add a
+terminating NUL), that XML had better use UTF-8 character encoding.
+
+
+<h3 id="limit">Resource Limits</h3>
+
+<p>All of these functions place a limit on the size and nesting level
+of XML they are willing to work with (encode or decode), intended to 
+reduce the chance of overusing computer resources.
+
+<p>There is a generalized resource limits facility in <b>libxmlrpc</b>.
+It is designed to cover all aspects of the Xmlrpc-c libraries, but in
+the present implementation it affects only XML encoding and decoding.
+
+<p>Any function that you ask to encode or decode XML in excess of a
+limit fails.
+
+<p>The limits are process-global (i.e. stored as C static global
+variables).
+
+<p>Each limit has a name and an integer value.  Here is a list of
+them; the name is also the name of a C macro that you can use in the
+library functions to refer to the limit.
+
+<dl>
+<dt>XMLRPC_NESTING_LIMIT_ID
+
+<dd>Maximum level of nesting of XML allowed.  E.g. the XML
+&quot;&lt;value&gt;&lt;string&gt;hello&lt;/string&gt;&lt;/value&gt;&quot;
+has a nesting level of 2.
+
+<p>The default is 64.
+
+
+<DT>XMLRPC_XML_SIZE_LIMIT_ID
+
+<dd>Maximum number of characters allowed in any XML element.  An XML-RPC
+response is an example of an XML element.
+
+<p>Note that this limit does not control the network layer; your
+system may still attempt to receive XML much larger than this.  After
+it successfully receives it into a buffer, <b>libxmlrpc</b> will
+refuse to process it and discard it.
+
+<p>The default is 512K.
+
+</dl>
+
+<h4 id="limit_set">xmlrpc_limit_set()</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_limit_set(XMLRPC_XML_SIZE_LIMIT_ID, 5e6);
+</code>
+</pre>
+
+<p>This function sets a limit.
+
+
+<h4 id="limit_get">xmlrpc_limit_get()</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    printf(&quot;The nesting limit is %u&quot;,
+           xmlrpc_limit_get(XMLRPC_NESTING_LIMIT_ID);
+</code>
+</pre>
+
+<p>This function queries a limit.
+
+
+<h3 id="xmlencoding">XML Encoding</h3>
+
+<p>All of the XML encoding (&quot;serializing&quot;) functions return results
+like this: The function takes a handle of
+a <a href="libxmlrpc_util.html#memoryblock">memory block</a> as an argument, and
+returns the XML by appending it to the memory block.  The value does not have
+a terminating NUL.
+
+
+<h4 id="serialize_call">xmlrpc_serialize_call()</h4>
+
+<p><b>xmlrpc_serialize_call()</b> creates the XML for an entire
+XML-RPC call.  As an XML-RPC client, all you have to do to make a call
+is transmit this text string over an HTTP connection to an
+XML-RPC server (and then accept the forthcoming response).
+
+<p>To use the function, you supply a method name and the parameters and the
+function gives you XML.  You supply the parameters as an <b>xmlrpc_value</b>
+array object, one array element per parameter.
+
+<p>The <a href="#dialect">XML-RPC dialect</a> this subroutine generates
+is <b>i8</b>.
+
+<h4 id="serialize_call2">xmlrpc_serialize_call2()</h4>
+
+<p>This is the same as <b>xmlrpc_serialize_call()</b> except that it
+has an argument to specify the <a href="#dialect">XML-RPC dialect</a>
+for the generated XML.
+
+<p>This subroutine was new in Xmlrpc-c 1.11 (June 2007).
+
+<h4 id="serialize_response">xmlrpc_serialize_response()</h4>
+
+<p><b>xmlrpc_serialize_response()</b> creates the XML for an entire
+success response to an XML-RPC call.  As an XML-RPC server, all you
+have to do to respond to (and thus complete) a call is transmit this
+text string over the HTTP connection on which you received the
+call.  You supply the response value as an <b>xmlrpc_value</b> object
+and the function gives you XML.
+
+<p>The <a href="#dialect">XML-RPC dialect</a> this subroutine generates
+is <b>i8</b>.
+
+<h4 id="serialize_response2">xmlrpc_serialize_response2()</h4>
+
+<p>This is the same as <b>xmlrpc_serialize_response()</b> except that it
+has an argument to specify the <a href="#dialect">XML-RPC dialect</a>
+for the generated XML.
+
+<p>This subroutine was new in Xmlrpc-c 1.11 (June 2007).
+
+<h4 id="serialize_fault">xmlrpc_serialize_fault()</h4>
+
+<p><b>xmlrpc_serialize_fault()</b> is similar to
+<b>xmlrpc_serialize_response()</b> except that it creates the XML for
+a fault response.  You supply the fault information as a
+<b>xmlrpc_env</b> object.
+
+<p>There is no corresponding function to decode fault XML, as explained
+in <a href="#xmldecoding">XML Decoding</a>.
+
+
+<h4 id="serialize_params">xmlrpc_serialize_params()</h4>
+
+<p><b>xmlrpc_serialize_params()</b> generates a &lt;params&gt; XML
+element.  (a &lt;params&gt; element is part of an XML-RPC call).  You
+give it an <b>xmlrpc_value</b> array object and it makes a parameter
+out of each element of the array.
+
+<p>The <a href="#dialect">XML-RPC dialect</a> this subroutine generates
+is <b>i8</b>.
+
+<p>There is no corresponding function to decode parameter XML, as explained
+in <a href="#xmldecoding">XML Decoding</a>.
+
+
+<h4 id="serialize_params2">xmlrpc_serialize_params2()</h4>
+
+<p>This is the same as <b>xmlrpc_serialize_params()</b> except that it
+has an argument to specify the <a href="#dialect">XML-RPC dialect</a>
+for the generated XML.
+
+<p>There is no corresponding function to decode parameter XML, as explained
+in <a href="#xmldecoding">XML Decoding</a>.
+
+<p>This subroutine was new in Xmlrpc-c 1.11 (June 2007).
+
+<h4 id="serialize_value">xmlrpc_serialize_value()</h4>
+
+<p><b>xmlrpc_serialize_value()</b> generates a &lt;value&gt; XML
+element (&lt;value&gt; elements are found in XML-RPC calls and
+responses).  You give it the value as an <b>xmlrpc_value</b> object.
+
+<p>The <a href="#dialect">XML-RPC dialect</a> this subroutine generates
+is <b>i8</b>.
+
+<p>You can decode value XML with <a
+href="#parse_value_xml"><b>xmlrpc_parse_value_xml()</b></a>
+
+<h4 id="serialize_value2">xmlrpc_serialize_value2()</h4>
+
+<p>This is the same as <b>xmlrpc_serialize_value()</b> except that it
+has an argument to specify the <a href="#dialect">XML-RPC dialect</a>
+for the generated XML.
+
+<p>There is no corresponding function to decode value XML, as explained
+in <a href="#xmldecoding">XML Decoding</a>.
+
+<p>This subroutine was new in Xmlrpc-c 1.11 (June 2007).
+
+<h3 id="xmldecoding">XML Decoding</h3>
+
+<p>These are functions you can use to decode the two kinds of XML documents
+that occur in XML-RPC: call and response.
+
+<p>You might expect the library to contain functions for decoding the
+individual XML-RPC entities such as parameter lists, since the
+library does include functions for going the other direction (e.g.  <a
+href="#serialize_value2"><b>xmlrpc_serialize_value2()</b></a>).  But it
+doesn't because of a basic asymmetry in the world of XML: It is much harder to
+parse XML than to construct it.  Because of this, a program that has to parse
+XML-RPC normally uses a general purpose XML document parser (such as
+<b>libxml2</b> or <b>expat</b>) to parse an entire call or response and never
+actually sees the XML for the individual XML-RPC entities.  So a function
+to parse XML text for just an XML-RPC value would be waste of development
+effort.
+
+<h4 id="parse_value_xml"><B>xmlrpc_parse_value_xml()</B></h4>
+
+<p><b>xmlrpc_parse_value_xml()</b> interprets the XML for an XML-RPC value --
+a <b>&lt;value&gt; element</b>.  You supply the XML and the function returns
+the value it represents as an <b>xmlrpc_value</b> object.
+
+<p>You probably won't find this useful, because in the course of processing
+XML-RPC, you rarely find a &lt;value&gt; element on its own, as explained
+at the top of <a href="#xmldecoding">XML Decoding</a>.
+
+<h4 id="parse_call">xmlrpc_parse_call()</h4>
+
+<p><b>xmlrpc_parse_call()</b> interprets the XML for an entire XML-RPC
+call.  You supply XML and the function returns the name of the method
+called and its parameters.  The parameters come as an <b>xmlrpc_value</b>
+array object, with one element for each parameter.
+
+<h4 id="parse_response2">xmlrpc_parse_response2()</h4>
+
+<p><b>xmlrpc_parse_response2()</b> interprets the XML for an entire
+XML-RPC response.  You supply XML and the function returns the
+response value or fault information, depending on whether it is a
+success or failure response.  The response value comes back as an
+<b>xmlrpc_value</b> object.  The fault information as an
+<b>xmlrpc_env</b> object.
+
+
+<h4 id="parse_response">xmlrpc_parse_response()</h4>
+
+<p><b>xmlrpc_parse_response()</b> is obsolete, superseded by
+<b>xmlrpc_parse_response2()</b>.  The essential difference is that
+<b>xmlrpc_parse_response()</b> merges the concept of a response that
+indicates failure and the concept of a failure to decode the response
+(i.e. the <i>envP</i> and <i>faultCodeP</i> and <i>faultStringP</i>
+arguments of <b>xmlrpc_parse_response2()</b>.
+
+
+<h3 id="xmlcharacter">Character Set/Encoding</h3>
+
+<p>These facilities follow the
+<a href="libgeneral.html#xmlrpccharencoding">Xmlrpc-c rules</a> for character
+sets and encodings where you are encoding or decoding an entire XML-RPC
+message.
+
+<p>Facilities for encoding just a fragment of an XML-RPC message (in
+particular, an XML-RPC value, as a &lt;value&gt; element), do <em>not</em>
+include an XML Processing Instruction declaring the encoding.  Likewise,
+facilities for decoding a fragment typically will not see an XML Processing
+Instruction and thus will work properly only if the fragment is encoded in
+UTF-8.
+
+
+<h2 id="jsonencodedecode">JSON Encoding And Decoding</h2>
+
+<p>The JSON feature of XML-RPC For C/C++ is a bonus feature unrelated to
+XML-RPC.  It lets you use Xmlrpc-c XML-RPC value processing facilities
+(i.e. the <b>xmlrpc_value</b> data type) with JSON, but does not provide any
+way for you use use JSON in any client/server communication (and if it did,
+that would not be XML-RPC).
+
+<p>The idea is that if you already know Xmlrpc-c and have code to deal with
+<b>xmlrpc_value</b>, or have a program that uses Xmlrpc-c for XML-RPC
+communication, it may be convenient to be able to use the same facilities
+to represent integers and arrays and such as JSON.
+
+<p>While you could instead use Xmlrpc-c facilities such as
+<b>xmlrpc_serialize_value</b> to represent integers and arrays and such in
+XML, JSON is usually more convenient.  Indeed, if JSON had been around when
+XML-RPC was invented, XML-RPC might have been JSON-RPC instead.  (In fact,
+there exists a protocol called JSON-RPC today, but it is fundamentally
+different from XML-RPC in that it is not an RPC protocol at all, but rather
+a general messaging protocol).
+
+<p>Here is an example of how you might use these JSON facilities in your
+XML-RPC server: Assume this server performs an RPC by reading information out
+of a file and sending it to a client.  You could define that file to be in
+JSON format.  So use <b>json_parse_value()</b> to read the information from
+the file as a <b>xmlrpc_value</b>.  Now use that <b>xmlrpc_value</b> as the
+return value of your XML-RPC method function.
+
+<p>The JSON taxonomy of values is somewhat different from the XML-RPC
+taxonomy; Xmlrpc-c resolves that as follows:
+
+<ul>
+<li>A JSON null corresponds to an XML-RPC nil.
+<li>A JSON boolean corresponds to an XML-RPC boolean.
+<li>A JSON string corresponds to an XML-RPC string.
+<li>A JSON number corresponds to either a pseudo-XML-RPC 64 bit integer or an
+XML-RPC floating point number, depending on whether the JSON contains
+a decimal point.
+<li>A JSON array corresponds to an XML-RPC array.
+<li>A JSON object corresponds to an XML-RPC structure.
+<li>An XML-RPC datetime converts to a JSON string that is the datetime
+in ISO 8601 form.  No JSON value converts to an XML-RPC datetime.
+<li>An XML-RPC bit string converts to a JSON string that is the bit string
+in base64.  No JSON value converts to an XML-RPC bit string.
+</ul>
+
+<p>There is a complete example of using the JSON encoding and decoding
+facilities in the <b>examples</b> directory of the Xmlrpc-c source tree
+as <b>json.c</b>.
+
+<p>Before Xmlrpc-c 1.25 (December 2010), JSON integers mapped to XML-RPC
+standard 32 bit integers.  (We accepted this compatibility-breaking change
+because we believed there were virtually no users of this new facility
+at that time).
+
+<h3 id="jsonencoding">JSON Encoding</h3>
+
+<h4 id="serialize_json">xmlrpc_serialize_json()</h4>
+
+<p><b>xmlrpc_serialize_json()</b> generates a JSON representation of
+an XML-RPC value, which you supply as an <b>xmlrpc_value</b> object.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_mem_block json;
+    xmlrpc_value * valP;
+    XMLRPC_MEMBLOCK_INIT(char, &amp;env, &amp;json, 0);
+
+    xmlrpc_serialize_json(&amp;env, valP, &amp;json);
+
+    printf(&quot;JSON: %s\n&quot;, XMLRPC_MEMBLOCK_CONTENTS(char, &amp;out));
+
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_serialize_json(xmlrpc_env *       const envP,
+                          xmlrpc_value *     const valP,
+                          xmlrpc_mem_block * const jsonP);
+</code>
+</pre>
+
+<p><i>valP</i> points to the XML-RPC value object to be converted.
+
+<p><b>xmlrpc_serialize_json()</b> appends the JSON representation of the
+XML-RPC value to the <a href="libxmlrpc_util.html#memoryblock">memory block</a>
+pointed to by <i>jsonP</i>, and an ASCIIZ string.
+
+<p><i>envP</i> points to the <a href="libxmlrpc_util.html#errorhandling">environment
+variable</a>.
+
+<p>This subroutine was new in Xmlrpc-c 1.22 (March 2010).
+
+
+<h3 id="jsondecoding">JSON Decoding</h3>
+
+<h4 id="xmlrpc_parse_json">xmlrpc_parse_json()</h4>
+
+<p><b>xmlrpc_parse_json()</b> generates an <b>xmlrpc_value</b> that
+represents the value that is represented by JSON text you supply.
+
+<p>Example:
+
+<pre>
+<code>
+    const char * const json = &quot;{&quot;serial&quot;: 7}
+
+    xmlrpc_value * const valP = xmlrpc_parse_json(&amp;env, json);
+
+    xmlrpc_value * serialP;
+    int serial;
+
+    xmlrpc_struct_find_value(&amp;env, valP, &quot;serial&quot;, &amp;serialP);
+
+    xmlrpc_read_int(&amp;env, serialP, &amp;serial);
+    assert(serial == 7);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value *
+    xmlrpc_parse_json(xmlrpc_env * const envP,
+                      const char * const json);
+</code>
+</pre>
+
+<p><i>json</i> is the JSON representation of the value, as an ASCIIZ string.
+
+<p>The return value is a new XML-RPC value object that represents the value.
+The caller owns a reference to the value and must enventually release it.
+
+<p><i>envP</i> points to
+the <a href="libxmlrpc_util.html#errorhandling">environment variable</a>.
+
+<p><b>xmlrpc_parse_json</b> recognizes and ignores comments in
+C++/Java/Javascript form (i.e. everything from &quot;//&quot; to the end of
+the line is a comment).  This is an extension of JSON; standard JSON has
+no comments.
+
+<p>This subroutine was new in Xmlrpc-c 1.22 (March 2010).
+
+
+<h2 id="version">Library Version</h2>
+
+<p><b>xmlrpc_version()</b> tells you what version (release, level) of
+<b>libxmlrpc</b> is linked to your program.
+
+<p>Example:
+
+<pre>
+<code>
+    unsigned int major, minor, point;
+    xmlrpc_version(&amp;major, &amp;minor, &amp;point);
+
+    printf(&quot;libxmlrpc version %u.%u.%u\n&quot;, major, minor, point);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_version(unsigned int * const majorP,
+                   unsigned int * const minorP,
+                   unsigned int * const pointP);
+</code>
+</pre>
+
+<p>This is declared in <b>&lt;xmlrpc-c/base.h&gt;</b> as follows:
+
+<P>The numbers returned are those you see in regular text references to
+the version of XML-RPC For C/++ from which that <b>libxmlrpc</b> comes,
+E.g. &quot;1.16.31.&quot;
+
+<p>This function was new in Xmlrpc-c <b>1.25</b> (December 2010).  Before
+that, you can use the following external integer variables (Still available,
+but now deprecated, because it's not possible to export integer variables
+directly in a Windows DLL).
+
+<pre>
+<code>
+    extern unsigned int const xmlrpc_version_major;
+    extern unsigned int const xmlrpc_version_minor;
+    extern unsigned int const xmlrpc_version_point;
+</code>
+</pre>
+
+<p>These symbols were new in Xmlrpc-c 1.13 (December 2007).
+
+</body>
+</html>

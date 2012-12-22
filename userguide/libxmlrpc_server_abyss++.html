@@ -1,0 +1,1054 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server_abyss++</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server_abyss++</b> function library, which is part of
+XML-RPC For C/C++ (Xmlrpc-c).  Also see <a
+href="libgeneral++.html">General Library Information - C++</a>
+
+<p>The <b>libxmlrpc_server_abyss++</b> library provides C++ classes
+for use in a program that is an XML-RPC server based on the Abyss HTTP
+server.
+
+<p>When using <b>libxmlrpc_server_abyss++</b>, you must also use the <a
+href="libxmlrpc++.html"><b>libxmlrpc++</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server_abyss++</b> classes depend on it.
+
+<p>Similarly, you will need the <a
+href="libxmlrpc_server++.html">libxmlrpc_server++</a> library.  It
+contains C++ classes for XML-RPC servers that are not specific to
+Abyss-based servers.  And <b>libxmlrpc_server_abyss++</b> classes
+depend on it.
+
+<p>Finally, you will need Abyss itself, which is in the library
+<b>libxmlrpc_abyss</b>, which is part of Xmlrpc-c.  Note that there
+is no C++ version of Abyss.  <B>libxmlrpc_abyss</B> is straight C.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#about_abyss">About Abyss</a>
+<li><a href="#facilities">Description Of Facilities</a>
+  <ul>
+  <li><a href="#class_serverAbyss">class <b>serverAbyss</b></a>
+    <ul>
+    <li><a href="#serverAbyss_example">Example</a>
+    <li><a href="#serverAbyss_constructors">Constructors</a>
+    <li><a href="#run"><b>run</b> Method</a>
+    <li><a href="#runonce"><b>runOnce</b> Method</a>
+    <li><a href="#runconn"><b>runConn</b> Method</a>
+    <li><a href="#sigchld"><b>sigchld</b> Method</a>
+    <li><a href="#terminate"><b>terminate</b> Method</a>
+    <li><a href="#shutdown"><b>shutdown</b> Subclass</a>
+    </ul>
+  <li><a href="#class_callinfo_serverAbyss">
+      class <b>callinfo_serverAbyss</b></a>
+    <ul>
+    <li><a href="#callInfo_constructors">Constructors</a>
+    <li><a href="#callInfo_serverAbyssP"><b>serverAbyssP</b> Member</a>
+    <li><a href="#callInfo_sessionAbyssP"><b>sessionAbyssP</b> Member</a>
+    </ul>
+  <li><a href="#set_handlers"><b>server_abyss_set_handlers</b> function</a>
+    <ul>
+    <li><a href="#set_handlers_overview">Overview</a>
+    <li><a href="#set_handlers_description">Description</a>
+    </ul>
+  </ul>
+<li><a href="#notes">Notes</A>
+  <ul>
+  <li><a href="#httpauth">HTTP Authentication</a>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_server_abyss.hpp</B> header file declares the
+interface to <b>libxmlrpc_server_abyss</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server_abyss++</b> library is
+<b>libxmlrpc_server_abyss++.a</b> or <b>libxmlrpc_server_abyss++.so</b>.
+The classic linker option to cause the library to be linked into your
+program is <tt>-l xmlrpc_server_abyss++</tt>.  These are hints; you'll
+have to modify this according to conventions of your particular
+platform.  You'll also have to figure out where the library resides
+and how to make your linker look there for it.
+
+
+<p>Because the <a
+href="libxmlrpc++.html#linking"><b>libxmlrpc++</b></a>, <a
+href="libxmlrpc_server++.html"><b>libxmlrpc_server++</b></a>, and <a
+href="libxmlrpc_abyss.html"><b>libxmlrpc_abyss</b></a> libraries are
+prerequisites, you'll also need to link those, and their prerequisite
+libraries, into your XML-RPC server program.
+
+<p>You can use <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>, specifying the
+&quot;c++2&quot; and &quot;abyss-server&quot; features, to find out
+what libraries to link.  This is designed to be used in a build
+program such as a make file.  When properly installed, it tells
+exactly how to link on your particular system.
+
+
+<h2 id="example">Example</h2>
+
+<p>See <a href="index.html#serverexamplepp">Introductory Examples</a>
+for a complete example of a simple XML-RPC server based on Abyss
+written in C++.
+
+<h2 id="about_abyss">About Abyss</h2>
+
+<p>See <a href="libxmlrpc_server_abyss.html#aboutabyss">C library
+abyss server documentation</a> for general information about Abyss and
+the various options you have for building an XML-RPC server based on
+it.  Xmlrpc-c provides a C++ version of only the highest level of
+those methods: A C++ alternative to <b>xmlrpc_server_abyss()</b>.
+
+
+<h2 id="facilities">Description Of Facilities</h2>
+
+<h3 id="class_serverAbyss">class <b>serverAbyss</b></h3>
+
+<p>An object of class <b>xmlrpc_c::serverAbyss</b> is an XML-RPC server
+based on the Abyss HTTP server.
+
+<p>The server responds to XML-RPC calls addressed to a particular
+URI path (usually &quot;/RPC2&quot;, but you choose when you create the
+object).
+
+<p>You supply the XML-RPC methods for the server to execute as an <a
+href="libxmlrpc_server++.html#method_registry">Xmlrpc-c method
+registry</a>.
+
+<p>There are essentially three ways to use a <b>serverAbyss</b>
+object:
+
+<UL>
+<li>You supply a TCP port number; the server listens for connections
+from XML-RPC clients to that port number.
+<li>You supply a TCP socket, already bound to the port number you want;
+the server listens for connections from XML-RPC clients on that socket.
+<li>You supply already connected sockets, one at a time.  The server
+processes an RPC on each socket you provide.
+</UL>
+
+<p>You choose between these models by your choice to specify the
+<b>portNumber</b>, <b>socketFd</b>, or neither option to the
+constructor.
+
+<p>The simplest thing is to use <b>portNumber</b> and let
+<b>serverAbyss</b> do all the work.  But it's often good design to
+leave binding of a socket to a separate program.  For one thing, it's
+an operation common to all TCP servers, and it's nice to avoid
+duplicating it in your XML-RPC server program.  Also, it's better for
+security: The binding program can have privileges needed to bind a
+reserved port number, while the XML-RPC server program does not.
+
+<p>Using individual connected sockets (don't specify either
+<b>portNumber</b> or <b>socketFd</b>) works for an inetd-based server
+and is also useful if you have some other sophisticated connection
+management system.
+
+<h4 id="serverAbyss_example">Example</h4>
+
+<p>See <a href="index.html#serverexamplepp">Introductory Examples</a>
+for a complete example of a simple XML-RPC server that uses
+<b>xmlrpc_c::serverAbyss</b>.
+
+
+<h4 id="serverAbyss_constructors">Constructors</h4>
+
+<p>Overview:
+
+<pre>
+<code>
+serverAbyss::serverAbyss(constrOpt const&amp; opt);
+</code>
+</pre>
+
+<p>Examples:
+
+<p>Listens for and processes RPCs on Port 8080:
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    ...
+    xmlrpc_c::serverAbyss abyssServer(xmlrpc_c::serverAbyss::constrOpt()
+                                      .registryP(&amp;myRegistry)
+                                      .portNumber(8080)
+                                      .logFileName("/tmp/xmlrpc_log")
+                                     );
+</code>
+</pre>
+
+<p>Same, using an automatic pointer to manage registry lifetime:
+
+<pre>
+<code>
+    xmlrpc_c::registryPtr myRegistryP(new xmlrpc_c::registry);
+    ...
+    xmlrpc_c::serverAbyss abyssServer(xmlrpc_c::serverAbyss::constrOpt()
+                                      .registryPtr(myRegistryP)
+                                      .portNumber(8080)
+                                     );
+</code>
+</pre>
+
+<p>You bind the socket yourself, then server accepts connections on it:
+
+<pre>
+<code>
+    ...
+    int fd;
+    fd = socket(...);
+    ...
+    bind(fd, ...);
+    xmlrpc_c::serverAbyss abyssServer(xmlrpc_c::serverAbyss::constrOpt()
+                                      .registryPtr(myRegistryP)
+                                      .socketFd(fd)
+        );
+</code>
+</pre>
+
+<p>You pass connections to the server one at a time, like inetd:
+
+<pre>
+<code>
+    ...
+    xmlrpc_c::serverAbyss abyssServer(xmlrpc_c::serverAbyss::constrOpt()
+                                      .registryPtr(myRegistryP)
+                                     );
+</code>
+</pre>
+
+<p>This constructor uses the <a
+href="libxmlrpc++.html#constropt"><i>constrOpt</i> paradigm</a> to
+make specifying options easy and flexible, though technically there is
+just one C++ parameter.
+
+<p>The option methods are:
+
+<dl>
+
+<dt>registryPtr(xmlrpc_c::registryPtr)
+
+<dd>This is a pointer to the method registry the server is to use.
+The pointer takes care of managing the existence of the registry;
+you can destroy all your pointers to the registry after the constructor
+returns.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>registryP(const xmlrpc_c::registry *)
+
+<dd>This is a pointer to the method registry the server is to use.
+You must ensure that the registry to which it points continues to exist
+as long as the server (xmlrpc_c::serverAbyss object) does.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>socketFd(xmlrpc_socket)
+
+<dd>This identifies a TCP socket that is bound to the desired network
+address, ready to be listened on.  It is analogous to the
+<b>libxmlrpc_server_abyss</b> <a href="libxmlrpc_server_abyss.html#socket_fd"><b>socket_fd</b></a> parameter with the following exceptions.
+
+<p>You cannot specify <b>sockaddrP</b> or <b>portNumber</b> if you
+specify <b>socketFd</b>.
+
+<p>If you specify neither <b>socketFd</b> nor <b>sockAddrP</b>
+nor <b>portNumber</b>, instead of a server that listens on IP Version 4 Port
+8080, you get a server that does not listen at all.  It does not accept
+connections.  Your program must feed complete connections to the server one at
+a time.
+
+<dt>portNumber(unsigned int)
+
+<dd>This gives the TCP port number on which the server is to listen for
+connections from XML-RPC clients.  It is analogous to the
+<b>libxmlrpc_server_abyss</b> <a href="libxmlrpc_server_abyss.html#port_number"><b>port_number</b></a>
+parameter with the following exceptions.
+
+<p>If you specify neither <b>socketFd</b> nor <b>sockAddrP</b>
+nor <b>portNumber</b>, instead of a server that listens on IP Version 4 Port
+8080, you get a server that does not listen at all.  It does not accept
+connections.  Your program must feed complete connections to the server one at
+a time.
+
+<dt>sockAddrP(const struct sockaddr *)
+
+<dd>This points to a conventional POSIX socket address that tells the network
+address and port where the server will listen for connections from XML-RPC
+clients.  It is analogous to the
+<b>libxmlrpc_server_abyss</b>
+<a href="libxmlrpc_server_abyss.html#sockaddr_p"><b>sockaddr_p</b></a>
+parameter with the following exceptions.
+
+<p>If you specify neither <b>socketFd</b> nor <b>sockAddrP</b>
+nor <b>portNumber</b>, instead of a server that listens on IP Version 4 Port
+8080, you get a server that does not listen at all.  It does not accept
+connections.  Your program must feed complete connections to the server one at
+a time.
+
+<p>This option was new in Xmlrpc-c 1.30 (March 2012).
+
+<dt>sockAddrLen(socklen_t)
+
+<dd>This goes with <b>sockAddrP</b>. 
+
+It is analogous to the
+<b>libxmlrpc_server_abyss</b> 
+<a href="libxmlrpc_server_abyss.html#sockaddrlen"><b>sockaddrlen</b></a>
+parameter.
+
+<p>This option was new in Xmlrpc-c 1.30 (March 2012).
+
+<dt>uriPath(std::string)<dd>
+
+<p>This names the URI path of the XML-RPC server.  For example, if a
+client will make an XML-RPC call using the URL
+&quot;http://www.google.com/RPC2&quot;, the URI path is &quot;/RPC2&quot;.
+The Abyss server will process as an XML-RPC call anything POSTed to
+that URI path and reject requests to any other URI path.
+
+<p>The default is &quot;/RPC2&quot;.
+
+<p>For more information on what a URI path is, see
+<a href="libxmlrpc_server_abyss.html#set_handlers2">
+<b>xmlrpc_server_abyss_set_handlers2()</b></a>.
+
+<p>This option was new in Xmlrpc-c 1.06 (June 2006).  Before that, the
+URI path is always &quot;/RPC2&quot;.
+
+<dt>logFileName(std::string)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#log_file_name"><B>log_file_name</b>
+parameter</a>.
+
+<dt>maxConn(unsigned int)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#max_conn"><B>max_conn</b>
+parameter</a>.  It was new in Xmlrpc-c 1.31 (September 2012).
+
+<dt>maxConnBacklog(unsigned int)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#max_conn_backlog"><B>max_conn_backlog</b>
+parameter</a>.  It was new in Xmlrpc-c 1.31 (September 2012).
+
+<dt>keepaliveTimeout(unsigned int)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#keepalive_timeout"><B>keepalive_timeout</b>
+parameter</a>.
+
+<dt>keepaliveMaxConn(unsigned int)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#keepalive_maxconn"><B>keepalive_maxconn</b>
+parameter</a>.
+
+<dt>timeout(unsigned int)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#timeout"><B>timeout</b>
+parameter</a>.
+
+<dt>dontAdvertise(bool)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#dont_advertise"><B>dontadvertise</b>
+parameter</a>.
+
+<dt>serverOwnsSignals(bool)
+
+<dd>This says the server object owns all the signals in the process.
+It can install signal handlers.  If other parts of your program need
+to use signals, see the section <a href="#signals"><i>signals</i></a>.
+
+<p>Default is true.
+
+<p>This option was new in Xmlrpc-c 1.19 (June 2009).
+
+<dt>expectSigchld(bool)
+
+<dd>This says you will call the object's <b>sigchld</b> method every time
+the program receives a SIGCHLD signal.
+
+<p>This is meaningful only when
+<b>serverOwnsSignals</b> is false (otherwise, you don't know anything about
+signals).  Assuming it is, you ordinarily want to call <b>sigchld</b> like
+this and specify <b>expectSigchld(true)</b> to let the object know you will.
+See the section <a href="#signals"><i>signals</i></a>.
+
+<p>Default is false.
+
+<p>This option was new in Xmlrpc-c 1.19 (June 2009).
+
+<dt>chunkResponse(bool)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#chunk_response"><B>chunk_response</b>
+parameter</a>.
+
+<dt>allowOrigin(string)
+
+<dd>This is analogous to to the <b>libxmlrpc_server_abyss</b> <a
+href="libxmlrpc_server_abyss.html#allow_origin"><B>allow_origin</b>
+parameter</a>, but doesn't have any analog to the null value.  (If you
+don't want to participate in HTTP access control, just omit this option).
+
+<dt>accessControlMaxAge(unsigned int)
+
+<dd>This is analogous to to the
+<b>libxmlrpc_server_abyss</b> <a href="libxmlrpc_server_abyss.html#access_control_max_age"><B>access_control_max_age</b>
+parameter</a>, but also fills the role of <b>access_control_expires</b>: If
+you specify this option, access control expires.  If you don't it doesn't.
+
+</dl>
+
+
+<p>Here's an older, more primitive constructor:
+
+<pre>
+<code>
+    serverAbyss(
+        xmlrpc_c::registry const&amp; registry,
+        unsigned int       const  portNumber = 8080,
+        std::string        const&amp; logFileName = &quot;&quot;,
+        unsigned int       const  keepaliveTimeout = 0,
+        unsigned int       const  keepaliveMaxConn = 0,
+        unsigned int       const  timeout = 0,
+        bool               const  dontAdvertise = false,
+        bool               const  socketBound = false,
+        xmlrpc_socket      const  socketFd = 0
+        );
+</code>
+</pre>
+
+<p><i>registry</i> defines the methods that the server will execute.
+See <a href="libxmlrpc_server++.html#registry_object">The Registry
+Object</a>.
+
+<p>The rest of the parameters have the same meaning as those of the
+same name used with the <a
+href="libxmlrpc_server_abyss.html#server_abyss_parameters">
+<b>xmlrpc_server_abyss()</b> C interface</a>.
+
+<p>The <i>registry</i> argument is somewhat unconventional and tricky
+to use, due to a design mistake.  While you don't pass a pointer, the
+<b>serverAbyss</b> object remembers its address and refers to it
+throughout its life.  So you must ensure that your registry continues
+to exist as long as the <b>serverAbyss</b> object does.  You should
+really just use the newer <b>constrOpt</b>-based constructor instead.
+
+<p>The server object so created listens on the relevant socket for
+connections.  The operating system will accept and queue some
+connections.  But the object does not take and process any.  For that,
+you need to call a method such as <b>run</b>.
+
+<h4 id="run"><b>run</b> Method</h4>
+
+<p>This method runs the server.
+
+<b>run</b> runs the functions of the server: It accepts connections as
+they arrive and executes the RPCs that come over the connections.  It
+executes RPCs in parallel, not serially; i.e. if RPC 2 arrives when
+the server is still executing the prior RPC 1, the server begins executing
+RPC 2 immediately; it does not wait to finish RPC 1.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::serverAbyss myAbyssServer(
+        xmlrpc_c::serverAbyss::constrOpt()
+        .portNumber(8080)
+        ...);
+
+    myAbyssServer.run();
+</code>
+</pre>
+
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    run();
+</code>
+</pre>
+
+<p>If you need the server to execute RPCs serially, see <a
+href="#runonce"><b>runOnce</b></a>.
+
+<p><b>run</b> returns when the server shuts down, which happens when
+you call its <a href="#terminate"><b>terminate</b></a> method or the
+server executes a <a href="libxmlrpc_server.html#system.shutdown">
+<b>system.shutdown</b></a> <a href="libxmlrpc_server++.html#systemmethod">
+system method</a> (provided you have set up an appropriate
+<a href="#shutdown"><b>shutdown</b></a> object).
+
+<p>As an alternative, you can use <b>runOnce</b> in a loop and use
+various methods to break the loop when you want the server to end.
+
+<p><b>run</b> may throw an error if it is or becomes impossible to run
+the server.
+
+<P>By default, <b>run</b> expects to own all the <a
+href="#signals">signals</a> in the process.  This is of course very
+un-object-like behavior.  If you set up signal handling yourself, see
+the discussion of <a href="#signals">signals</a>.
+
+
+<h4 id="runonce"><b>runOnce</b> Method</h4>
+
+<p>This method causes the server object to process one RPC
+(waiting for one if necessary).  It waits for the next
+HTTP connection on the server's listening socket, accepts it, reads the
+HTTP POST request, executes the indicated RPC, and closes the
+connection.  Note that because the listening socket is perpetually
+listening, the operating system will accept and queue connections on its
+own.  <b>runOnce()</b> processes a previously accepted connection.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::serverAbyss myAbyssServer(
+        xmlrpc_c::serverAbyss::constrOpt()
+        .portNumber(8080)
+        ...);
+
+    myAbyssServer.runOnce();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    runOnce();
+</code>
+</pre>
+
+<p><b>runOnce</b> is a good way to make sure your server executes no
+more than one RPC at a time, when your method function is written to
+be single threaded.  It is also a good way to ensure that all RPCs
+execute against the same memory, as opposed to running in separate
+processes.  And it's the easiest to debug.  All new server programs
+should start out using this interface, before graduating to the more
+demanding <b>run</b> approach.
+
+<p><b>runOnce</b> aborts waiting for a connection request and
+returns immediately if the process receives a signal.  Note that
+unless you have a handler for that signal, the signal will probably
+kill the whole process, so set up a signal handler &mdash; even one that
+does nothing &mdash; if you want to exploit this.  But before Xmlrpc-c 1.06
+(June 2006), signals have no effect &mdash; there is no way to make
+<b>runOnce</b> abort the wait and return.
+
+<p><b>runOnce</b> was new in Xmlrpc-c 1.05 (March 2006).
+
+
+<h4 id="runconn"><b>runConn</b> Method</h4>
+
+<p>This method causes the server object to process one HTTP request
+from the read/write Abyss socket you supply.  For normal HTTP, the
+socket must be for a new TCP connection, with nothing having been read
+or written on the connection yet.  <b>runConn()</b> reads an HTTP
+request from the socket, performs it, and writes the response to the
+socket.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::serverAbyss myAbyssServer(
+         xmlrpc_c::serverAbyss::constrOpt()
+         .registryP(&amp;myRegistry));
+
+    myAbyssServer.runConn(STDIN_FILENO);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    runConn(int socketFd);
+</code>
+</pre>
+
+<p><i>socketFd</i> is a file descriptor (such as you get from a standard C
+library <b>open</b> call) of the aforementioned socket.  It should be a
+stream socket in connected state.
+
+<p>This would be useful for an Inetd application.  Inetd is a server
+common on Unix systems that listens for connections on various ports
+simultaneously.  When it gets one, it accepts it and forks a process
+and execs a program that provides whatever service is supposed to be
+available on the port in question.  For example, Inetd might be
+configured to accept connections to the FTP port, among others.  When
+someone tries to connect to the FTP port, Inetd accepts the connection
+and forks a process running an FTP server program.  It continues
+listening for further FTP connections and forks other FTP server
+processes to handle any others.
+
+<p>Inetd passes the connected stream socket to the processor program
+as its Standard Input.  The processor program must be designed to
+expect a connected stream socket on its Standard Input.  One way to
+construct such a program is to have it call the <b>runConn</b> method
+with the file descriptor number of Standard Input (0) as its argument.
+
+<p><b>runConn</b> was new in Xmlrpc-c 1.05 (March 2006).
+
+
+<h4 id="sigchld"><b>sigchld</b> Method</h4>
+
+<p>This method informs the server object that the process has received
+a SIGCHLD signal, possibly for a child process it created.  You don't use
+this unless you explicitly created the server object to require it.
+
+<p>See section <a href="#signals"><i>signals</i></a> for information on
+how and why to use this.
+
+<p>Example:
+
+<pre>
+<code>
+    static void 
+    sigchld(int const signalClass) {
+    /*----------------------------------------------
+       This is a signal handler for a SIGCHLD signal
+    ----------------------------------------------*/
+        // Reap zombie children / report to Abyss until there aren't any more.
+    
+        bool zombiesExist;
+        bool error;
+    
+        assert(signalClass == SIGCHLD);
+        
+        zombiesExist = true;  // initial assumption
+        error = false;  // no error yet
+        while (zombiesExist &amp;&amp; !error) {
+            int status;
+            pid_t const pid = waitpid((pid_t) -1, &amp;status, WNOHANG);
+        
+            if (pid == 0)
+                zombiesExist = false;
+            else if (pid &lt; 0) {
+                /* because of ptrace */
+                if (errno == EINTR) {
+                    // This is OK - it's a ptrace notification
+                } else
+                    error = true;
+            } else
+                myServerP-&gt;sigchld(pid);
+        }
+    }
+
+    myServerP-&gt;sigchld(pid);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void sigchld(pid_t pid);
+</code>
+</pre>
+
+<p>This method was new in Xmlrpc-c 1.19 (June 2009).
+
+<h4 id="terminate"><b>terminate</b> Method</h4>
+
+<p>This method causes an Abyss XML-RPC server that is running to
+terminate, and to terminate immediately if it starts running in the
+future.
+
+<p>Because a program that starts a server running does not regain
+control as long as the server is running, this is meant to be called
+from a separate thread or signal handler.
+
+<p>Example:
+
+<pre>
+<code>
+    myServerP-&gt;terminate();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void terminate();
+</code>
+</pre>
+
+<p>If you have a signal handler that calls <b>terminate()</b> and the
+process receives a signal while the server is running, the server will
+terminate (<b>run()</b> will return) soon after the signal handler
+returns.  If the server is processing an RPC when the
+process receives the signal, it will not terminate until it is done with that
+RPC.
+
+<p>You can also call this from an XML-RPC method (i.e. from the
+<b>execute</b> method of a <b>xmlrpc_c::method</b> object), as long as
+that object is in the same process that waits for and accepts new
+connections.  If, on the other hand, you are running the server with
+<b>run()</b> and you have a system in which it does that by way of a
+Unix fork, a <b>terminate()</b> from inside an Abyss HTTP request
+handler has no effect.
+
+<p>If you are running the server with <b>run()</b>, which means the
+server processes the connections (executes RPCs) in separate threads,
+<b>terminate()</b> affects only the foreground thread that waits
+for, accepts, and dispatches new connections.  The background RPC
+threads continue normally to completion in their own time.
+
+<p>This method was new in Xmlrpc-c 1.11 (June 2007).  Before that,
+there is no way to terminate a running <b>xmlrpc_c::serverAbyss</b>
+server.
+
+<p>Before Xmlrpc-c 1.14 (March 2008), <b>terminate</b> can't actually
+interrupt anything the server is doing -- the server won't notice it is
+supposed to terminate as long as it is asleep waiting for an RPC.  So the
+server terminates after the next RPC.
+
+<p>The same is true on Windows until Xmlrpc-c 1.25 (December 2010) &mdash;
+<b>terminate</b> can't interrupt anything.
+
+
+<h4 id="shutdown"><b>shutdown</b> Subclass</h4>
+
+<p>This class is for enabling the <b>system.shutdown</b>
+<a href="libxmlrpc_server++.html#systemmethod">system method</a>.
+
+<p>It is a derived class of <b>xmlrpc_c::registry::shutdown</b>,
+so you can pass it to the <a href="libxmlrpc_server++.html#setshutdown">
+<b>xmlrpc_c::registry::setShutdown</b></a> of your method registry
+before running the Abyss server.  Then, when the server executes
+the <b>system.shutdown</b> methods, it has the effect of calling
+the server's <a href="#terminate"><b>terminate</b></a> method.
+
+
+<p>Example:
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+
+    xmlrpc_c::serverAbyss myServer(xmlrpc_c::serverAbyss::constrOpt()
+                                   .registryP(&amp;myRegistry)
+                                   .portNumber(8080)
+                                   );
+
+    xmlrpc_c::serverAbyss::shutdown shutdown(&amp;myServer);
+
+    registry.setShutdown(&amp;shutdown);
+</code>
+</pre>
+
+<p>The only method you will call is the constructor:
+
+<p>Prototype:
+
+<pre>
+<code>
+    shutdown(xmlrpc_c::serverAbyss * const serverP);
+</code>
+</pre>
+
+<p><i>serverP</i> identifies the server that you want the object to
+terminate.  It doesn't make sense to specify any server other than the
+one that you set up to use this registry.
+
+<p>This class was new in Xmlrpc-c 1.13 (December 2007).  Before that,
+there is no way for <b>system.shutdown</b> to shut down a
+<b>serverAbyss</b> server.
+
+<p>Before Xmlrpc-c 1.14 (March 2008) on Unix, and on Windows before Xmlrpc-c
+1.25 (December 2010), <b>system.shutdown</b> can't actually interrupt anything
+the server is doing &mdash; the server won't notice it is supposed to
+terminate as long as it is asleep waiting for an RPC.  So you normally have to
+call it twice -- once to request shutdown, and once to wake up the master
+thread so it notices the request.  But if you're running the server in a
+single-thread manner, you don't have this problem because the server will
+notice the termination after the <b>system.shutdown</b> completes and before
+it waits for the next RPC.
+
+
+<h3 id="class_callinfo_serverAbyss">Class <b>callinfo_serverAbyss</b></h3>
+
+<p>An object of class <b>callinfo_serverAbyss</b> is something that gets
+passed to your XML-RPC method (i.e. to the <b>execute</b> method of a
+<b>xmlrpc_c::method</b> object) to give it information about how the XML-RPC
+call arrived.  It is an instance of <a
+href="libxmlrpc_server++.html#callinfo"><b>xmlrpc_c::callInfo</b></a> specific
+to <b>serverAbyss</b> servers.
+
+<p>You can use this, among other things, to find out the IP address of the
+XML-RPC client.
+
+<p>This class was new in Xmlrpc-c Release 1.19 (June 2009).  Before that,
+information about how the XML-RPC call arrived is not available to your
+XML-RPC method.
+
+
+<h4 id="callInfo_constructors">Constructors</h4>
+
+<p>You don't construct or destroy a <b>callInfo_serverAbyss</b>.
+Methods of <b>serverAbyss</b> do that &mdash; you just follow a pointer to it
+and use it.
+
+<h4 id="callInfo_serverAbyss"><b>serverAbyssP</b> Member</h4>
+
+<p>Member <b>serverAbyssP</b> is a pointer to the <b>serverAbyss</b> object
+that is the XML-RPC server through which the call arrived.
+
+<p><b>serverAbyss</b> per se doesn't contain any members that are useful to
+your XML-RPC method, but derived class members might.  For example, you might
+have defined a derived class of <b>serverAbyss</b> called
+<b>serverAbyssXyz</b> and endowed it with information you want your XML-RPC
+method to have.  Your XML-RPC method, then, need only do a dynamic cast of
+<b>serverAbyssP *</b> to <b>serverAbyssXyz *</b> and use that pointer to
+access your information.
+
+<h4 id="callInfo_sessionAbyss"><b>sessionAbyssP</b> Member</h4>
+
+<p>Member <b>sessionAbyssP</b> is a pointer to the Abyss session object (type
+<b>TSession</b>) through which the XML-RPC call arrived.  An Abyss session is
+essentially an HTTP transaction.  In the simplest HTTP, it is also a TCP
+connection; but more sophisticated HTTP has persistent connections, which
+means a single TCP connection can host multiple Abyss sessions.
+
+<p>You can use <b>libxmlrpc_abyss</b>'s <a
+href="libxmlrpc_abyss.html#SessionGetRequestInfo"><b>SessionGetRequestInfo()</b></a>
+and <a
+href="libxmlrpc_abyss.html#SessionGetChannelInfo">SessionGetChannelInfo</a> to
+get information about how the RPC arrived.
+
+<p>You're not supposed to use the Abyss session object in any other way
+&mdash; <b>libxmlrpc_server_abyss++</b> owns it.
+
+<p>Here is an example of getting the IP address and TCP port number of
+the XML-RPC client, assuming you're using a conventional Abyss server
+that uses conventional Unix sockets:
+
+<pre>
+<code>
+
+class testCallInfoMethod : public xmlrpc_c::method2 {
+public:
+    void
+    execute(xmlrpc_c::paramList        const&amp; paramList,
+            const xmlrpc_c::callInfo * const  callInfoPtr,
+            xmlrpc_c::value *          const  retvalP) {
+
+        const xmlrpc_c::callInfo_serverAbyss * const callInfoP(
+            dynamic_cast&lt;const xmlrpc_c::callInfo_serverAbyss *&gt;(callInfoPtr));
+
+        void * chanInfoPtr;    
+        SessionGetChannelInfo(callInfoP-&gt;abyssSessionP, &amp;chanInfoPtr);
+
+        struct abyss_unix_chaninfo * const chanInfoP(
+            static_cast&lt;struct abyss_unix_chaninfo *&gt;(chanInfoPtr));
+        
+        struct sockaddr const clientAddr(chanInfoP-&gt;peerAddr);
+
+        // Now pick apart 'clientAddr' in the usual way to get to the
+        // IP address and port number.  It is the same type of data you
+        // would get from POSIX accept().
+
+        ...
+    }
+</code>
+</pre>
+
+<p>There is a complete working example of this in the Xmlrpc-c source tree as
+<a
+href="http://xmlrpc-c.svn.sourceforge.net/viewvc/xmlrpc-c/trunk/examples/cpp/xmlrpc_sample_add_server.cpp?view=markup">
+<b>examples/cpp/callinfo_abyss_server.cpp</b> </a>.  It implements an XML-RPC
+method <b>getCallInfo</b> which returns a text message containing the IP
+address and TCP port number of the XML-RPC client.
+
+
+<h3 id="set_handlers"><b>server_abyss_set_handlers</b> function</h3>
+
+<p><b>xmlrpc_c::server_abyss_set_handlers</b> is a function that
+marries an Xmlrpc-c XML-RPC method registry object to an Abyss server
+object so that the Abyss server executes the XML-RPC methods.
+
+<h4 id="set_handlers_overview">Overview</h4>
+<pre>
+<code>
+void
+xmlrpc_c::xmlrpc_server_abyss_set_handlers(
+    TServer *            const srvP,
+    xmlrpc_c::registry * const registryP,
+    std::string          const uriPath = &quot;/RPC2&quot;
+);
+</code>
+<code>
+void
+xmlrpc_c::xmlrpc_server_abyss_set_handlers(
+    TServer *             const srvP,
+    xmlrpc_c::registryPtr const registryP,
+    std::string           const uriPath = &quot;/RPC2&quot;
+);
+</code>
+<code>
+void
+xmlrpc_c::xmlrpc_server_abyss_set_handlers(
+    TServer *            const  srvP,
+    xmlrpc_c::registry   const&amp; registry,
+    std::string          const  uriPath = &quot;/RPC2&quot;
+);
+</code>
+</pre>
+
+<h4 id="set_handlers_description">Description</h4>
+
+<p>This function adds to the Abyss server identied by <i>srvP</i> a
+request handler for a URI path you specify.  This handler executes
+a POST request as an XML-RPC call as defined by the <a
+href="libxmlrpc_server++.html#method_registry">method registry</a>
+identified by <i>registryP</i>.  It rejects requests with other HTTP
+methods for /RPC2 with an HTTP &quot;Method Not Allowed&quot; (code
+405) failure.
+
+<p>This function also adds a default request handler, which handles
+requests to every URI path other than the one specified.  All that
+handler does is fail the request with an HTTP &quot;file not
+found&quot; (code 404) error.
+
+<p>You normally call this once per server.  If you call it a second
+time, it adds another handler, later in Abyss' search order, for exactly
+the same requests, so it has no effect.
+
+<p>Note that you do not use this with a <b>serverAbyss</b> object.
+With a <b>serverAbyss</b>, you never see an Abyss object.  A
+<b>serverAbyss</b> object has the Abyss server buried inside it and
+takes care of setting whatever handlers it needs.
+
+<p>Regardless of how you pass the registry, (reference, simple
+pointer, or <b>registryPtr</b>), you must ensure that the registry
+continues to exist as along as the Abyss server does.
+
+
+<h2 id="signals">Signals</h2>
+
+<p>Class <b>serverAbyss</b> has the same considerations for signals as the <a
+href="libxmlrpc_server_abyss.html#signals">C equivalent</a>.
+
+<p>By default, the <b>run</b> method takes care of all the signal requirements
+of the server, but it also expects to own all of the signals of the program,
+which means it may not be compatible with the rest of your program.
+In particular, if your program receives SIGCHLD signals that aren't from Abyss
+children, and you need to see them, you must specify a
+<b>serverOwnsSignals(false)</b> constructor option when you construct the
+<b>serverAbyss</b> object.
+
+<p><b>serverOwnsSignals(false)</b> causes the <b>serverAbyss</b> object not
+to touch signal handlers, and places the responsibility on you to handle
+signals as <b>serverAbyss</b> requires.  You have two responsibilities:
+
+<ul>
+
+<li>Make the program handle or ignore SIGPIPE signals.  (Otherwise, you
+will find that the OS kills the process if a client hangs up on the server
+before the server has sent an RPC response).
+
+<li>If you use a forking Abyss server (that's not normal -- Abyss normally
+uses pthreads, but one can built it with a special option that says to use
+Unix fork instead):
+<p>
+Install a handler for SIGCHLD and make it call the <b>serverAbyss</b>
+object's <b>sigchld</b> method.  It needs to do this at least for signals that
+announce the death of a child of the Abyss server, but it doesn't hurt to call
+it for all SIGCHLD signals, since the server knows which ones are for its
+children.  Specify a <b>expectSigchld(true)</b> constructor option when you
+construct the <b>serverAbyss</b> object to confirm that you have this handler.
+
+<p>If for whatever reason you can't do the SIGCHLD handler, then you can
+specify <b>expectSigchld(false)</b> and Abyss will do its best to live without
+the signals, but it may cost performance and resources.
+
+</ul>
+
+<p><b>serverOwnsSignals</b> was new in Xmlrpc-c 1.19 (June 2009).  Before
+that, <b>run</b> always sets up signal handlers and there is no way to run a
+server than handles multiple RPCs at once without messing with your
+signals.  The best you can do in those releases is use <b>runOnce</b>
+in a loop.
+
+<p><b>runOnce</b> and <b>runConn</b> don't set up any kind of signal handling.
+They don't require any SIGCHLD handling, so the only thing you have to do
+is set up SIGPIPE to be ignored or handled.
+
+
+<h2 id="notes"></h2>
+
+<p>This section contains special topics of interest to users of the
+facilities described above.
+
+
+<h3 id="httpauth">HTTP Authentication</h3>
+
+<P>HTTP authentication is the concept of the XML-RPC client, as an
+HTTP client, identifying and authenticating itself to the XML-RPC server,
+as an HTTP server, using features of the HTTP protocol.
+
+<p><b>libxmlrpc_server_abyss++</b> provides no facilities for doing any of
+that.
+
+<p>See further comments on this situation in the discussion of how the
+<a href="libxmlrpc_server_abyss.html#httpauth">C libraries</a> don't have this
+function either.
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>If you set the <b>XMLRPC_TRACE_ABYSS</b> environment variable to 1,
+<b>libxmlrpc_server_abyss</b>'s Abyss request handler prints a message
+to Standard Error each time Abyss calls it.
+
+<p>You can also use the <a
+href="libxmlrpc_server++.html#trace_xml">XMLRPC_TRACE_XML</a>
+environment variable to trace the handler's calls to the
+<b>libxmlrpc_server</b> registry.
+
+</body>
+</html>
+

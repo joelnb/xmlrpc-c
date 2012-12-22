@@ -1,0 +1,305 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server_cgi++</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server_cgi++</b> function library, which is part of XML-RPC
+For C/C++ (Xmlrpc-c).  Also see <a href="libgeneral.html">General
+Library Information - C</a>
+
+<p>The <b>libxmlrpc_server_cgi++</b> library provides C++ classes for use
+in a program that is an XML-RPC server based on CGI (Common Gateway
+Interface) scripts run by a web server.
+
+<p>When using <b>libxmlrpc_server_cgi++</b>, you must also use the <a
+href="libxmlrpc++.html"><b>libxmlrpc++</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server_cgi++</b> classes depend on it.
+
+<p>Similarly, you will need the <a
+href="libxmlrpc_server++.html">libxmlrpc_server++</a> library.  It
+contains functions for XML-RPC servers that are not specific to
+CGI-based servers.  And <b>libxmlrpc_server_cgi++</b> classes
+depend on it.
+
+<p><b>libxmlrpc_server_cgi++</b> was new in Xmlrpc-c 1.16 (December
+2008).  The C version, <b>libxmlrpc_server_cgi</b> is much older.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#aboutcgi">About CGI</a>
+<li><a href="#facilities">Description Of Facilities</a>
+  <ul>
+  <li><a href="#class_serverCgi">class <b>serverCgi</b></a>
+    <ul>
+    <li><a href="#serverCgi_example">Example</a>
+    <li><a href="#serverCgi_constructors">Constructors</a>
+    <li><a href="#processcall"><b>processCall</b> Method</a>
+    </ul>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_server_cgi.hpp&gt;</B> header file
+declares the interface to <b>libxmlrpc_server_cgi++</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it, or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>Because various other Xmlrpc-c libraries are prerequisites (and
+<b>xmlrpc_server_cgi.hpp</b> includes them), you'll also need their
+header files.  It's easiest just to have the entire Xmlrpc-c package
+available.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server_cgi++</b> library is
+<b>libxmlrpc_server_cgi++.a</b> or <b>libxmlrpc_server_cgi++.so</b>.
+The classic linker option to cause the library to be linked into your
+program is <tt>-l xmlrpc_server_cgi++</tt>.  These are hints; you'll
+have to modify this according to conventions of your particular
+platform.  You'll also have to figure out where the library resides
+and how to make your linker look there for it.  Or use 
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_server_cgi</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_server++
+<li>libxmlrpc_server
+<li>libxmlrpc++
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>Here is an example of a C++ CGI program that uses
+<b>libxmlrpc_server_cgi++</b> to effect an XML-RPC server.
+
+<pre>
+<code>
+    #include &lt;cassert&gt;
+    #include &lt;iostream&gt;
+    
+    #include &lt;xmlrpc-c/base.hpp&gt;
+    #include &lt;xmlrpc-c/registry.hpp&gt;
+    #include &lt;xmlrpc-c/server_cgi.hpp&gt;
+    
+    using namespace std;
+    
+    class sampleAddMethod : public xmlrpc_c::method {
+    public:
+        sampleAddMethod() {
+            // signature and help strings are documentation -- the client
+            // can query this information with a system.methodSignature and
+            // system.methodHelp RPC.
+            this-&gt;_signature = &quot;i:ii&quot;;  // method's arguments, result are integers
+            this-&gt;_help = &quot;This method adds two integers together&quot;;
+        }
+        void
+        execute(xmlrpc_c::paramList const&amp; paramList,
+                xmlrpc_c::value *   const  retvalP) {
+            
+            int const addend(paramList.getInt(0));
+            int const adder(paramList.getInt(1));
+            
+            paramList.verifyEnd(2);
+            
+            *retvalP = xmlrpc_c::value_int(addend + adder);
+        }
+    };
+    
+    
+    
+    int 
+    main(int           const, 
+         const char ** const) {
+    
+        try {
+            xmlrpc_c::registry myRegistry;
+    
+            xmlrpc_c::methodPtr const sampleAddMethodP(new sampleAddMethod);
+    
+            myRegistry.addMethod(&quot;sample.add&quot;, sampleAddMethodP);
+    
+            xmlrpc_c::serverCgi myServer(
+                xmlrpc_c::serverCgi::constrOpt()
+                .registryP(&amp;myRegistry));
+    
+            myServer.processCall();
+    
+        } catch (exception const&amp; e) {
+            cerr << &quot;Something failed.  &quot; << e.what() << endl;
+        }
+        return 0;
+    }
+
+</code>
+</pre>
+
+
+<p>This program, with procedures to build it, is in the Xmlrpc-c
+source tree as <b>examples/cpp/xmlrpc_sample_add_server_cgi.cpp</b>.
+
+<h2 id="aboutcgi">About CGI</h2>
+
+<p>The <a href="libxmlrpc_server_cgi.html#aboutcgi">manual</a> for
+<b>libxmlrpc_server_cgi++</b>'s C cousin has some useful information on
+what CGI is about and how this library fits into it.  The C++
+library fits in the same way, just for a different language.
+
+<h2 id="facilities">Description Of Facilities</h2>
+
+<h3 id="class_serverCgi">class <b>serverCgi</b></h3>
+
+<p>An object of class <b>xmlrpc_c::serverCgi</b> is the XML-RPC engine
+inside an XML-RPC server.  The object does the XML-RPC part of executing
+<em>one</em> XML-RPC call, connecting to the HTTP server that does the
+rest of the work via CGI.
+
+<p>You use the object like this: your HTTP server, upon receiving an
+XML-RPC call, calls your CGI program.  Your CGI program creates a
+<b>serverCgi</b> object, executes its <b>processCall</b> method, the
+destroys the object and exits.  <b>processCall</b> gets information
+about the XML-RPC call via the CGI interface and delivers information
+for the XML-RPC response via the CGI interface.
+
+<p>You supply the XML-RPC methods for the server to execute as an <a
+href="libxmlrpc_server++.html#method_registry">Xmlrpc-c method
+registry</a>.  Though there's only one particular method that needs to
+execute (because there's only one XML-RPC call) you normally build a
+registry with all of the server's methods so your code doesn't have
+to decide which method is required.
+
+
+<h4 id="serverCgi_example">Example</h4>
+
+<p>See <a href="#example">above</a>.
+
+
+<h4 id="serverCgi_constructors">Constructors</h4>
+
+<p>Overview:
+
+<pre>
+<code>
+serverCgi::serverCgi(constrOpt const&amp; opt);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    ...
+    xmlrpc_c::serverCgi cgiServer(xmlrpc_c::serverCgi::constrOpt()
+                                  .registryP(&amp;myRegistry));
+</code>
+</pre>
+
+<p>This constructor uses the <a
+href="libxmlrpc++.html#constropt"><i>constrOpt</i> paradigm</a> to
+make specifying options easy and flexible, though technically there is
+just one C++ parameter.
+
+<p>The option methods are:
+
+<dl>
+
+<dt>registryPtr(xmlrpc_c::registryPtr)
+
+<dd>This is a pointer to the method registry the server is to use.
+The pointer takes care of managing the existence of the registry;
+you can destroy all your pointers to the registry after the constructor
+returns.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>registryP(const xmlrpc_c::registry *)
+
+<dd>This is a pointer to the method registry the server is to use.
+You must ensure that the registry to which it points continues to exist
+as long as the server (xmlrpc_c::serverAbyss object) does.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+</dl>
+
+
+<h4 id="processCall"><b>processCall</b> Method</h4>
+
+<p>This method does the XML-RPC part of executing an XML-RPC call.
+The entire point of your CGI program is to call this method once.  It
+communicates with the web server via the CGI interface to get the
+XML-RPC call information and supply the XML-RPC response information.
+
+<p>The heart of what <b>processCall</b> does is call one of the method
+functions that you registered in the method registry tied to the
+<b>serverCgi</b> object.
+
+<p><b>processCall</b> does its best to respond to any problems it has
+by generating an appropriate XML-RPC or HTTP error response.  But if
+problems are so basic that it can't do that, it throws an error.
+
+<p>Example:
+
+<pre>
+<code>
+    cgiServerP-&gt;processCall();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void processCall();
+</code>
+</pre>
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>If you set the <a
+href="libxmlrpc_server.html#trace_xml">XMLRPC_TRACE_XML</a>
+environment variable to 1, the CGI program prints to Standard Error
+the XML that it processes and returns.  This is not much more
+informative than trace facilities that are probably available in your
+web server.  But at least it will help you confirm that the CGI
+program is running and you are using the method registry correctly.
+
+</body>
+</html>

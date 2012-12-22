@@ -1,0 +1,2277 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_client++</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_client++</b> function library, which is part of XML-RPC
+For C/C++ (Xmlrpc-c).  Also see <a href="libgeneral++.html">General
+Library Information - C++</a>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Everything you need to know about XML-RPC is on the <a
+href="http://www.xmlrpc.com">XML-RPC web site</a>.
+
+<p>The <b>libxmlrpc_client++</b> library provides C++ classes for use in
+a program that is an XML-RPC client.  These classes take care of
+all the protocol related things so the calling program can be very
+simple.
+
+<p>There are 4 separate levels of client facilities in Xmlrpc-c.  Each
+successive level requires more code, skill, and thought on your part,
+but gives you more options.  The <b>libxmlrpc_client++</b> library
+gives you the first two, which are described below as <a
+href="#simple_client">Simple Client</a> and <a href="#complex_client">
+Complex Client</a>.  The next level down would be to use the
+<b>libxmlrpc++</b> library to generate call XML and parse response
+XML, but use your own code to transport the XML via HTTP.  The lowest
+level is actually not to use Xmlrpc-c at all.  Build and parse XML with
+your own code and transport it as well.
+
+<p>The Complex Client facilities are actually very general.  You can
+use them to make a client that isn't exacty XML-RPC.  For example, it
+might not use HTTP and might not use XML.  Or you could substitute
+your own code for almost any piece of the Xmlrpc-c suite.  For
+example, you might pull canned XML out of somewhere and use
+<b>libxmlrpc_client++</b> facilities to transport it easily.  It all
+depends on which classes you choose to use.
+
+<p>When using <b>libxmlrpc_client++</b>, you must also use the <a
+href="libxmlrpc++.html"><b>libxmlrpc++</b> library</a>.  It contains
+additional facilities that an XML-RPC client needs but are general to
+XML-RPC and not specific to XML-RPC clients.  Besides, the
+<b>libxmlrpc_client++</b> library routines depend on it.
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#testing">Testing, Experimenting</a>
+<li><a href="#simple_client">Simple Client</a>
+  <ul>
+    <li><a href="#clientsimple">Class <b>clientSimple</b></a>
+      <ul>
+        <li><a href="#headersimple">Interface Header File</a>
+        <li><a href="#constructors_simple">Contructors</a>
+        <li><a href="#call_simple"><b>call</b> Method</a>
+          <ul>
+            <li><a href="#call_simple_no_parm">RPC Has No Parameters</a>
+            <li><a href="#call_simple_format">RPC Has Predictable Simple Parameter Structure</a>
+            <li><a href="#call_simple_paramlist">RPC Has Varying or Complex Parameters</a>
+            </ul>
+      </ul>
+  </ul>
+<li><a href="#complex_client">Complex Client</a>
+  <ul>
+    <li><a href="#complex_client_example">Example</a>
+    <li><a href="#complex_client_overview">Overview</a>
+    <li><a href="#asynch">Asynchronous Client</a>
+      <ul>
+        <li><a href="#async_examples">Examples</a>      
+        <li><a href="#async_howto">Basic How-to</a>      
+      </ul>
+    <li><a href="#complex_rpc_exception">Failed RPC, Exception</a>
+    <li><a href="#class_rpc">Class <b>xmlrpc_c::rpc</b></a>
+      <ul>
+        <li><a href="#constructors_rpc">Constructors</a>
+        <li><a href="#call_rpc"><b>call</b> Method</a>
+        <li><a href="#start_rpc"><b>start</b> Method</a>
+        <li><a href="#isfinished"><b>isFinished</b> Method</a>
+        <li><a href="#issuccessful"><b>isSuccessful</b> Method</a>
+        <li><a href="#getresult"><b>getResult</b> Method</a>
+        <li><a href="#getfault"><b>getFault</b> Method</a>
+        <li><a href="#notifycomplete"><b>notifyComplete</b> Method</a>
+        <li><a href="#finish"><b>finish</b> Method</a>
+        <li><a href="#finishfail"><b>finishfail</b> Method</a>
+        <li><a href="#finisherr"><b>finisherr</b> Method</a>
+      </ul>
+    <li><a href="#class_rpcptr">Class <b>xmlrpc_c::rpcPtr</b></a>
+      <ul>
+        <li><a href="#constructors_rpcptr">Constructors</a>
+        <li><a href="#operators_rpcptr">Operators</a>
+      </ul>
+    <li><a href="#class_client">Class <b>xmlrpc_c::client</b></a>
+      <ul>
+        <li><a href="#finishasync_client"><b>finishAsync</b> Method</a>
+        <li><a href="#call_client"><b>call</b> Method</a>
+        <li><a href="#start_client"><b>start</b> Method</a>
+        <li><a href="#set_interrupt"><b>setInterrupt</b> Method</a>
+      </ul>
+    <li><a href="#class_clientptr">Class <b>xmlrpc_c::clientPtr</b></a>
+    <li><a href="#class_clientxml">Class <b>xmlrpc_c::client_xml</b></a>
+      <ul>
+        <li><a href="#constructors_clientxml">Constructors</a>
+      </ul>
+    <li><a href="#class_clientxmltransport">
+      Class <b>xmlrpc_c::clientXmlTransport</b></a>
+      <ul>
+        <li><a href="#constructors_clientxml">Constructors</a>
+        <li><a href="#call_clientxmltransport"><b>call</b> Method</a>
+        <li><a href="#start_clientxmltransport"><b>start</b> Method</a>
+        <li><a href="#finishasync_xml"><b>finishAsync</b> Method</a>
+      </ul>
+    <li><a href="#class_clientxmltransportptr">
+      Class <b>xmlrpc_c::clientXmlTransportPtr</b></a>
+    <li><a href="#class_http">
+      Class <b>xmlrpc_c::clientXmlTransport_http</b></a>
+      <ul>
+        <li><a href="#http_create"><b>create</b> Class Method</a>
+        <li><a href="#http_available"><b>availableTypes</b> Class Method</a>
+      </ul>
+    <li><a href="#class_curl">
+      Class <b>xmlrpc_c::clientXmlTransport_curl</b></a>
+      <ul>
+        <li><a href="#constructors_curl">Constructors</a>
+        <li><a href="#curl_interference">Interference With Other Modules</a>
+        <li><a href="#concurrency_curl">Concurrency</a>
+      </ul>
+    <li><a href="#class_libwww">
+      Class <b>xmlrpc_c::clientXmlTransport_libwww</b></a>
+      <ul>
+        <li><a href="#constructors_libwww">Constructors</a>
+      </ul>
+    <li><a href="#class_wininet">
+      Class <b>xmlrpc_c::clientXmlTransport_wininet</b></a>
+      <ul>
+        <li><a href="#constructors_wininet">Constructors</a>
+      </ul>
+    <li><a href="#class_pstream">
+      Class <b>xmlrpc_c::clientXmlTransport_pstream</b></a>
+      <ul>
+        <li><a href="#constructors_pstream">Constructors</a>
+      </ul>
+    <li><a href="#class_xmltransaction">
+      Class <b>xmlrpc_c::xmlTransaction</b></a>
+      <ul>
+        <li><a href="#constructors_xmltransaction">Constructors</a>
+        <li><a href="#finish_xmltransaction"><b>finish</b> Method</a>
+        <li><a href="#finisherr_xmltransaction"><b>finishErr</b> Method</a>
+      </ul>
+    <li><a href="#class_xmltransactionptr">
+      Class <b>xmlrpc_c::xmlTransactionptr</b></a>
+      <ul>
+        <li><a href="#constructors_xmltransactionptr">Constructors</a>
+      </ul>
+    <li><a href="#class_carriageparm">
+      Class <b>xmlrpc_c::carriageParm</b></a>
+    <li><a href="#class_carriageparmptr">
+      Class <b>xmlrpc_c::carriageParmPtr</b></a>
+    <li><a href="#class_carriageparmhttp">
+      Class <b>xmlrpc_c::carriageParm_http</b></a>
+      <ul>
+        <li><a href="#constructors_parmhttp">Constructors</a>
+        <li><a href="#setuser"><b>setUser</b> Method</a>
+        <li><a href="#allowauthbasic"><b>allowAuthBasic</b> Method</a>
+        <li><a href="#disallowauthbasic"><b>disallowAuthBasic</b> Method</a>
+        <li><a href="#allowauthdigest"><b>allowAuthDigest</b> Method</a>
+        <li><a href="#disallowautdigest"><b>disallowAuthDigest</b> Method</a>
+        <li><a href="#allowauthnegotiate"><b>allowAuthNegotiate</b> Method</a>
+        <li><a href="#disallowauthnegotiate"><b>disallowAuthNegotiate</b> Method</a>
+        <li><a href="#allowauthntlm"><b>allowAuthNtlm</b> Method</a>
+        <li><a href="#disallowauthntlm"><b>disallowAuthNtlm</b> Method</a>
+        <li><a href="#setbasicauth"><b>setBasicAuth</b> Method</a>
+      </ul>
+    <li><a href="#class_carriageparmhttpptr">
+      Class <b>xmlrpc_c::carriageParm_httpPtr</b></a>
+    <li><a href="#class_carriageparmcurl0">
+      Class <b>xmlrpc_c::carriageParm_curl0</b></a>
+    <li><a href="#class_carriageparmcurl0ptr">
+      Class <b>xmlrpc_c::carriageParm_curl0Ptr</b></a>
+    <li><a href="#class_carriageparmlibwww0">
+      Class <b>xmlrpc_c::carriageParm_libwww0</b></a>
+    <li><a href="#class_carriageparmlibwww0ptr">
+      Class <b>xmlrpc_c::carriageParm_libwww0Ptr</b></a>
+    <li><a href="#class_carriageparmwininet0">
+      Class <b>xmlrpc_c::carriageParm_wininet0</b></a>
+    <li><a href="#class_carriageparmwininet0ptr">
+      Class <b>xmlrpc_c::carriageParm_wininet0Ptr</b></a>
+    <li><a href="#class_carriageparmpstream">
+      Class <b>xmlrpc_c::carriageParm_pstream</b></a>
+    <li><a href="#class_carriageparmpstreamptr">
+      Class <b>xmlrpc_c::carriageParm_pstreamPtr</b></a>
+    <li><a href="#class_connection">
+      Class <b>xmlrpc_c::connection</b></a>
+      <ul>
+        <li><a href="#constructors_connection">Constructors</a>
+      </ul>
+    <li><a href="#class_serverAccessor">
+      Class <b>xmlrpc_c::serverAccessor</b></a>
+      <ul>
+        <li><a href="#serverAccessor_constructors">Constructors</a>
+        <li><a href="#serverAccessor_call"><b>call</b> Method</a>
+      </ul>
+  </ul>
+<li><a href="#interrupting">Interrupting</a>
+<li><a href="#brokenserver">Dealing With Broken Servers</a>
+<li><a href="#debugging">Debugging</a>
+  <ul>
+  <li><a href="#standard_error">Standard Error</a>
+  <li><a href="#trace_xml">XMLRPC_TRACE_XML environment variable</a>
+  <li><a href="#trace_curl">XMLRPC_TRACE_CURL environment variable</a>
+  </ul>
+
+</ul>
+
+
+
+<h2 id="headerfile">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/client++.hpp&gt;</B> header file declares the interface
+to the general parts of <b>libxmlrpc_client++</b>.  Other header files
+declare special facilities; the sections that describe these identify
+those header files.
+
+<p>You'll have to figure out where on your system these header files
+live and how to make your compiler look there for them.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_client++</b> library is <b>libxmlrpc_client++.a</b> or
+<b>libxmlrpc_client++.so</b>.  The classic linker option to cause the
+library to be linked into your program is <tt>-l xmlrpc_client++</tt>.
+These are hints; you'll have to modify this according to conventions
+of your particular platform.  You'll also have to figure out where the
+library resides and how to make your linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_client++</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc++
+<li>libxmlrpc_packetsocket
+<li>libxmlrpc_client
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+
+<h2 id="example">Example</h2>
+
+<p>A complete example of an XML-RPC client program that uses
+<b>libxmlrpc_client++</b> is <a href="index.html#clientexamplepp">here</a>.
+
+<p>An example of the main part of the same program using the more flexible
+Complex Client facilities is <a href="#complex_client_example">here</a>.
+
+<!-- Looks like we don't need this because all we have to do is declare
+a static variable in the library.  But in case we find out that doesn't
+work (xmlwrapp seems to think what's described here is required), we're
+keeping this documentation here.
+
+
+<h2 id="initializinglibrary">Initializing The Library</h2>
+
+<p>There is a peculiar non-object-oriented thing you must do in order to
+use <b>libxmlrpc_client++</b>.  There are &quot;pseudo-constants&quot; that
+have to be set.  These are constants in that their value is independent of
+anything in your particular environment or any choice you make, but not
+constant in that the program must set their value after the program
+(and its linked libraries such as <b>libxmlrpc_client++</b>) has been
+loaded.  Their values are too complex for the program loader itself to
+set them up.
+
+<p>To handle the pseudo-constants, you must create an object of class
+<b>clientGlobalConstant</b>.
+
+<p>There are better object-oriented ways to handle such pseudo-constants,
+but <b>libxmlrpc_client++</b> can't use them because <b>libxmlrpc_client++</b>
+uses other libraries that don't.  The code of <b>libxmlrpc_client++</b>
+itself does not contain any global variables.
+
+<h3 id="globalconstant">class <b>clientGlobalConstant</b></h3>
+
+<p>This is a peculiar class that serves to connect a C++ library to
+non-object-oriented libraries that it uses.
+
+<p>The rule is that at least one object of this class must exist the entire
+time that an object of any other class in <b>libxmlrpc_client++</b> does.
+The object doesn't do anything; it has no methods and you never refer to
+it.  It just sits there.
+
+<p>Having multiple objects of this class is the same as having one.
+
+<p>The constructor and destructor of this class are <strong>not thread
+safe</strong>.  And that doesn't just mean you can't call them from
+multiple threads at the same time.  It means you can't call them when any
+other thread in your program is running anything.  That's because the
+global variables involved are accessed by libraries that
+<b>libxmlrpc_client++</b> uses under the covers and you can't know that
+some other thread isn't also using those libraries.  For example, another
+thread that uses the Curl HTTP transport library might conflict.  Or
+the GNU encryption library Libgcrypt (which you will not see even if you
+read the <b>libxmlrpc_client++</b> code, because it is used by
+GnuTLS, which may be used by the Curl library, which may be used by
+<b>libxmlrpc_client++</b>!)
+
+<p>So the typical way to use this class is to create the object early
+in program initialization.  Even if it is a multi-threaded program, it
+will be just one thread there.  Conversely, destroy the object as the
+program exits.  Think of it as an extension of loading the program.
+
+<p>If your code that uses <b>libxmlrpc_client++</b> is itself a modular
+library, you will normally provide the same kind of pseudo-constant
+initialization object or function yourself.  That way, even though you don't
+own the program initialization code, some of your code runs then and your user
+doesn't have to know about <b>libxmlrpc_client++</b>.  Your initialization
+function creates the <b>clientGlobalConstant</b> object.  And likewise on the
+termination side.  Note that it causes no harm if other modules in the program
+also create a <b>clientGlobalConstant</b> object.
+
+<p>If you neglect to have a <b>clientGlobalConstant</b> object existing
+while other <b>libxmlrpc_client++</b> objects do, results are
+unpredictable.
+
+<p>This class was new in Xmlrpc-c 1.05 (March 2006).  Before that,
+pseudo-constant setting is implicit and rather quirky.  Essentially,
+if you have a multi-threaded program, you should make sure you create
+at least one client transport object while the program is still just
+one thread.  And your program will probably exit with some memory
+(for the pseudo-constants) still allocated.
+
+<h4 id="constructors_globalconst">Constructors</h4>
+
+<p>The only constructor is the trivial no-argument constructor.
+As explained above, this constructor is not thread-safe.
+
+END OF COMMENT -->
+
+
+<h2 id="testing">Testing, Experimenting</h2>
+
+<p>You can use the <a href="libxmlrpc_client.html#testing">same techniques</a>
+as you would with client code based on the C client library.
+
+
+<h2 id="simple_client">Simple Client</h2>
+
+<p>This section describes the highest level, simplest, and least flexible
+means that <b>libxmlrpc_client++</b> provides for writing an XML-RPC
+client program.
+
+<p>See <a href="index.html#clientexample++">Introductory Examples</a>
+for a complete example of a simple XML-RPC client in C++.
+
+<h3 id="clientsimple">Class <b>clientSimple</b></h3>
+
+<p>An object of this class is an XML-RPC client with limited function,
+but easy to use.  You use this client to perform RPCs, i.e. communicate
+with XML-RPC servers.
+
+<p>Contrary to what you would think, you may not have more than one object
+of this class in a program.  The code is not re-entrant -- it uses global
+variables.
+
+<p>Here are some of the limitations of the simple client as compared to 
+lower level Xmlrpc-c facilities:
+
+<ul>
+<li>The client always does true XML-RPC (it doesn't use alternatives to
+HTTP and XML, for example)
+<li>You don't get to choose the XML transport.  (The client uses the
+first transport from this list that your version of the Xmlrpc-c is
+capable of using: Curl, Libww, Wininet).
+
+<li>The client uses the default XML transport parameters and carriage
+parameters.  So for example:
+  <ul>
+  <li>You can't choose which network interface it uses.
+
+  <li>You always get full authentication when you use SSL.
+
+  <li>You can't specify userid and password for HTTP basic
+  authentication (so you can't use a server that requires such
+  authentication).
+  </ul>
+
+<li>You cannot use the client asynchronously because the only
+available method to start an RPC does not return until the RPC is
+complete.
+
+</ul>
+
+<h4 id="headersimple">Interface Header File</h4>
+
+<p>This class is declared in header file
+<b>&lt;xmlrpc-c/client_simple.hpp&gt;</b>.
+
+<h4 id="constructors_simple">Constructors</h4>
+
+<p>There is only one constructor: the no-argument constructor.
+
+<p>Remember you can't have more than one object of this class in a
+program.  Nothing will stop you from constructing two of them, but
+they will interfere with each other as you use them.
+
+<h4 id="call_simple"><b>call</b> Method</h4>
+
+<p>The <b>call</b> method performs an XML-RPC RPC.  It returns when the
+RPC is complete.
+
+<p>The method throws a <b>girerr:error</b> if it is not able to
+perform the RPC.  In that case, it may or may not have started the RPC
+and if it has started it, it may or may not complete later.  But as
+far as the <b>xmlrpc_c::clientSimple</b> object is concerned, the RPC
+is history.
+
+<p>There are three forms of arguments for the <b>call</b> method:
+
+<h5 id="call_simple_no_parm">RPC Has No Parameters</h5>
+
+<p>To perform an RPC that has no parameters, just use this:
+
+<pre>
+<code>
+    void
+    call(std::string       serverUrl,
+         std::string       methodName,
+         xmlrpc_c::value * resultP);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::value bathTempV;
+    myClient.call(&quot;http://bathtub_control.acme.com/RPC2&quot;,
+                  &quot;get_temperature&quot;,
+                  &amp;bathTempV
+    double const bathTemp = xmlrpc_c::value_double(bathTempV);
+    cout &lt;&lt; &quot;Bath temperature is &quot; &lt;&lt; bathTemp &lt;&lt; endl;
+</code>
+</pre>
+
+
+<h5 id="call_simple_format">RPC Has Predictable Simple Parameter Structure</h5>
+
+<p>If the RPC has parameters, and you know at coding time what form they
+take, and none of them is complex (i.e. an array or structure), use this:
+
+<pre>
+<code>
+    void
+    call(std::string       serverUrl,
+         std::string       methodName,
+         std::string       format,
+         xmlrpc_c::value * resultP,
+         ...);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::value result;
+    myClient.call(&quot;http://localhost:8080/RPC2&quot;, &quot;sample.add&quot;,
+                  &quot;ii&quot;, &amp;result, 5, 7);
+    int const sum = xmlrpc_c::value_int(result);              
+    cout &lt;&lt; &quot;Result of RPC (sum of 5 and 7): &quot; &lt;&lt; sum &lt;&lt; endl;
+</code>
+</pre>
+
+<p>The <i>serverUrl</i>, <i>methodName</i>, and <i>resultP</i> arguments
+are self-explanatory.
+
+<p>The <i>format</i> argument is like a <b>printf</b>
+format string and specifies the form of the parameters.  The variable
+arguments (<b>...</b>) are the arguments specified by the format string.
+
+<p>The format string is the same as <a
+href="libxmlrpc.html#formatstring">the C interface's format
+string</a>, but there is <strong>an important difference</strong> in
+how you use it.  With the C interface, the format string specifies a
+single array value, and the elements of that array are the RPC
+parameters.  In the C++ methods, the format string simply specifies
+the parameters, in sequence.  So to specify the two integer parameters
+for the &quot;sample.add&quot; method in the above example <em>in the
+C interface</em>, you would use the format string &quot;(ii)&quot;,
+whereas to specify those two parameters <em>in the C++ interface</em>, you
+use &quot;ii&quot; (and &quot;(ii)&quot; would mean something else).
+
+<p>The reason for the difference is that the C interface is stupid.
+It makes it look like the RPC actually has one array parameter.  
+In fact, in the C interface, unlike the C++ interface, there are not
+types specifically to represent XML-RPC entities such as values and
+parameter lists.  Unlike the C++ <b>xmlrpc_c::value</b> type,
+the C <b>xmlrpc_value</b> type is a general purpose data structure.
+
+<p>Note that the <b>A</b>, <b>S</b>, and <b>V</b> format specifiers are
+unlikely to be useful to you, because they correspond to data types that you
+don't (normally) use in a C++ program.  In a program that uses the C versions
+of the Xmlrpc-c libraries, an <b>A</b> specifier, for example, says the
+parameter is an XML-RPC array and you are supplying its value as a pointer to
+a data structure of type <b>xmlrpc_value</b>, which is the C equivalent of
+C++'s <b>xmlrpc_c::value</b>.  Furthermore, there is no C++ equivalent to
+<b>A</b>, <b>S</b>, and <b>V</b>.  E.g. you can't supply an array parameter
+with an <b>xmlrpc_c::value_array</b> variable, using the format string
+version of <b>call</b>.
+
+<p>If you want to use your <b>xmlrpc_c::value_array</b> data structure as an
+XML-RPC RPC parameter, use instead
+the <a href="#call_simple_paramlist">version of <b>call</b></a> that takes an
+<b>xmlrpc_c::paramList</b> argument.  (Your
+<b>xmlrpc_c::value_array</b> will be an argument to
+the <a href="libxmlrpc++.html#add"><b>add</b> method</a> of the
+<b>xmlrpc_c::paramList</b>).
+
+
+<h5 id="call_simple_paramlist">RPC Has Varying or Complex Parameters</h5>
+
+<p>Sometimes you don't know at coding time what kind of parameters
+your RPC will need.  Maybe the RPC has a variable parameter list
+like a C++ method.  Maybe the user tells you the method and parameters
+and you don't know anything about the method.  In this case, you
+can't use the printf-style <b>call</b>.
+
+<p>Also, if one of your parameters is an array or structure, you can't
+use the printf-style <b>call</b>.
+
+<p>Instead, use an <a
+href="libxmlrpc++.html#paramlist"></a><b>xmlrpc_c::paramList</b> object,
+which you build using logic as complex as you need.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    call(std::string         serverUrl,
+         std::string         methodName,
+         xmlrpc_c::paramList paramList,
+         xmlrpc_c::value *   resultP);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::value result;
+    xmlrpc_c::paramList sampleAddParms;
+    sampleAddParms.add(xmlrpc_c::value_int(5));
+    sampleAddParms.add(xmlrpc_c::value_int(7));
+    myClient.call(&quot;http://localhost:8080/RPC2&quot;, &quot;sample.add&quot;,
+                  sampleAddParms, &amp;result);
+    int const sum = xmlrpc_c::value_int(result);              
+
+    cout &lt;&lt; &quot;Result of RPC (sum of 5 and 7): &quot; &lt;&lt; sum &lt;&lt; endl;
+</code>
+</pre>
+
+
+<h2 id="complex_client">Complex Client</h2>
+
+<h3 id="complex_client_example">Example</h3>
+
+<pre>
+<code>
+    xmlrpc_c::clientXmlTransport_curl myTransport;
+    xmlrpc_c::client_xml myClient(&amp;myTransport);
+
+    string const methodName(&quot;sample.add&quot;);
+
+    xmlrpc_c::paramList sampleAddParms;
+    sampleAddParms.add(xmlrpc_c::value_int(5));
+    sampleAddParms.add(xmlrpc_c::value_int(7));
+
+    xmlrpc_c::rpcPtr myRpcP(methodName, sampleAddParms);
+
+    string const serverUrl(&quot;http://localhost:8080/RPC2&quot;);
+
+    xmlrpc_c::carriageParm_curl0 myCarriageParm(serverUrl);
+
+    myRpcP-&gt;call(&amp;myClient, &amp;myCarriageParm);
+
+    assert(myRpcP-&gt;isFinished());
+
+    int const sum((xmlrpc_c::value_int(myRpcP-&gt;getResult())));
+        // Assume the method returned an integer; throws error if not
+
+    cout &lt;&lt; "Result of RPC (sum of 5 and 7): " &lt;&lt; sum &lt;&lt; endl;
+</code>
+</pre>
+
+<p>Following is a more compact and more natural C++ way to generate the
+parameter list object <b>sampleAddParms</b> in the above example.  Drawbacks
+of this method are that you can't represent every possible XML-RPC parameter
+list this way and it may be harder for a newcomer to Xmlrpc-c to decipher.
+
+<pre>
+<code>
+    xmlrpc_c::paramList sampleAddParms
+    sampleAddParms.addc(5).addc(7);
+</code>
+</pre>
+
+
+<h3 id="complex_client_overview">Overview</h3>
+
+<p>Due to the great flexibility these facilities give you in kinds of
+RPCs and ways of performing them, you need several kinds of objects to
+perform an RPC.
+
+<p>You fundamentally need an RPC object, a client object, and a
+carriage parameter object to perform an RPC.  In regular XML-RPC, you
+also need an XML transport object.
+
+<p>There is an object for each RPC.  The RPC's method name and
+parameters are properties of the RPC.  The state of execution is
+another.  The identity of the server and the protocols used to
+communicate with the server are not.  An RPC is oblivious to the fact
+that XML and HTTP are used in performing it.  Its only connection to
+XML-RPC is the kinds of parameters and outcomes it can have.  An RPC is
+an object of Class <b>xmlrpc_c::rpc</b>.
+
+<p>There is an object for a client.  The protocols for performing an
+RPC are properties of the client.  If you're using true XML-RPC, the
+fact that XML and HTTP are used is a property of the client.  Clients
+that don't use those (i.e. non-XML-RPC clients) are also possible.  A
+client object is an object of Class <b>xmlrpc_c::client</b>.
+
+<p>A client that uses XML (such as any true XML-RPC client) has an XML
+transport object associated with it.  An XML transport object knows
+the protocols for getting XML to and from a server.  For example, one
+kind of XML transport object uses HTTP via a Curl library.  An XML
+transport object is an object of Class
+<b>xmlrpc_c::clientXmlTransport</b>.
+
+<p>A carriage parameter object describes how to transport a particular
+RPC.  Its precise meaning depends on the kind of client.  For an XML
+client, its meaning depends on the kind of XML transport.  For
+example, with a true XML-RPC client that uses the Curl HTTP library,
+the carriage parameter tells the URL of the server, basic
+authentication userid and password if necessary, and the network
+interface to use.  A carriage parameter object is an object of Class
+<b>xmlrpc_c::carriageParm</b>.
+
+
+<h3 id="asynch">Asynchronous Client</h3>
+
+<p>The simplest way to use <b>libxmlrpc_client++</b> is
+<em>synchronously</em>, where your program makes a call that performs
+a whole RPC, then moves on.  I.e. performance of RPCs is synchronous
+with the execution of your program.  To use the library synchronously,
+you use the <b>call</b> method of Class <b>xmlrpc_c::rpc</b>.
+
+<p>But synchronous operation is limiting because you can't have
+multiple RPCs in progress at the same time and your (single-thread)
+program can't do other things while an RPC executes.  So you can
+alternatively use <b>libxmlrpc_client++</b>'s asynchronous client
+facilities to create multiple threads of execution (within a single
+operating system thread).
+
+<p>The heart of the asynchronous client facility is the <b>start</b>
+method of the <b>xmlrpc_c::rpc</b> class.  It's like <b>call</b>,
+except that it returns immediately, even if the RPC is still underway.
+Your program can then go on to start additional RPCs or do whatever
+else it wants.  Eventually, it calls the client's <b>finishAsync</b>
+method to cause all outstanding RPCs started by that client to
+complete.
+
+<p>To be even more asynchronous, you can specify a timeout for
+<b>finishAsync</b> or interrupt it with a signal and do some other
+stuff before eventually calling it again.
+
+<p><strong>But:</strong> the asynchronous client facility is not so
+asynchronous that you can just start an RPC and forget about it.  When you
+start an RPC, you must eventually finish it and recognize that it has
+completed.  Until then, it is using resources and may not even progress.
+RPCs are inherently synchronous, in that there's a response that tells the
+client that the server has completed its work.  If you want a communication
+style where you just throw a message out and walk away and it arrives when it
+arrives, you should consider something other than an RPC protocol.  A simple
+UDP packet sometimes works.  JSON-RPC, despite its name, has facilities for
+that too.
+
+<p>If you're just looking for a way to avoid waiting indefinitely for a slow
+RPC, the asynchronous RPC facility is not for you.  You probably want the <a
+href="#interrupting">RPC interruption</a> facility.
+
+
+<h4 id="async_examples">Examples</h4>
+
+<p>Here is an example of code that uses the asynchronous facilities.
+
+<pre>
+<code>
+    myRpcP-&gt;start(&amp;myClient, &amp;myCarriageParm);
+    myClient.finishAsync(xmlrpc_c::timeout());
+    assert(myRpcP-&gt;isFinished();
+</code>
+</pre>
+
+<p>The code above is actually synchronous -- it's the equivalent of
+the folllowing; its only purpose is to help you understand how the
+facilities work.
+
+<pre>
+<code>
+    myRpcP-&gt;call(&amp;myClient, &amp;myCarriageParm);
+    assert(myRpcP-&gt;isFinished();
+</code>
+</pre>
+
+<p>Note that the default constructor of xmlrpc_c::timeout() constructs
+an infinite timeout, so in the example, <b>finishAsync</b> runs until
+the RPC is finished, no matter how long that takes.
+
+<p>Here is a more useful example: two RPCs execute simultaneously.
+
+<pre>
+<code>
+    myRpcP-&gt;start(&amp;myClient, &amp;myCarriageParm);
+    myOtherRpcP-&gt;start(&amp;myClient, &amp;myCarriageParm);
+    myClient.finishAsync(xmlrpc_c::timeout());
+    assert(myRpcP-&gt;isFinished();
+    assert(myOtherRpcP-&gt;isFinished();
+</code>
+</pre>
+
+<p>For a complete example of a program that performs RPCs asynchronously,
+see <b>asynch_client</b> in the examples/cpp/ directory of the
+Xmlrpc-c source tree (starting with Release 1.12 (September 2007)).
+
+<h4 id="async_howto">Basic How-to</h4>
+
+<p>As mentioned above, <b>start</b> starts an RPC.
+
+<p>You can tell when the RPC has finished with the <b>isFinished</b>
+method.  Also, when the RPC finishes, its <b>notifyComplete</b> method
+gets called.  You can make your own RPC class, derived from
+<b>xmlrpc_c::rpc</b>, that has a <b>notifyComplete</b> method that
+notifies you somehow.
+
+<p>While the RPC is running, the client object maintains a reference to it.
+So you can destroy all your pointers to it right after <b>start</b>
+returns, and the RPC will cease to exist after it finishes.
+
+<p>Most clients are not capable of performing an RPC entirely
+asynchronously to the client's method callers.  That means if you
+start an RPC by calling <b>start</b> and then call <b>isFinished</b>
+repeatedly forever, you will find that the RPC <em>never</em>
+finishes.  The client is able asynchronously to do parts of the RPC
+that don't require any instructions to execute, such as wait for the
+server to respond, and parts that require only operating system
+execution, such as receive the response, but it doesn't have a thread
+of its own to do such things as interpret the response and set the
+&quot;finished&quot; flag.
+
+<p>So after calling <b>start</b>, you must eventually call the
+client's <b>finishAsync</b> method.  If it returns before the RPC is
+complete (because you specified a timeout or interrupted it with a
+signal), you must eventually call it again.  You must do this even if
+you no longer care if the RPC finishes, because until it finishes, it
+will consume resources.
+
+<p>The exact nature of the asynchronicity depends highly on the client
+XML transport involved.  <b>start</b> may in actuality wait for
+the RPC to finish.  Or it might not even really start it, and
+<b>finishAsync</b> might do all the work.  See the sections on the
+transport classes (e.g. <a href="#class_curl">Class
+<b>xmlrpc_c::clientXmlTransport_curl</b></a>) for details.
+
+<h3 id="complex_rpc_exception">Failed RPC, Exception</h3>
+
+<p>You can approach exceptions at varying levels of complexity.  
+You can keep your code simple and just assume the server and network
+and all of the infrastructure are working normally and have no code that
+(other than high level generic exception handlers) that considers the
+various things that might go wrong.  Or you can look at the results of
+RPCs in detail and respond specially to individual kinds of exceptions.
+
+<p>The simple method is what you see in examples above.  After doing
+an RPC, you simply assume that it completed normally and call the
+RPC's <a href="#getresult"><b>getResult</b></a> method to get the
+result.  (Furthermore, you can assume the result is of the type you
+expect and convert the <b>xmlrpc_c::value</b> accordingly).  If you're
+wrong and, say, the server failed the RPC, <b>getResult</b> throws an
+error.  Somebody higher up can deal with that; your immediate code
+doesn't worry about it.
+
+<p>For the more complex method, an <a
+href="#class_rpc"><b>xmlrpc_c::rpc</b></a> object has methods you can
+use to query the disposition of the RPC.
+
+<p><b>isSuccessful</b> tells you whether the RPC succeeded (i.e. the
+server returned an XML-RPC result response).  If it did, you can then
+call <b>getResult</b>.  If it didn't (i.e. the server returned an
+XML-RPC fault response), you can call <a
+href="#getfault"><b>getFault</b></a> to get the contents of the fault
+response.
+
+<p>Another kind of error is where the RPC doesn't execute at all.  For
+example, the network is down or the server you're going for doesn't
+exist.  When that happens, whether the RPC is successful or not is
+meaningless, as are its result or fault information, and all the above
+methods throw an error.  There isn't any way to query whether the RPC
+failed to even execute or to distinguish programmatically among the
+myriad reasons that it might.  However, the <b>girerr::error</b>
+thrown contains an English description of the exact problem.
+
+
+<h3 id="class_rpc">Class <b>xmlrpc_c::rpc</b></h3>
+
+<p>An object of this class is an individual RPC.  The main reason
+there is an object for this is so that you can have an asynchronous
+program, with multiple RPCs in progress at the same time.  But even if
+you write a synchronous program and use the synchronous Xmlrpc-c
+facilities, you need these objects.
+
+<p>One of the properties of an RPC object is the execution status of
+the RPC.  Has it been started yet?  Has it finished?  Has an error
+prevented the RPC from executing?
+
+<p>Other properties of an RPC include the identity of the method, the
+parameters, and the outcome.
+
+<p>Class <b>xmlrpc_c::rpc</b> is derived from <a
+href="libxmlrpc++.html#autoObject"><b>girmem::autoObject</b></a>.  Its
+associated pointer class is <b>xmlrpc_c::rpcPtr</b>.  You normally
+access it via such a pointer.  In fact, you can even create it
+implicitly when you create a pointer.  Before Xmlprpc-c 1.05 (March
+2006), the usual auto-object pointer construction paradigm
+(<code>rpcPtr myRpcP(new rpc(...))  </code> doesn't even work -- you must
+create the <b>rpc</b> implicitly.
+
+<p>Most programmers see an RPC from the top, which means from a
+program that wants to perform an RPC.  But some of the members form a
+view of the RPC from the bottom -- from the code that actually makes
+the RPC happen.  This bilateral view exists because of the fact that
+RPCs can be asynchronous.  It is equivalent to the situation in a
+device driver, where a top interface starts I/O and a bottom interface
+handles I/O interrupts.
+
+<p>The bottom-facing methods are clearly marked below and are of
+concern to you only if you are developing an <b>xmlrpc_c::client</b>
+subclass.
+
+<h4 id="constructors_rpc">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    rpc(std::string         methodName,
+        xmlrpc_c::paramList paramList);
+</code>
+</pre>
+
+<p>This constructs a new <b>xmlrpc_c::rpc</b> object.
+
+<p>You should normally construct a <b>xmlrpc_c::rpc</b> object via the
+conventional auto-object paradigm <code>rpcPtr myrpcP(new rpc(...))</code>.
+That lets the library take care of destroying the object when you are done
+with it and makes it harder for you to destroy it prematurely.
+
+<p>You <em>must</em> use a <b>rpcPtr</b> if you plan to use asynchronous RPC
+execution facility (i.e. the <b>xmlrpc_c::rpc::start</b> method) because
+otherwise Xmlrpc-c code will destroy the RPC as soon as it finishes, since it
+will appear to be unreferenced.  But there is no way you can write your code
+to guarantee it won't still reference the RPC after it finishes, because the
+Xmlrpc-c calls you make to conduct the asynchronous execution reference the
+RPC.
+
+<p>The <i>methodName</i> argument is self-explanatory.
+
+<p>The <i>paramList</i> argument is the parameter list of the RPC as an
+<a href="libxmlrpc++.html#paramlist"><b>xmlrpc_c::paramList</b></a>
+object.
+
+<p>The new RPC is in the &quot;not started&quot; state.  Nothing will
+happen with the RPC until you call its <b>call</b> or <b>start</b> method.
+
+<p>You can alternatively construct an <b>rpc</b> object implicitly by
+constructing an <b>rpcPtr</b> pointer.  But the preferred way starting
+with Xmlrpc-c 1.05 (March 2006) is to use the conventional auto-object
+paradigm <code>rpcPtr myrpcP(new rpc(...))</code>.
+
+<h4 id="call_rpc"><b>call</b> Method</h4>
+
+<p>This method performs the RPC.  It returns when the RPC is finished
+or the RPC object has found it impossible and given up.  The method
+fails if the RPC is already in progress.
+
+<p>The method does not return the outcome of the RPC.  You can get that
+with additional methods such as <b>isSuccessful</b> and <b>getResult</b>.
+
+Example:
+<pre>
+<code>
+    xmlrpc_c::rpcPtr myRpcP(new rpc(&quot;sample.add&quot;, sampleAddParms));
+    myRpcP->call(&amp;myClient, &amp;myCarriageParm);
+    int const sum((xmlrpc_c::value_int(myRpcP-&gt;getResult())));
+    cout &lt;&lt; "Result of RPC (sum of 5 and 7): " &lt;&lt; sum &lt;&lt; endl;
+</code>
+</pre>
+
+<p>There are two forms of this method.
+
+<h5>call by client and carriage parameter</h5>
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    call(xmlrpc_c::client       * clientP,
+         xmlrpc_c::carriageParm * carriageParmP);
+</code>
+</pre>
+
+<p>This performs the RPC using client *<i>clientP</i> and carriage
+parameter *<i>carriageParmP</i>.  Those two objects tell how to deliver
+the RPC call to the server and get the response back.
+
+<p>See <a href="#class_client">class <b>client</b></a> and
+<a href="#class_carriageparm">class <b>carriageParm</b></a>.
+
+<p>In an ordinary XML-RPC client, <i>clientP</i> points to an <a
+href="#class_clientxml"><b>xmlrpc_c::client_xml</b></a> object and
+<i>carriageParmP</i> points to a <a
+href="#class_carriageparmhttp"><b>xmlrpc_c::carriageParm_http</b></a>
+object.
+
+<h5>call by connection</h5>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    call(xmlrpc_c::connection connection);
+</code>
+</pre>
+
+<p>This is the same as above, but using an <a
+href="#class_connection"><b>xmlrpc_c::connection</b></a> object to deliver
+the call and receive the response.
+
+<h4 id="start_rpc"><b>start</b> method</h4>
+
+<p>This method starts an RPC, but does not wait for it to finish.
+The RPC may finish before or after the method returns.
+
+<p>The arguments are the same as for <b>call</b>.
+
+<p>Use this to perform RPCs asynchronously.  See
+<a href="#asynch">Asynchronous Client</a>.
+
+
+<h4 id="isfinished"><b>isFinished</b> Method</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    bool isFinished() const;
+</code>
+</pre>
+
+<p>This method returns true if and only if the RPC is finished.  If
+the RPC object is unable to execute the RPC and has given up, that
+counts as finished.
+
+<p>Note that to use this properly, you have to call the client's
+<b>run</b> method between calls to <b>isFinished</b>.  See the
+<a href="#start_rpc"><b>start</b></a> method for an explanation.
+
+
+<h4 id="issuccessful"><b>isSuccessful</b> Method</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    bool isSuccessful() const;
+</code>
+</pre>
+
+<p>This method returns true if and only if the RPC has succeeded, in
+an XML-RPC sense.  I.e. it has executed completely and did not return a
+fault.
+
+<h4 id="getresult"><b>getResult</b> Method</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_c::value getResult() const;
+</code>
+</pre>
+
+<p>This method returns the result of the successful RPC.  If the RPC
+has not succeeded, this throws a <b>girerr::error</b>.  You can use
+<b>isSuccessful</b> to determine whether you can successfully call
+<b>getResult</b>.
+
+<h4 id="getfault"><b>getFault</b> Method</h4>
+
+<p>This method returns the description of the fault with which the RPC
+failed.  If the RPC has not failed, this throws a
+<b>girerr::error</b>.
+
+<p>You can use <b>isFinished</b> and <b>isSuccessful</b> to partially
+determine whether you can successfully call <b>getFault</b>.  But note
+that those two methods won't distinguish between an RPC that failed
+and an RPC that the client wasn't able to execute at all.  There are
+3 possible results of starting an RPC: 1) The RPC executes and
+succeeds in an XML-RPC sense (i.e. returns an XML-RPC result); 2) The
+RPC executes, but fails in an XML-RPC sense (i.e. returns an XML-RPC
+fault); 3) The RPC doesn't execute (for example, because the network
+is down).  If the RPC didn't execute, <b>getFault()</b> throws an
+error, and there is no other way to determine that the RPC didn't
+execute.
+
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_c::fault getFault() const;
+</code>
+</pre>
+
+
+<h4 id="notifycomplete"><b>notifyComplete</b> Method</h4>
+
+<p>This is a bottom-facing method, as described above.  Ordinary
+client programs don't call this, but they often override it.
+
+<p>This method is supposed to notify someone somehow that the RPC has
+finished.  The <b>xmlrpc_c:rpc</b> class' <b>notifyComplete</b> does
+nothing; you override it in a derived class that you write
+specifically for your program.  But if your program does not need any
+notification, you needn't override it.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void notifyComplete();
+</code>
+</pre>
+
+<p>Note that the implementation of <b>notifyComplete()</b> normally
+uses other methods such as <b>this-&gt;getResult</b> to ascertain the
+outcome of the RPC.
+
+<h4 id="finish"><b>finish</b> Method</h4>
+
+<p>This is a bottom-facing method, as described above.  Ordinary
+client programs don't use this.  This method declares that the RPC is
+finished and succeeded.  The method's argument is the RPC's result as
+an <b>xmlrpc_c::value</b> object.
+
+<h4 id="finishfail"><b>finishFail</b> Method</h4>
+
+<p>This is like <b>finish</b>, but declares that the RPC failed.  It
+was fully executed, but failed in an XML-RPC sense.  The method's
+argument is an <b>xmlrpc_c::fault</b> object describing the failure.
+
+<h4 id="finisherr"><b>finishErr</b> Method</h4>
+
+<p>This is like <b>finish</b>, but declares that the client was unable
+to execute the RPC cleanly.  The call may or may not have been made
+and if it was, the response may or may not have been received.  The
+RPC may have finished successfully, failed, or neither.  The method's
+argument is a <b>girerr::error</b> object describing the error.
+
+
+<H3 id="class_rpcptr">Class <b>xmlrpc_c::rpcPtr</b></H3>
+
+<p>An object of this class is a pointer to an object of class
+<a href="#class_rpc"><b>xmlrpc_c::rpc</b></a>.  The class is derived
+from <a
+href="libxmlrpc++.html#auotObject"><b>girmem::autoObjectPtr</b></a>.
+
+<h4 id="constructors_rpcptr">Constructors</h4>
+
+<p>You will normally just use the constructors of the base class, for
+consistency with Xmlrpc-c's various other auto-object classes.
+
+<p>Example:
+<pre>
+<code>
+    rpcPtr const myrpcP(new rpc(std::string         methodName,
+                                xmlrpc_c::paramList paramList));
+</code>
+</pre>
+
+<p>But for backward compatibility with releases based on an earlier
+design philosophy, you can also use a constructor that implicitly creates
+the <b>rpc</b> object to which the <b>rpcPtr</b> points, without your
+code ever seeing the <b>rpc</b> directly.
+
+<p>Example:
+
+<pre>
+<code>
+    rpcPtr const myrpcP(std::string         methodName,
+                        xmlrpc_c::paramList paramList);
+</code>
+</pre>
+
+
+<h3 id="class_client">Class <b>xmlrpc_c::client</b></h3>
+
+<p>An object of this class represents a client, which is something that
+communicates with servers.
+
+<p>This is an abstract base class.  You can't create a generic object
+of this class, but rather create an object of a derived class that
+communicates with servers in a certain way.  The normal derived class
+(the only one provided by Xmlrpc-c) is <b>xmlrpc_c::client_xml</b>.
+
+<p>This class is derived from <a href="libxmlrpc++.html#autoObject">
+<b>girmem::autoObject</b></a>.  Its associated pointer class is
+<b>xmlrpc_c::clientPtr</b>.  But this is true only in Xmlrpc-c 1.05
+(March 2006) and later.
+
+<h4 id="finishasync_client"><b>finishAsync</b> Method</h4>
+
+<p>This method causes the client to synchronize with all outstanding
+RPCs.  It's part of the <a href="#async">asynchronous client
+facility</a> -- if you use the <b>start</b> method of an
+<b>xmlrpc_c::rpc</b> object, you need this too.
+
+<p>The method causes all outstanding RPCs to finish and waits for
+them.  For some clients, the thread of this method is what finishes
+the RPCs, so no RPC can finish until you call this.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void finishAsync(xmlrpc_c::timeout timeout);
+</code>
+</pre>
+
+<p>The function waits no longer than <i>timeout</i> milliseconds for
+RPCs to complete.  You can call <b>finishAsync</b> again later to
+finish any RPCs that are left unfinished because of the timeout.
+
+<h4 id="call_client"><b>call</b> Method</h4>
+
+<p>This method performs an RPC.  An ordinary client program does not
+use this method, because it performs RPC via the methods of an
+<b>xmlrpc_c::rpc</b> object.
+
+<h4 id="start_client"><b>start</b> Method</h4>
+
+<p>This method starts an RPC.  An ordinary client program does not use
+this method, because it performs RPC via the methods of an
+<b>xmlrpc_c::rpc</b> object.
+
+<h4 id="set_interrupt"><b>setInterrupt</b> Method</h4>
+
+<p>This method declares an interrupt flag for a client.  Henceforth,
+you can interrupt various client operations by setting that flag to a
+nonzero value.  The interrupt flag works the same way as the one for
+the <a href="libxmlrpc_client.html#interrupting">C client library</a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void setInterrupt(int * interruptFlag);
+</code>
+</pre>
+
+<p>To clear the interrupt flag, specify NULL for <i>interruptP</i>.
+
+<p>If you call this while the client is in the middle of something,
+results are undefined.  Normally, you call this only as part of setting
+up a client, shortly after you create it.
+
+<p>Not all clients are interruptible.  On some of the ones that
+aren't, this method throws a <b>girerr:error</b>; on others it simply
+has no effect.
+
+<p>In particular, only a client of class <b>xmlrpc_c::client_xml</b>
+is interruptible; <b>setInterrupt</b> of a client of any other class
+throws an error.  Among clients of class <b>xmlrpc_c::client_xml</b>,
+only those using a <b>xmlrpc_c::clientXmlTransport_curl</b> transport
+are interruptible.  <b>setInterrupt</b> of any other client has no
+effect.
+
+<p>This function was new in Xmlrpc-c 1.13 (December 2007).  Before
+that, there is no way to interrupt a client operation (but there is
+for a C client).
+
+
+<h3 id="class_clientptr">Class <b>xmlrpc_c::clientPtr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::client</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h3 id="class_clientxml">Class <b>xmlrpc_c::client_xml</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::client</b> object that
+performs an RPC using XML-RPC XML.  The object is not necessarily an
+XML-RPC client, though, as it does not necessarily use HTTP to
+transport that XML.  You supply a separate XML transport object that
+transports the XML in a way of your choosing.
+
+<h4 id="constructors_clientxml">Constructors</h4>
+
+<p>Prototypes:
+
+<pre>
+<code>
+    client_xml(xmlrpc_c::clientXmlTransport * transportP);
+</code>
+</pre>
+<pre>
+<code>
+    client_xml(xmlrpc_c::clientXmlTransport * transportP,
+               xmlrpc_dialect                 dialect);
+</code>
+</pre>
+<pre>
+<code>
+    client_xml(xmlrpc_c::clientXmlTransportPtr transportP);
+</code>
+</pre>
+<pre>
+<code>
+    client_xml(xmlrpc_c::clientXmlTransportPtr transportP);
+               xmlrpc_dialect                  dialect);
+</code>
+</pre>
+
+<i>transportP</i> points to an object that transports the client's XML
+(calls and responses).  See <a href="#class_clientxmltransport">class
+<b>xmlrpc_c::clientXmlTransport</b></a>.  In true XML-RPC, this is an object
+that knows how to communicate via HTTP, e.g. <a
+href="#class_clientxmltransporthttp">
+<b>xmlrpc_c::clientXmlTransport_http</b></a>.
+
+<p><i>dialect</i> selects the <a
+href="libxmlrpc.html#dialect">dialect</a> that the client will use
+when it generates the XML for a method call parameter.
+
+<p>Note that this has no effect on the dialect the client is able to
+interpret in responses from a server.  The client understands all the
+dialects.
+
+<p>If you use a constructor without <i>dialect</i>, the dialect is i8.
+
+<p>If you use a constructor that takes a C++ pointer
+(<tt>xmlrpc_c::clientXmlTransport *</tt>) to identify the transport,
+you must ensure that the transport continues to exist as long as the
+client does.  You don't have to worry about that when you use the
+<b>clientXmlTransportPtr</b> -- the transport knows when it is being used by
+the client and won't disappear before then.
+
+<p>The <b>clientXmlTransportPtr</b> constructor was new in Xmlrpc-c 1.05
+(March 2006).
+
+<p>The constructors with <i>dialect</i> where new in Xmlrpc-c 1.11
+(June 2007).
+
+
+<h3 id="class_clientxmltransport">
+Class <b>xmlrpc_c::clientXmlTransport</b></h3>
+
+<p>An object of this class transports XML (arbitrary strings, actually)
+to and from a server for a client.
+
+<p>A normal client program does not access an
+<b>xmlrpc_c::clientXmlTransport</b> object except to create it and
+give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<p>This is an abstract base class.  You can't create a generic object
+of this class, but rather create an object of a derived class that
+transports XML in a certain way.  The normal derived class (the only
+one provided by Xmlrpc-c) is <a href="#class_clientxmltransporthttp"><b>xmlrpc_c::clientXmlTransport_http</b></a>.
+
+<p>An object of Class <b>xmlrpc_c::clientXmlTransport</b> processes
+transactions.  A transaction is delivery of a call and reception of
+its associated response.  When you use the asynchronous interface to
+the transport, you have to supply an <a
+href="#class_xmltransaction"><b>xmlrpc_c::xmlTransaction</b>
+object</a> to represent each transaction.
+
+<p>This class is derived from <a
+href="libxmlrpc++.html#autoObject"><b>girmem::autoObject</b></a>.  Its
+associated pointer type is <b>xmlrpc_c::clientXmlTransportPtr</b>.  This
+is true starting with Xmlrpc-c 1.04 (November 2005).
+
+<h4 id="call_clientxmltransport"><b>call</b> Method</h4>
+
+<p>This method transports a call to the server and receives and returns
+the response.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    call(xmlrpc_c::carriageParm * carriageParmP,
+         std::string              callXml,
+         std::string *            responseXmlP);
+</code>
+</pre>
+
+<h4 id="start_clientxmltransport"><b>start</b> Method</h4>
+
+<p>This method transports a call to the server and associates it with
+a transaction.  It does not wait for or receive the response.
+
+<pre>
+<code>
+    void
+    start(xmlrpc_c::carriageParm *    carriageParmP,
+          std::string                 callXml,
+          xmlrpc_c::xmlTransactionPtr xmlTranP);
+</code>
+</pre>
+
+<p><i>xmlTranP</i> is a pointer to an <b>xmlTransaction</b> object
+that represents the transaction (call/response).  This is the object
+that the <b>xmlrpc_c::clientXmlTransport</b> object notifies (by
+calling its <b>finish</b> or <b>finishErr</b> method) when it has
+received the response.  See <a href="#class_xmltransaction"> class
+<b>xmlTransaction</b></a>.
+
+<p>Having successfully called <b>start()</b> (It didn't throw an
+error), you must later call <a
+href="#finishasync_xml"><b>finishAsync()</b></a>.  You must keep
+calling it until the transaction <i>xmlTranP</i> completes.  If you
+fail to do this, you will probably consume resources at the least.
+Furthermore, the RPC typically won't even get transported and the
+transaction will never complete because the transport object relies on
+your thread to do the work, via your call to <b>finishAsync()</b>.
+
+<h4 id="finishasync_xml"><b>finishAsync</b> Method</h4>
+
+<p>This method causes the transport to synchronize with all
+outstanding transactions.  The method causes all outstanding
+transactions to complete and waits for them.  For some transports, the
+thread of this method is what finishes the transactions, so no
+transaction can complete until you call this.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void finishAsync(xmlrpc_c::timeout timeout);
+</code>
+</pre>
+
+<p>The function waits no longer than <i>timeout</i> milliseconds for
+transactions to complete.  You can call <b>finishAsync</b> again
+later to finish any transactions that are left uncompleted because of
+the timeout.
+
+
+<h3 id="class_clientxmltransportptr">
+Class <b>xmlrpc_c::clientXmlTransportPtr</b></h3>
+
+<p>An object of this class is a pointer to an object of class <a
+href="#class_clientxmltransport"><b>xmlrpc_c::clientXmlTransport</b></a>.
+The class is derived from <a
+href="libxmlrpc++.html#auotObject"><b>girmem::autoObjectPtr</b></a>.
+
+<p>This class was new in Xmlrpc-c 1.04 (November 2005).
+
+
+<h3 id="class_http">
+Class <b>xmlrpc_c::clientXmlTransport_http</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::clientXmlTransport</b>.
+
+<p>An object of this class transports XML (arbitrary strings, actually)
+to and from a server for a client, using HTTP.
+
+<p>As with all <b>xmlrpc_c::clientXmlTransport</b> objects, a normal
+client program does not access an
+<b>xmlrpc_c::clientXmlTransport_http</b> object except to create it
+and give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<p>This is an abstract base class.  You can't create a generic object
+of this class, but rather create an object of a derived class that
+uses HTTP using a certain HTTP library.  Xmlrpc-c provides three such
+classes:  <b>xmlrpc_c::clientXmlTransport_curl</b>,
+<b>xmlrpc_c::clientXmlTransport_libwww</b>, and
+<b>xmlrpc_c::clientXmlTransport_wininet</b>.
+
+<p>If you don't care which one (and unless you're doing something fancy,
+there's no reason you should), you can use the class method
+<b>create</b> to create a transport object of a class of
+<b>libxmlrpc_client++</b>'s choosing.
+
+<p>Some people build variations of the Xmlrpc-c libraries that
+don't have all of the transports mentioned above available, or that
+have extra ones.  To find out which ones are available, you can use
+the <b>availableTypes</b> class method.  This is also a good reason to
+use <b>create</b>, since it always chooses a transport class that is
+actually available.
+
+<h4 id="http_create"><b>create</b> Class Method</h4>
+
+<p>This method creates an object of a derived class of
+Class <b>xmlrpc::clientXmlTransport_http</b>.  Which of various derived
+classes it uses is arbitrary.  Use this when you don't care, don't want
+to decide, or don't know which derived classes are implemented in your
+version of <b>libxmlrpc_client++</b>.
+
+<p>(The other way to create an object derived from
+<b>clientXmlTransport_http</b> is to use the constructor of the particular
+derived class).
+
+<P>Example:
+
+<pre>
+<code>
+    xmlrpc::clientXmlTransportPtr const transportP(
+        xmlrpc::clientXmlTransport_http::create());
+    client_xml myClient(transportP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    static xmlrpc::clientXmlTransportPtr create();
+</code>
+</pre>
+
+<p>Note that because you don't control what kind of transport you get,
+you can't ordinarily use any features or parameters that are specific
+to a particular one.  You must use a carriage parameter of class
+<b>xmlrpc::carriageParm_http0</b>, which has only controls that are
+common to all HTTP transports.
+
+<p>If you really want to know which kind of object you got, you can
+use trial dynamic casts to find out.
+
+<p>The <b>create</b> class method was new in Xmlrpc-c 1.05 (March 2006).
+
+
+<h4 id="http_available"><b>availableTypes</b> Class Method</h4>
+
+<p>This method returns a list of the names of the available client
+XML transport classes in the library.
+
+<P>Example:
+
+<pre>
+<code>
+    using namespace std;
+    vector&lt;string&gt; const typeList(
+        xmlrpc::clientXmlTransport_http::availableTypes();
+    vector&lt;string&gt;::const_iterator i;
+    for (i = typeList.begin(); i != typeList.end(); ++i)
+        cout &lt;&lt; &quot;Available transport class: &quot;
+             &lt;&lt; *i
+             &lt;&lt; endl;    
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    static std::vector&lt;std::string&gt;
+    availableTypes();
+</code>
+</pre>
+
+<p>The <b>availableTypes</b> class method was new in Xmlrpc-c 1.05
+(March 2006).
+
+<h3 id="class_curl">Class <b>xmlrpc_c::clientXmlTransport_curl</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::clientXmlTransport_http</b>.
+
+<p>An object of this class transports XML (arbitrary strings,
+actually) to and from a server for a client, using HTTP courtesy of
+the Curl HTTP client library.
+
+<p>As with all <b>xmlrpc_c::clientXmlTransport_http</b> objects, a
+normal client program does not access an
+<b>xmlrpc_c::clientXmlTransport_curl</b> object except to create it
+and give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<h4 id="constructors_curl">Constructors</h4>
+
+<p>The no-argument constructor works.  The more general constructor is
+as follows.  The no-argument constructor does the same thing as the
+general one with no options specified.
+
+<p>Example (new in Xmlrpc-c 1.04 (November 2005)):
+
+<pre>
+<code>
+    xmlrpc_c::clientXmlTransport_curl myTransport(
+        xmlrpc_c::clientXmlTransport_curl::constrOpt()
+        .network_interface(&quot;eth0&quot;)
+        .no_ssl_verifyhost(true)
+        );
+</code>
+</pre>
+
+<p>This rather complex constructor is actually quite easy to use if
+you follow the example instead of trying to understand how it works.
+This is a common C++ use paradigm that lets a subroutine have named
+parameters.  See <a href="libxmlrpc++.html#namedarg">C++ Named
+Arguments</a> for an explanation.
+
+<p>
+<strong>
+The option names (i.e. the names of the option setter methods, such
+as &quot;network_interface&quot;) are identical to the parameter names
+in the <a href="libxmlrpc_client.html#curl">Curl transport of the C
+interface</a>.  The option meanings are of course the same.
+</strong>
+
+<p>Before Xmlrpc-c 1.04 (November 2005), the constructor was different
+as follows.  This constructor continues to exist for backward
+compatibility.
+
+<pre>
+<code>
+    clientXmlTransport_curl(std::string networkInterface = &quot;&quot;,
+                            bool        noSslVerifyPeer = false,
+                            bool        noSslVerifyHost = false,
+                            std::string user_agent = &quot;&quot;);
+</code>
+</pre>
+
+<p>The meanings of the arguments are the same as for the corresponding
+parameters in the <a href="libxmlrpc_client.html#curl">Curl transport
+of the C interface</a>.
+
+<h4 id="curl_interference">Interference With Other Modules</h4>
+
+<p>The Curl library, and the various other libraries it uses,
+unfortunately use global variables.  That means if another part of
+your program uses one of these libraries for something via a means
+other than Xmlrpc-c, there can be problems.  These global variables
+are the sort of thing that one would normally never change from
+defaults, such as the identity of the memory allocator (malloc).
+Xmlrpc-c does not change these from defaults, but if something else in
+your program does, there could be unpredictable results.
+
+<p>An essential part of this uneasy peace between Xmlrpc-c and
+competing users of the Curl library (and actually, between multiple
+<b>xmlrpc_c::clientXmlTransport_curl</b> objects) is that Xmlrpc-c
+code never &quot;cleans up&quot; the Curl global variables.  I.e.  it
+never calls the Curl library's <b>curl_global_cleanup()</b>.  That
+means there can be a trivial amount of leaked memory.  If you want a
+cleaner program, call <b>curl_global_init()</b> yourself before
+creating any <b>clientXmlTransport_curl</b> objects, and call
+<b>curl_global_cleanup()</b> after any such objects have ceased to
+exist.  Note that <b>curl_global_init()</b> is repeatable -- after the
+first call, subsequent calls have no effect, so it's not a problem if
+both you and Xmlrpc-c call it.
+
+<p>The facilities Curl uses that have this problem are:
+
+<ul>
+<li>OpenSSL library
+<li>GNU TLS library
+<li>Windows socket services
+<li>Amiga socket services
+</ul>
+<p>The global settings that the Curl library itself manipulates are:
+<ul>
+<li>Setting of the memory allocator services that Curl code uses.
+<li>The <b>CHARSET</b> environment variable.
+</ul>
+
+
+<h4 id="concurrency_curl">Concurrency</h4>
+
+<p>You may call the methods of a <b>clientXmlTransport_curl</b> object
+(transport) from multiple threads simultaneously.  You may use the
+same transport for multiple <b>xmlrpc_c::client_xml</b> objects.
+
+<p>A <b>clientXmlTransport_curl</b> object uses pthread locking on
+Unix systems and Windows locking on Windows.  So your environment must
+provide these facilities whether you want to use multiple threads or
+not.
+
+<p>You may have multiple <b>clientXmlTransport_curl</b> objects in a
+process.
+
+<p>When you use the synchronous interface (such as the <b>call</b>
+method of a <b>xmlrpc_c::rpc</b> object does), a
+<b>clientXmlTransport_curl</b> object transports RPCs one at a time,
+in the order requested.  So if you have multiple pthreads all doing
+<b>xmlrpc_c::rpc::call</b>s via the same <b>clientXmlTransport_curl</b>
+object, you will never have more than one HTTP transaction in progress
+at a time.
+
+<p>To get multiple RPCs executing concurrently using the synchronous
+interface, you can use multiple <b>clientXmlTransport_curl</b> objects.
+Each one has a separate serial stream of HTTP transactions and therefore
+RPCs.
+
+<p>However, there are some significant differences between
+transporting two RPC with the same transport and transporting them
+with separate objects:
+
+<ul>
+<li>A <B>clientXmlTransport_curl</B> transport
+uses persistent HTTP connections.  That means that if the transport
+transports two RPCs sequentially to the same server, it tends to use
+the same HTTP connection for both, which saves a significant amount of
+time and other resources compared to using a separate connection for
+each.  But separate transports don't share HTTP connections, so if two
+RPCs go via two separate transports, they cannot both go on the same
+HTTP connection.
+
+<li>Cookies are local to a transport.  If a server sets a cookie in
+response to an RPC and for a later RPC requests that cookie back, it
+will get it only if the later RPC came via the same transport as the
+earlier one.  (There are no persistent cookies in Xmlrpc-c).
+Fortunately, cookie use is fairly unusual in XML-RPC.  You probably
+don't need to worry about this.
+
+</ul>
+
+<p>When you use the asynchronous transport interface (such as the
+<b>start</b> method of a <b>xmlrpc_c::rpc</b> object does) with multiple
+operating system threads, you get a rather strange beast, because you
+have Xmlrpc-c threads inside of operating system threads.  It works,
+but probably has different concurrency characteristics than you want.
+You'll get something very similar to using the synchronous transport
+interface with multiple operating system threads.
+
+<p>The Curl transport does one DNS server host name lookup at a time,
+and the timeout of the transport's and client's <b>finishAsync</b>
+method are ineffective against long-running name lookups.  This is due
+to a weakness in the Curl library (at least as late as version 7.16.1
+-- January 2007).
+
+
+<h3 id="class_libwww">Class <b>xmlrpc_c::clientXmlTransport_libwww</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::clientXmlTransport_http</b>.
+
+<p>An object of this class transports XML (arbitrary strings,
+actually) to and from a server for a client, using HTTP courtesy of
+the W3C Libwww HTTP client library.
+
+<p>As with all <b>xmlrpc_c::clientXmlTransport_http</b> objects, a
+normal client program does not access an
+<b>xmlrpc_c::clientXmlTransport_libwww</b> object except to create it
+and give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<p>An object of this class is <strong>not thread safe</strong>.  You
+must not call a method while another thread is running a method of the
+same object.  The same goes for any client object that uses the
+object.
+
+<p>You can still have a multithreaded program with this class; you
+just have to construct multiple transport (and client) objects -- one
+for each thread.  Or do explicit threading using the <b>start</b>
+method of an <b>xmlrpc_c::rpc</b> object.
+
+<h4 id="constructors_libwww">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    clientXmlTransport_libwww(std::string appname = &quot;&quot;,
+                              std::string appversion = &quot;&quot;);
+</code>
+</pre>
+
+<p>The meanings of the arguments are the same as for the <a
+href="libxmlrpc_client.html#libwww">Libwww transport of the C
+interface</a>.
+
+
+<h3 id="class_wininet">Class <b>xmlrpc_c::clientXmlTransport_wininet</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::clientXmlTransport_http</b>.
+
+<p>An object of this class transports XML (arbitrary strings,
+actually) to and from a server for a client, using HTTP courtesy of
+the Wininet HTTP client facility built into Windows.
+
+<p>As with all <b>xmlrpc_c::clientXmlTransport_http</b> objects, a
+normal client program does not access an
+<b>xmlrpc_c::clientXmlTransport_wininet</b> object except to create it
+and give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<h4 id="constructors_wininet">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    clientXmlTransport_wininet(bool allowInvalidSslCerts = false);
+</code>
+</pre>
+
+<p>The meanings of the arguments are the same as for the <a
+href="libxmlrpc_client.html#wininet">Wininet transport of the C
+interface</a>.
+
+<h3 id="class_pstream">Class <b>xmlrpc_c::clientXmlTransport_pstream</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::clientXmlTransport</b>.
+
+<p>An object of this class transports XML (arbitrary strings,
+actually) to and from a server for a client, using a packet stream.
+As XML-RPC requires HTTP, not a packet stream, when you use this
+transport, your client is not an XML-RPC client and it will not talk
+to an XML-RPC server.  We call it a packet stream XML-RPC client;
+think of it as pseudo-XML-RPC.  You can use it to talk to a server
+that uses <a href="libxmlrpc_server_pstream++.html">Xmlrpc-c packet
+stream XML-RPC server facilities</a>.  For more information on this
+protocol, see that server manual.
+
+<p>As with all <b>xmlrpc_c::clientXmlTransport</b> objects, a normal
+client program does not access an
+<b>xmlrpc_c::clientXmlTransport_pstream</b> object except to create it
+and give it to an <b>xmlrpc_c::client_xml</b> object.
+
+<p>A transport of this class talks to exactly one server.  You fix the
+identity of that server before you construct the object.  Furthermore,
+it uses exactly one connection to that server.  You establish that
+connection before you construct the object.
+
+<p>This class was new in Xmlrpc-c 1.11 (June 2007).
+
+<h4 id="constructors_pstream">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    clientXmlTransport_pstream(constrOpt &amp; opt);
+</code>
+</pre>
+
+
+<p>This constructor uses the <a
+href="libxmlrpc++.html#constropt"><i>constrOpt</i> paradigm</a> to
+make specifying options easy and flexible, though technically there is
+just one C++ parameter.
+
+<p>The option methods are:
+
+<dl>
+
+<dt>fd
+
+<dd>File descriptor of a stream socket that is connected to a packet
+stream XML-RPC server.  (It just has to be connected at the stream socket
+level, such as one would do with the <b>connect()</b> standard C library
+function -- no prior packet stream negotiation is implied).
+
+<p>You can control a lot of the behavior of the transport just by your
+choice of socket parameters (which you make before you pass it to the
+<b>clientXmlTransport_pstream</b> constructor).  However, you are not
+allowed to access the socket in any way while the object exists.
+
+</dl>
+
+
+
+<h3 id="class_xmltransaction">Class <b>xmlrpc_c::xmlTransaction</b></h3>
+
+<p>An object of this class represents an XML transaction that an
+<b>xmlrpc_c::clientXmlTransport</b> object performs.  You need this
+class only if you are using an XML transport and using it
+asynchronously (i.e.  transactions can be in progress while your
+program is doing something else).
+
+<p>A normal XML-RPC client program never sees this class because its objects
+are internal to the <b>xmlrpc_c::rpc</b> class.
+
+<p>There is an obvious connection between an XML transaction (class
+<b>xmlrpc_c::xmlTransaction</b>) and an RPC (class
+<b>xmlrpc_c::rpc</b>).  When you're doing XML-RPC, every RPC is
+associated with exactly one XML transaction.  In that case, the object
+that represents the XML transaction is typically of derived class
+<b>xmlrpc_c::xmlTransaction_client</b>.
+
+<p>Class <b>xmlrpc_c::xmlTransaction</b> is derived from <a
+href="libxmlrpc++.html#autoObject"><b>girmem::autoObject</b></a>.  Its
+associated pointer class is <b>xmlrpc_c::xmlTransactionPtr</b>.
+
+<h4 id="constructors_xmltransaction">Constructors</h4>
+
+<p>No constructors are available for public use.  Instead, construct an
+<b>xmlrpc_c::xmlTransactionPtr</b>.  That will automatically construct a new
+<b>xmlrpc_c::xmlTransaction</b> to which to point.
+
+<h4 id="finish_xmltransaction"><b>finish</b> Method</h4>
+
+<p>This method notifies somebody somehow that the XML response has been
+received.  The method's argument is the XML.  The generic
+<b>xmlrpc_c::xmlTransaction</b> version of the method does nothing, but
+you typically override it in a derived class.
+
+<h4 id="finisherr_xmltransaction"><b>finishErr</b></h4>
+
+<p>This method notifies somebody somehow that the transaction has failed
+and no response XML will be forthcoming.
+
+<p>The generic <b>xmlrpc_c::xmlTransaction</b> version of the method
+does nothing, but you typically override it in a derived class.
+
+
+<H3 id="class_xmltransactionptr">
+Class <b>xmlrpc_c::xmlTransactionPtr</b></H3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::xmlTransaction</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h4 id="constructors_xmltransactionptr">Constructors</h4>
+
+<p>The no-argument constructor creates a placeholder pointer.  It
+doesn't point to anything, but you can assign another pointer value to
+it later.  There are no other constructors; typically, you construct an
+object of a derived class.  You might then assign that object's value
+to a placeholder <b>xmlrpc_c::xmlTransactionPtr</b> object.
+
+<h3 id="class_carriageparm">class <B>xmlrpc:c::carriageParm</B></h3>
+
+<p>An object of this class tells how to transport an RPC.  It
+describes parameters that may vary from one RPC to the next.
+
+<p>This is an abstract base class.  You can't create a generic object
+of this class, but rather create an object of a derived class that
+means something for some particular kind of client.  For example, an
+HTTP client might use a carriage parameter that includes a URL, and
+maybe a userid/password for HTTP basic authentication.
+
+<p>This base class has no members of its own.
+
+<p>Xmlrpc-c provides the following derived classes, all for clients
+of class <b>xmlrpc_c::client_xml</b>:
+
+<ul>
+<li><b>carriageParm_curl0</b> for use with an
+<b>xmlrpc_c::xmlTransport_curl</b> XML transport.
+<li><b>carriageParm_libwww0</b> for use with an
+<b>xmlrpc_c::xmlTransport_libwww</b> XML transport.
+<li><b>carriageParm_wininet0</b> for use with an
+<b>xmlrpc_c::xmlTransport_wininet</b> XML transport.
+<li><b>carriageParm_pstream</b> for use with an
+<b>xmlrpc_c::xmlTransport_pstream</b> XML transport.
+</ul>
+
+<p>The first three are derived from yet another class,
+<b>xmlrpc_c::carriageParm_http0</b>, which is itself derived from
+<b>xmlrpc_c::carriageParm</b>.  <b>carriageParm_http0</b> represents
+parameters common to all HTTP transportation.
+
+
+<h3 id="class_carriageparmhttp0">Class <b>xmlrpc_c::carriageParm_http0</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::carriageParm</b> object
+that is suitable as the carriage parameter for a
+<b>xmlrpc_c::client_xml</b> client that uses an XML transport of the
+class <b>xmlrpc_c::xmlTransport_http</b>.
+
+<p>This class is derived from <a href="libxmlrpc++.html#autoObject">
+<b>girmem::autoObject</b></a>.  Its associated pointer class is
+<b>xmlrpc_c::carriagepparmhttp0Ptr</b>.  But this is true only in
+Xmlrpc-c 1.05 (March 2006) and later.
+
+<h4 id="constructors_parmhttp">Constructors</h4>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::carriageParm const myParm(&quot;http://localhost:8080/RPC2&quot;);
+</code>
+</pre>
+
+<p>The argument, obviously, is the server URL &#109;dash it tells to
+where to make the HTTP connection over which to perform the RPC.
+
+<h4 id="setuser"><b>setUser</b> Method</h4>
+
+<p>This sets the username and password to be used in identifying and
+authenticating the client, for those authentication methods that involve
+usernames and passwords.
+
+<p>This function by itself does not enable any authentication.  You
+must separately call a method such as <b>allowAuthBasic</b> as well.
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    setUser(std::string const userid,
+            std::string const password);
+</code>
+</pre>
+
+<p>This function was new in Xmlrpc-c 1.14 (March 2008).
+
+<h4 id="allowauthbasic"><b>allowAuthBasic</b> Method</h4>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    allowAuthBasic();
+</code>
+</pre>
+
+<p>This sets the carriage parameter to indicate that HTTP basic
+authentication is allowed with the server.
+
+<p>You must set a username and password with <b>setUser</b> before
+calling this, or it will fail.
+
+<p>Use <b>disallowAuthBasic</b> to undo this.
+
+<p>This function was new in Xmlrpc-c 1.14 (March 2008).
+
+<h4 id="disallowauthbasic"><b>disallowAuthBasic</b> Method</h4>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    disallowAuthBasic();
+</code>
+</pre>
+
+<p>This sets the carriage parameter to indicate that HTTP basic
+authentication is not allowed with the server.
+
+<p>This undoes what <b>allowAuthBasic</b> does.
+
+<p>This function was new in Xmlrpc-c 1.14 (March 2008).
+
+<h4 id="allowauthdigest"><b>allowAuthDigest</b> Method</h4>
+
+<p>This is analogous to <b>allowAuthBasic</b>, except for HTTP digest
+authentication.
+
+<h4 id="disallowauthdigest"><b>disallowAuthDigest</b> Method</h4>
+
+<p>This is analogous to <b>disallowAuthDigest</b>, except for HTTP digest
+authentication.
+
+<h4 id="allowauthnegotiate"><b>allowAuthNegotiate</b> Method</h4>
+
+<p>This is analogous to <b>allowAuthBasic</b>, except for HTTP GSS-Negotiate 
+authentication.
+
+<h4 id="disallowauthnegotiate"><b>disallowAuthNegotiate</b> Method</h4>
+
+<p>This is analogous to <b>disallowAuthDigest</b>, except for GSS-Negotiate 
+authentication.
+
+<h4 id="allowauthntlm"><b>allowAuthNtlm</b> Method</h4>
+
+<p>This is analogous to <b>allowAuthNtlm</b>, except for HTTP NTLM
+authentication.
+
+<h4 id="disallowauthntlm"><b>disallowAuthNtlm</b> Method</h4>
+
+<p>This is analogous to <b>disallowAuthNtlm</b>, except for HTTP NTLM
+authentication.
+
+
+<h4 id="setbasicauth"><b>setBasicAuth</b> Method</h4>
+
+<p><strong>This method is obsolete.</strong> In new code, use
+<b>allowBasic</b> and <b>setUser</b> instead.
+
+<p>This method is equivalent to the combination of <b>allowBasic</b>
+and <b>setUser</b>.
+
+
+<h3 id="class_carriageparmhttp0ptr">
+Class <b>xmlrpc_c::carriageParm_http0Ptr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::carriageparmhttp0</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h3 id="class_carriageparmcurl0">Class <b>carriageParm_curl0</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::carriageParm</b> object
+that is suitable as the carriage parameter for a <b>xmlrpc_c::client_xml</b>
+client that uses the <b>xmlrpc_c::xmlTransport_curl</b> XML transport.
+
+<p>The class is derived from <a
+href="#class_carriageparmhttp"><b>xmlrpc_c::carriageParm_http</b></a>
+(which is derived from <b>xmlrpc_c::carriageParm</b>), and has no
+additional members.
+
+<p>In case you're wondering what the &quot;0&quot; is doing in the name:
+We expect this class to grow in future versions of Xmlrpc-c, and it may not
+be possible to distinguish the new versions from the old ones with
+variable constructor parameter lists alone.  Since today's programs have
+to keep compiling and working as they do today, we may have to add
+new classes and use that number suffix to distinguish them.
+
+<h3 id="class_carriageparmcurl0ptr">
+Class <b>xmlrpc_c::carriageParm_curl0Ptr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::carriageparmcurl0</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h3 id="class_carriageparmlibwww0">Class <b>carriageParm_libwww0</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::carriageParm</b> object
+that is suitable as the carriage parameter for a <b>xmlrpc_c::client_xml</b>
+client that uses the <b>xmlrpc_c::xmlTransport_libwww</b> XML transport.
+
+<p>The class is derived from <a
+href="#class_carriageparmhttp"><b>xmlrpc_c::carriageParm_http</b></a>
+(which is derived from <b>xmlrpc_c::carriageParm</b>), and has no
+additional members.
+
+<p>In case you're wondering what the &quot;0&quot; is doing in the name:
+We expect this class to grow in future versions of Xmlrpc-c, and it may not
+be possible to distinguish the new versions from the old ones with
+variable constructor parameter lists alone.  Since today's programs have
+to keep compiling and working as they do today, we may have to add
+new classes and use that number suffix to distinguish them.
+
+<h3 id="class_carriageparmlibwww0ptr">
+Class <b>xmlrpc_c::carriageParm_libwww0Ptr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::carriageparmlibwww0</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h3 id="class_carriageparm_wininet0">Class <b>carriageParm_wininet0</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::carriageParm</b> object
+that is suitable as the carriage parameter for a <b>xmlrpc_c::client_xml</b>
+client that uses the <b>xmlrpc_c::xmlTransport_wininet</b> XML transport.
+
+<p>The class is derived from <a
+href="#class_carriageparmhttp"><b>xmlrpc_c::carriageParm_http</b></a>
+(which is derived from <b>xmlrpc_c::carriageParm</b>), and has no
+additional members.
+
+<p>In case you're wondering what the &quot;0&quot; is doing in the name:
+We expect this class to grow in future versions of Xmlrpc-c, and it may not
+be possible to distinguish the new versions from the old ones with
+variable constructor parameter lists alone.  Since today's programs have
+to keep compiling and working as they do today, we may have to add
+new classes and use that number suffix to distinguish them.
+
+<h3 id="class_carriageparmwininet0ptr">
+Class <b>xmlrpc_c::carriageParm_wininet0Ptr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::carriageparmwininet0</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+
+<h3 id="class_carriageparm_pstream">Class <b>carriageParm_pstream</b></h3>
+
+<p>An object of this class is an <b>xmlrpc_c::carriageParm</b> object
+that is suitable as the carriage parameter for a <b>xmlrpc_c::client_xml</b>
+client that uses an <b>xmlrpc_c::xmlTransport_pstream</b> XML transport.
+
+<p>The class is derived from <a
+href="#class_carriageparm"><b>xmlrpc_c::carriageParm</b></a> and has
+no additional members.
+
+<p>Notice that there are no members you can set.  The
+<b>xmlTransport_pstream</b> class is so simple that there is only one
+way to carry an RPC with it.  Even the destination of an RPC is a
+fixed characteristic of the transport object.  So the only reason this
+class exists is is to fill a place in the argument list of some
+methods that are designed for use with more flexible transport
+classes.
+
+<p>This class was new in Xmlrpc-c 1.11 (June 2007).
+
+<h3 id="class_carriageparmpstreamptr">
+Class <b>xmlrpc_c::carriageParm_pstreamPtr</b></h3>
+
+<p>An object of this class is a pointer to an object of class
+<b>xmlrpc_c::carriageparmpstream</b>.  This class is derived from 
+<a href="libxmlrpc++.html#autoObject"><b>girmem::autoObjectPtr</b></a>.
+
+<p>This class was new in Xmlrpc-c 1.11 (June 2007).
+
+
+<h3 id="class_connection">Class <b>xmlrpc_c::connection</b></h3>
+
+<p>An object of this class represents a sort of channel over which
+RPCs execute.  It has two fixed ends and a fixed medium.  It is really
+nothing more than a combination of a client object and a carriage
+parameter object.  If you do many RPCs to the same server in the same
+way, this can save you a little program clutter.
+
+<p>Class <b>xmlrpc_c::serverAccessor</b> is usually what you want instead
+of this.
+
+<h4 id="constructors_connection">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    connection(xmlrpc_c::client *       clientP,
+               xmlrpc_c::carriageParm * carriageParmP);
+</code>
+</pre>
+
+<h3 id="class_serverAccessor">Class <b>xmlrpc_c::serverAccessor</b></h3>
+
+<p>An object of this class is a tool for making RPCs to a particular
+XML_RPC server, carried a particular way.  Internally, it uses an
+<B>xmlrpc_c::client</B> and an <b>xmlrpc_c::carriage_parm</b>.  You get
+only a simple synchronous &quot;call&quot; interface; 
+
+<p>You could just use your own client and carriage parameter, but a
+server accessor hides the carriage parameter mess from the parts of
+your code that do RPCs, thus making that code cleaner.
+
+<p>Example:
+<pre>
+<code>
+    string const serverUrl("http://localhost:8080/RPC2");
+    string const methodName("sample.add");
+
+    clientXmlTransportPtr const transportP(new clientXmlTransport_curl(
+        clientXmlTransport_curl::constrOpt()));
+    clientPtr const clientP(new client_xml(transportP));
+    carriageParm_curl0Ptr const carriageParmP(
+        new carriageParm_curl0(serverUrl);
+    serverAccessor const serverP(clientP, carriageParmP);
+
+    ...
+
+    rpcOutcome outcome;
+        
+    serverP->call(methodName, ParamList().add(value_int(5).add(value_int(7),
+                  &amp;outcome);
+</code>
+</pre>
+
+<p>This class was new in Xmlrpc-c Release 1.04 (November 2005).
+
+<h4 id="serverAccessor_constructors">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    serverAccessor(xmlrpc_c::clientPtr       clientP,
+                   xmlrpc_c::carriageParmPtr carriageParmP);
+</code>
+</pre>
+
+<p>This constructs a server accessor object that uses the client pointed to
+by <i>clientP</i> to perform RPCs on the server identified by
+<i>carriageParmP</i>.
+
+
+<h4 id="serverAccessor_call"><b>call</b> Method</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    call(std::string          &amp; methodName,
+         xmlrpc_c::paramList  &amp; paramList,
+         xmlrpc_c::rpcOutcome * outcomeP);
+</code>
+</pre>
+
+<p>This performs an RPC.  It makes a call and waits for the response,
+analogous to the <b>call</b> method of the <b>client</b>, and <b>rpc</b>
+classes.
+
+
+<h2 id="interrupting">Interrupting</h2>
+
+<p>There is a facility for interrupting long-running methods with a
+signal.  It is analogous, in purpose and form, to the same facility
+for the <a href="libxmlrpc_client.html#interrupting">C library</a>.
+
+<p>In C++, you use the <a href="#set_interrupt"><b>setInterrupt</b>
+method</a> of the client object where in C you would use the
+<b>xmlrpc_client_set_interrupt()</b> function.  In C++, an interrupted
+method throws an error.
+
+<h2 id="brokenserver">Dealing With Broken Servers</h2>
+
+<p>Considerations for dealing with broken servers are the same as
+for <a href="libxmlrpc_client.html#brokenserver">the C interface</a>.
+
+<h2 id="debugging">Debugging</h2>
+
+<p>This section describes some facilities and techniques for debugging
+programs that use <b>libxmlrpc_client++</b>.
+
+<h3 id="standard_error">Standard Error</h3>
+
+<p>The trace facilities described here write messages to the Standard
+Error file descriptor via the Standard Error stream of the standard C
+library (<b>stderr</b>).  So make sure you have one.  Many server
+processes don't (they explicitly close the one that the system setup
+code provides).
+
+<h3 id="trace_xml">XMLRPC_TRACE_XML environment variable</h3>
+
+<p>If you set the <b>XMLRPC_TRACE_XML</b> environment variable to
+<b>1</b>, the <b>libxmlrpc_client</b> transports will print to
+Standard Error the XML of the call and of the response, in addition to
+their normal processing.
+
+<p>It works the same as for the <a
+href="libxmlrpc_client.html#trace_xml">C client library</a>.
+
+<h3 id="trace_curl">XMLRPC_TRACE_CURL environment variable</h3>
+
+<p>If you are using the Curl XML transport,
+<a href="#curl_debug">XMLRPC_TRACE_CURL</a> can be useful.
+
+<p>It works the same as for the <a
+href="libxmlrpc_client.html#trace_xml">C client library</a>.
+
+</body>
+</html>

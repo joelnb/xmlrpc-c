@@ -1,0 +1,244 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC For C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>General Library Information - C++</h1>
+
+<p>This chapter contains general information applicable to all of the
+C++ programming libraries of XML-RPC For C/C++ (<b>libxmlrpc++</b>,
+<b>libxmlrpc_server++</b>, etc).
+
+<p>You will also find information of general applicability in
+the manual for <a href="libxmlrpc++.html"><b>libxmlrpc++</b></a>, because
+it includes basic classes that you use with all the other libraries.
+
+<p>The equivalent chapter for the C libraries is <a
+href="libgeneral.html">General Library Information - C</a>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Almost everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.  But you will find that the official
+specification of the protocol is riddled with ambiguity and other usability
+problems.  <a href="http://effbot.org/zone/xmlrpc-errata.htm">This page</a>
+adds to it and accurately describes most so-called &quot;XML-RPC&quot;
+clients and servers.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+  <li><a href="#namespace">C++ Namespace</a>
+  <li><a href="#succfail">Success/Failure</a>
+  <li><a href="#memory">Memory Management</a>
+  <li><a href="#naming">Naming Conventions</a>
+  <li><a href="#namedarg">C++ Named Arguments</a>
+  <li><a href="#threadsafe">Thread Safety</a>
+</ul>
+
+
+<h2 id="namespace">C++ Namespace</h2>
+
+<p>Everything specific to Xmlrpc-c is in the C++ namespace
+<b>xmlrpc_c</b>.  For example, the name of the XML-RPC value class is
+<b>xmlrpc_c::value</b>.  
+
+<p>There are a few utilities that are packaged with Xmlrpc-c, but
+really are not specific to Xmlrpc-c's main purpose (they would be
+useful in many other arenas).  These are in other namespaces.  For
+example, Xmlrpc-c contains a class for errors.  An object of this
+class is not specific to Xmlrpc-c in any way -- any program that
+generates errors could use it.  It is in the <b>girerr</b> namespace
+(don't ask what the name means &mdash; it's essentially arbitrary).
+
+<h2 id="succfail">Success/Failure</h2>
+
+<p>A method either succeeds or fails.  The distinction might be a
+little fuzzy sometimes, but the documentation should make it clear
+what is considered successful.
+
+<p>When a method fails, it throws an object.  Pointed-to or referenced
+return variables have arbitrary values when the function returns.
+
+<p>A method does not change the state of anything when it fails.  For
+all practical purposes, it is the same as if the method had not been
+called.
+
+<p>While the object a method throws when it fails does contain
+information specifying how it failed, you generally aren't supposed to
+call a method just to see how it fails and your program should not
+analyze the failure information any further than to discern the type
+of object it is.  The failure information within the object is
+primarily intended for forwarding to a human to diagnose a larger
+problem.  There generally exist interfaces whereby you can learn from
+a successful execution whatever you would have learned from some
+failed execution.
+
+<p>A method never throws an object (i.e. it always completes and
+returns) when it succeeds.
+
+<p>The method an object throws when it fails is usually a
+<b>girerr::error</b>, described under <a href="#error">Error
+Object</a>.  But if lower level libraries or code you supply throws
+something else up to an Xmlrpc-c method, the Xmlrpc-c method often
+just throws that on up.
+
+<h2 id="memory">Memory Management</h2>
+
+<p>An Xmlrpc-c method never destroys an object you created, or expects you
+to destroy an object it created.  When an Xmlrpc-c method creates an object
+and returns it to you, it does so with a shared pointer created by you
+such that the object gets deleted automatically after you've destroyed your
+pointers.
+
+<p>Likewise, Xmlrpc-c never retains a reference/pointer to an object
+you created so that you have to worry about when you can safely
+destroy it.  (Of course, when you pass an object as a parameter to a
+method, you cannot destroy the object while the method is running).
+
+<h2 id="naming">Naming Conventions</h2>
+
+<p>Names follow the form &quot;paramCount&quot;.  They don't use
+underscores to separate words.  Names use underscores in some cases
+to reflect inheritance hierarchy, such as in &quot;value_int&quot;
+(which is derived from &quot;value&quot;).  And sometimes underscores
+reflect other naming hierarchies.
+
+<h2 id="namedarg">C++ Named Arguments</h2>
+
+<p>The Xmlrpc-c libraries use a common C++ use paradigm that allows a
+method to have named arguments, which is not possible in C++ itself.
+Named arguments means the caller can specify arguments in any order and
+omit any of them.  It also means the call is easy to read.  And future
+versions of the method can have additional possible arguments without
+any loss of backward compatibility.
+
+<p>For our explanation, we will use the following example: The
+<B>connectIt</B> method creates an HTTP connection.  You must tell it
+either a host name or IP address and optionally TCP port number of the
+server and name of the local network interface to use.  The following
+are possible calls, all of the same method:
+
+<pre>
+<code>
+    connectIt(connectOpt()
+              .hostname(&quot;www.google.com&quot;)
+              .port(8080)
+             )
+
+    connectIt(connectOpt()
+              .hostaddr(&quot;127.0.0.1&quot;)
+              .interface(&quot;eth0&quot;)
+             )
+
+    connectIt(connectOpt()
+              .interface(&quot;eth0&quot;)
+              .hostaddr(&quot;127.0.0.1&quot;)
+              .port(8080)
+             )
+
+</code>
+</pre>
+
+<p>To the unaccustomed, these examples don't even look like legal C++,
+but in fact it is quite basic C++.  The periods on the left are just
+the &quot;member&quot; operator, as in <b>mystring.length()</b>.  The
+code just isn't formatted in the typical way.
+
+<p>Here's how it works: 
+
+<p>The one argument to the constructor is a <b>connectOpt</b> object.
+That option contains all of your option specifications.  In the first
+example, it knows that you specified a host name and port number (and
+the values you specified), but not an IP address or interface name.
+<b>connectOpt</b>'s constructor takes no arguments and generates an
+object that says you specified no arguments.
+
+<p>A <b>connectOpt</b> has a &quot;setter&quot; method to set each of the
+arguments.  So
+<code>connectOpt().hostname(&quot;www.google.com&quot;)</code> generates
+a <b>connectOpt</b> that says you specified the host name.
+
+<p>But here is the key to the cleverness: The setter method's return
+value is a reference to the very object of which it is part.  So you can
+use the above expression as the argument to the <b>connectIt</b>
+method.  Or you can use it to call another setter method, in a
+boundless chain: opt().arg1Setter(arg1).arg2Setter(arg2)...  That's what
+you see in the examples above, but formatted for easier reading.
+
+<p>Here are definitions that make the examples work:
+
+<pre>
+<code>
+    class connectOpt {
+    public:
+        connectOpt() {
+            present.hostname  = false;
+            present.hostaddr  = false;
+            present.port      = false;
+            present.interface = false;
+        }
+
+        connectOpt &amp; hostname(string const&amp; arg) {
+            present.hostname = true;
+            value.hostname   = arg;
+        }
+        connectOpt &amp; hostaddr(string const&amp; arg) {
+            present.hostaddr = true;
+            value.hostaddr   = arg;
+        }
+        connectOpt &amp; port(string const&amp; arg) {
+            present.port = true;
+            value.port   = arg;
+        }
+        connectOpt &amp; interface(string const&amp; arg) {
+            present.interface = true;
+            value.interface   = arg;
+        }
+
+        struct {
+            string       hostname;
+            string       hostaddr;
+            unsigned int port;
+            string       interface;
+        } value;
+
+        struct {
+            bool hostname;
+            bool hostaddr;
+            bool port;
+            bool interface;
+        } present;
+    };
+    
+    connectIt(connextOpt const&amp; opt);
+</code>
+</pre>
+
+<h2 id="threadsafe">Thread Safety</h2>
+
+<p>The libraries, and objects of the classes implemented by them, are
+thread-safe.  The libraries do not use static variables.
+
+<p>As an exception, some <b>libxmlrpc_client++</b> objects are not
+thread safe.
+
+<p>The libraries' thread safety is of course depends upon thread-safety
+of all the libraries it uses.  Your standard C library in particular
+must be thread-safe.  As far as I know, all libraries that Xmlrpc-c
+uses in typical configurations are thread-safe.
+
+<p>We use the same <a href="libgeneral.html#def_threadsafe">definition
+of thread-safety</a> as with the C libraries.
+
+</body>
+</html>

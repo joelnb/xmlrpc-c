@@ -1,0 +1,2764 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+<BODY>
+<h1>libxmlrpc_client</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc_client</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C</a>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.
+
+<p>The <b>libxmlrpc_client</b> library provides functions for use in
+an program that is an XML-RPC client.  These functions take care of
+all the protocol related things so the calling program can be very
+simple.
+
+<p>When using <b>libxmlrpc_client</b>, you must also use the <a
+href="libxmlrpc.html"><b>libxmlrpc</b> library</a>.  It contains
+additional facilities that an XML-RPC client needs but are general to
+XML-RPC and not specific to XML-RPC clients.  Besides, the
+<b>libxmlrpc_client</b> library routines depend on it.
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#headerfile">Interface Header File</a>
+<li><a href="#linking">Linking</a>
+<li><a href="#example">Example</a>
+<li><a href="#testing">Testing, Experimenting</a>
+<li><a href="#globalconst">Global Constants</a>
+<li><a href="#client">Client Object</a>
+  <ul>
+  <li><a href="#privateclient">Private Client</a>
+    <ul>
+    <li><a href="#client_create">xmlrpc_client_create()</a>
+      <ul>
+      <li><a href="#specifytransport">Specifying the XML Transport</a>
+      <li><a href="#clientdialect">XML-RPC Dialect</a>
+      <li><a href="#clientprogressfn">Progress Function</a>
+      </ul>
+    <li><a href="#client_destroy">xmlrpc_client_destroy()</a>
+    </ul>
+  <li><a href="#globalclient">Global Client</a>
+    <ul>
+    <li><a href="#client_init2">xmlrpc_client_init2()</a>
+    <li><a href="#client_init">xmlrpc_client_init()</a>
+    <li><a href="#client_cleanup">xmlrpc_client_cleanup()</a>
+    </ul>
+  </ul>
+<li><a href="#rpc">Performing An RPC</a>
+  <ul>
+  <li><a href="#syncrpc">Synchronous RPCs</a>
+    <ul>
+    <li><a href="#xmlrpc_client_call2f">xmlrpc_client_call2f()</a>
+    <li><a href="#xmlrpc_client_call2">xmlrpc_client_call2()</a>
+    <li><a href="#xmlrpc_client_call">xmlrpc_client_call()</a>
+    <li><a href="#xmlrpc_client_call_params">xmlrpc_client_call_params()</a>
+    <li><a href="#xmlrpc_client_call_server">xmlrpc_client_call_server()</a>
+    <li><a href="#xmlrpc_client_call_server_params">
+              xmlrpc_client_call_server_params()</a>
+    </ul>
+  <li><a href="#asyncrpc">Asynchronous RPCs</a>
+    <ul>
+    <li><a href="#xmlrpc_client_start_rpc">xmlrpc_client_start_rpc()</a>
+    <li><a href="#xmlrpc_client_start_rpcf">xmlrpc_client_start_rpcf()</a>
+    <li><a href="#xmlrpc_client_start_rpcf_va">
+        xmlrpc_client_start_rpcf_va()</a>
+    <li><a href="#responsehandler">Response Handler</a>
+    </ul>
+  <li><a href="#ryorpc">Roll Your Own RPC</a>
+  <li><a href="#server_info">Server Information Object</a>
+    <ul>
+    <li><a href="#server_info_basic">Basic xmlrpc_server_info functions</a>
+      <ul>
+        <li><a href="#server_info_new">xmlrpc_server_info_new()</a>
+        <li><a href="#server_info_free">xmlrpc_server_info_free()</a>
+        <li><a href="#server_info_copy">xmlrpc_server_info_copy()</a>
+        </ul>
+    <li><a href="#server_info_auth">Authentication</a>
+      <ul>
+        <li><a href="#set_user">xmlrpc_server_info_set_user()</a>
+        <li><a href="#allow_auth_basic">xmlrpc_server_info_allow_auth_basic()</a>
+        <li><a href="#disallow_auth_basic">xmlrpc_server_info_disallow_auth_basic()</a>
+        <li><a href="#allow_auth_digest">xmlrpc_server_info_allow_auth_digest()</a>
+        <li><a href="#disallow_auth_digest">xmlrpc_server_info_disallow_auth_digest()</a>
+        <li><a href="#allow_auth_negotiate">xmlrpc_server_info_allow_auth_negotiate()</a>
+        <li><a href="#disallow_auth_negotiate">xmlrpc_server_info_disallow_auth_negotiate()</a>
+        <li><a href="#allow_auth_ntlm">xmlrpc_server_info_allow_auth_ntlm()</a>
+        <li><a href="#disallow_auth_ntlm">xmlrpc_server_info_disallow_auth_ntlm()</a>
+        <li><a href="#set_basic_auth">xmlrpc_server_info_set_basic_auth()</a>
+      </ul>
+    </ul>
+  <li><a href="#serverdoesntrespond">When Server Doesn't Respond Properly</a>
+  </ul>
+<li><a href="#ssl">SSL (HTTPS)</a>
+<li><a href="#interrupting">Interrupting</a>
+  <ul>
+  <li><a href="#interrupthow">How To Interrupt A Function</a>
+    <ul>
+    <li><a href="#xmlrpc_client_set_interrupt">
+        xmlrpc_client_set_interrupt()</a>
+    </ul>
+  <li><a href="#interruptlimit">Limitations</a>
+  </ul>
+<li><a href="#transports">Client XML Transports</a>
+  <ul>
+  <li><a href="#curl">Curl</a>
+    <ul>
+    <li><a href="#curlsession">Curl Sessions</a>
+    <li><a href="#cookies_curl">Cookies</a>
+    <li><a href="#curlssl">SSL</a>
+    <li><a href="#useragent">User Agent</a>
+    <li><a href="#referer">Referer</a>
+    <li><a href="#expectcontinue">Expect/Continue</a>
+    <li><a href="#curlparm">Curl Transport-specific Parameters</a>
+    <li><a href="#concurrency_curl">Concurrency</a>
+    <li><a href="#curl_interference">Interference With Other Curl Uses</a>
+    <li><a href="#curl_debug">Debugging</a>
+    </ul>
+  <li><a href="#libwww">Libwww</a>
+    <ul>
+    <li><a href="#cookies_libwww">Cookies</a>
+    <li><a href="#concurrency_libwww">Concurrency</a>
+    </ul>
+  <li><a href="#wininet">Wininet</a>
+  </ul>
+<li><a href="#misc">Miscellaneous</a>
+  <ul>
+  <li><a href="#get_default_transport">
+      xmlrpc_client_get_default_transport()</a>
+  </ul>
+<li><a href="#concurrency">Concurrency</a>
+  <ul>
+  <li><a href="#threadsafe"><b>libxmlrpc_client</b> Thread Safety</a>  
+  <li><a href="#practicalconcurrency">Practical Concurrency</a>  
+  </ul>
+<li><a href="#brokenserver">Dealing With Broken Servers</a>
+  <ul>
+  <li><a href="#immune">Client Is Immune To Broken Server</a>
+  <li><a href="#badserverhang">Client Hang Because Of Bad Server</a>
+  <li><a href="#boguscontentlength">Bogus Content Length</a>
+  <li><a href="#pythonhttp">Python Expect/Continue Bug (3 Second Delay)</a>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+  <ul>
+  <li><a href="#xmlrpc_env">Error Environment Variable</a>
+  <li><a href="#standard_error">Standard Error</a>
+  <li><a href="#trace_xml">XMLRPC_TRACE_XML environment variable</a>
+  <li><a href="#trace_curl">XMLRPC_TRACE_CURL environment variable</a>
+  </ul>
+<li><a href="#version">Library Version</a>
+
+</ul>
+
+
+<h2 id="headerfile">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_client.h&gt;</B> header file declares the
+interface to <b>libxmlrpc_client</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>Because the <b>libxmlrpc</b> library is a prerequisite, you'll also
+need its header file (<b>xmlrpc.h</b>).
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_client</b> library is <b>libxmlrpc_client.a</b> or
+<b>libxmlrpc_client.so</b>.  The classic linker option to cause the
+library to be linked into your program is <tt>-l xmlrpc_client</tt>.
+These are hints; you'll have to modify this according to conventions
+of your particular platform.  You'll also have to figure out where the
+library resides and how to make your linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_client</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>A complete example of an XML-RPC client program that uses
+<b>libxmlrpc_client</b> is <a href="index.html#clientexample">here</a>.
+
+<p>Here is an example of the main part of the same program using the
+slightly more complex but preferred private client method:
+
+<pre>
+<code>
+#include &lt;xmlrpc-c/base.h&gt;
+#include &lt;xmlrpc-c/client.h&gt;
+
+#include &quot;config.h&quot;  /* information about this build environment */
+
+#define NAME &quot;XML-RPC C Test Client&quot;
+#define VERSION &quot;1.0&quot;
+
+int 
+main(int           const argc, 
+     const char ** const argv) {
+
+    xmlrpc_env env;
+    xmlrpc_client * clientP;
+    xmlrpc_value * resultP;
+    int sum;
+    char * const url = &quot;http://localhost:8080/RPC2&quot;;
+    char * const methodName = "sample.add";
+
+    /* Initialize our error-handling environment. */
+    xmlrpc_env_init(&amp;env);
+
+    xmlrpc_client_setup_global_const(&amp;env);
+
+    xmlrpc_client_create(&amp;env, XMLRPC_CLIENT_NO_FLAGS, NAME, VERSION, NULL, 0,
+                         &amp;clientP);
+    die_if_fault_occurred(&amp;env);
+
+    /* Make the remote procedure call */
+    xmlrpc_client_call2f(&amp;env, clientP, url, methodName, &amp;resultP,
+                &quot;(ii)&quot;, (xmlrpc_int32) 5, (xmlrpc_int32) 7);
+    die_if_fault_occurred(&amp;env);
+    
+    /* Get our sum and print it out. */
+    xmlrpc_read_int(&amp;env, resultP, &amp;sum);
+    die_if_fault_occurred(&amp;env);
+    printf(&quot;The sum  is %d\n&quot;, sum);
+    
+    /* Dispose of our result value. */
+    xmlrpc_DECREF(resultP);
+
+    /* Clean up our error-handling environment. */
+    xmlrpc_env_clean(&amp;env);
+    
+    xmlrpc_client_destroy(clientP);
+
+    xmlrpc_client_teardown_global_const();
+
+    return 0;
+}
+
+</code>
+</pre>
+
+
+<h2 id="testing">Testing, Experimenting</h2>
+
+<p>As you build an XML-RPC client using <b>libxmlrpc_client</b>, it's good
+to be able to try it out by talking to a server.
+
+<p>One way to do this is to use the one of the server programs in the
+<b>examples</b> directory of the Xmlrpc-c source tree.  For example,
+<b>xmlrpc_sample_add_server</b> runs a server on a local TCP port of your
+choosing.  If you choose Port 8080, for example, you can direct your
+client program to URL http://localhost:8080/RPC2 and execute a
+<b>system.listMethods</b> method.
+
+<p>Or you can use a server that already exists on the Internet.  The Xmlrpc-c
+project operates one at
+<b>http://giraffe-data.com/xmlrpc_sample_add_server.cgi</b>.  This is Apache
+with a CGI program that uses Xmlrpc-c's <a
+href="libxmlrpc_server_cgi.html"><b>libxmlrpc_server_cgi</b></a> library.
+(You can find the code for that program as
+<b>examples/xmlrpc_sample_add_server_cgi.c</b> in the Xmlrpc-c source tree.
+
+<p>There is a more elaborate example server
+at <b>http://phpxmlrpc.sourceforge.net/server.php</b>.  This one has lots
+of methods.  You can use its <b>system.listMethods</b> and
+<b>system.methodHelp</b> methods to find out more.  Note that this server does
+not use Xmlrpc-c and has nothing to do with the Xmlrpc-c project.
+
+<p>An advantage of running your <em>own</em> server is that you can do tracing
+on the server side to help you understand why your client isn't doing what you
+expect.
+
+<p>Also see <a href="#debugging">Debugging</a>.
+
+
+<h2 id="globalconst">Global Constants</h2>
+
+<p><b>libxmlrpc_client</b> has global constants that you must set up.
+The global initialization function is
+<b>xmlrpc_client_setup_global_const()</b>.  The global termination
+function is <b>xmlrpc_client_teardown_global_const()</b>.
+
+<p>See <a href="libgeneral.html#globalconst">Global Constants</a>
+for an explanation of why you need these and how to use them.
+
+<P>If you use the global client object
+(i.e. <b>xmlrpc_client_init2()</b>), creating the global client and
+setting up the global constants are merged into one operation, so you
+need not call <b>xmlrpc_client_setup_global_const()</b>.
+
+
+<h2 id="client">Client Object</h2>
+
+<p>You perform XML-RPC client functions through an xmlrpc-c client
+object.  You create this object with <b>xmlrpc_client_create()</b> and
+destroy it with <b>xmlrpc_client_destroy()</b>.  A handle for this
+object is an argument to the functions that perform RPCs.
+
+<p>A slightly simpler method is available in which the client is
+implied by a static global variable.  You can't use it in a modular
+program because all users of <b>libxmlrpc_client</b> in the program
+would be sharing the same global variable and would conflict with each
+other.  But before Xmlrpc-c 1.05 (March 2006), this is the only
+interface available.
+
+<p>The private client method is requires a few more lines of code (a
+global constant setup and teardown, and an extra argument on many
+functions), but is the cleaner option by far.  Code that uses a
+private client can be modular and it is obvious to a reader of the
+code where the state is being kept, as opposed to the global client
+method where it is in a hidden global variable.
+
+<p>An example of using the global client object is <a
+href="index.html#clientexample">here</a>.
+
+<p>An example of using a private client object is <a
+href="#example">here</a>.
+
+<h3 id="privateclient">Private Client (Versatile Interface)</h3>
+
+<p>A client object is represented by a data structure of type
+<b>xmlrpc_client</b>.  A pointer to the object is a handle that you
+use to identify it.
+
+<h4 id="client_create"><b>Function: xmlrpc_client_create()</b></h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+void 
+xmlrpc_client_create(xmlrpc_env *                const envP,
+                     int                         const flags,
+                     char *                      const appname,
+                     char *                      const appversion,
+                     struct xmlrpc_clientparms * const clientparmsP,
+                     unsigned int                const parmSize,
+                     xmlrpc_client **            const clientPP);
+
+</code>
+</pre>
+
+<p>This creates an Xmlrpc-c client object and returns a handle for it.
+
+<p>You use this handle with various other library functions.
+
+<p>You can undo this &mdash; destroy the object &mdash; with
+<b>xmlrpc_client_destroy()</b>.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>appname</i> and <i>appversion</i> are meaningful only if the
+client XML transport is <b>libwww</b>, and are in the parameter list
+(instead of the <b>libwww</b> transport-specific parameters) only for
+historical reasons.  These values control the User-Agent HTTP header
+in the XML-RPC call.  (The User-Agent HTTP header normally tells
+through what program the user made the HTTP request; for classic web
+browsing, it identifies the web browser program, such as Internet
+Explorer).  The value in the User-Agent header is
+<i>appname</i>/<i>appversion</i>, plus the name and version number of
+the libwww library.  For the other HTTP transports, see the
+documentation of the individual transport for information on
+controlling User-Agent.
+
+<p>The name and version number of your program would be appropriate
+values for these.
+
+<p>These are asciiz strings.
+
+<p><i>clientparmsP</i> is a pointer to a structure that contains other
+parameters of the client.  <i>parmSize</i> is the size in bytes of
+that structure.  More precisely, it is the amount of the structure that
+you have filled with meaningful information.   Details are below.
+
+<pre>
+<code>
+struct xmlrpc_clientparms {
+    const char *               transport;
+    struct xmlrpc_xportparms * transportparmsP;
+    size_t                     transportparmSize;
+    const struct xmlrpc_client_transport_ops * transportOpsP;
+    xmlrpc_client_transport *  transportP;
+    xmlrpc_dialect             dialect;
+    xmlrpc_curl_progress_fn *  progress_fn
+};
+</code>
+</pre>
+
+This structure may contain more information in future versions of
+<b>libxmlrpc_client</b>.  If you want defaults for everything in this
+structure, you may specify a null pointer as <i>clientparmsP</i>.  
+
+<p>For <i>parmSize</i>, use the <b>XMLRPC_CPSIZE</b> macro.  This
+macro gives the size of the <b>xmlrpc_clientparms</b> structure up
+through the member you name.  Name the last member in the structure
+that you set.  You must set every member up through that one, but for
+every member after it, <b>xmlrpc_client_create()</b> will assume a
+default.
+
+<p>The reason it's important to use <b>XMLRPC_CPSIZE</b> instead of
+just setting all the members and using <b>sizeof(struct
+xmlrpc_clientparms)</b> is forward compatibility.  Future versions of
+<b>libxmlrpc_client</b> might add new members, and you want the client
+program you write today and compile with that future library to work.
+
+<b>XMLRPC_CPSIZE</b> also allows you to not worry about members at the end of
+the structure that you don't care about.
+
+<p>It isn't so easy to omit parameters you don't care about from the
+<em>middle</em> of the structure, but the members are defined so that a value
+encoded as zero bits is the same as the member not being present, so you can
+just set the whole structure to zero bits and then set the members you care
+about to something else.
+
+<p><b>xmlrpc_client_create()</b> was new in Xmlrpc-c 1.05 (March 2006).
+Before that, you must use the <a href="#globalclient">global client</a>.
+
+<h5 id="specifytransport">Specifying the XML Transport</h5>
+
+<p>The <i>transport</i>, <i>transportparmsP</i>,
+<i>transportparm_size</i>, <i>transportOpsP</i>, and <i>transportP</i>
+parameters are all for you specify what to use for the XML transport.
+The XML transport is the thing that delivers XML to the XML-RPC server
+and gets XML back.  See <a href="#transports">Client XML
+Transports</a>.  There are two ways to specify the XML transport.  In
+the first, you name a built-in transport type and
+<b>xmlrpc_client_create()</b> creates one for you. In the other, you
+supply your own XML transport.
+
+<h6>Using a Built-in XML Transport</h6>
+
+<p>Select this option by making <i>transportP</i> null or not present.
+
+<p><i>transport</i> is the name of the XML transport that you want the
+client to use, as an asciiz string.  The available
+transports (by name) are:
+<dl>
+<dt>libwww
+
+<dd>The traditional World Wide Web Consortium (w3c) HTTP library.
+This is the default.
+
+<dt>curl
+
+<dd>Curl.  An HTTP library generally superior to the w3c libwww one.
+
+<dt>wininet
+
+<dd>Wininet.  An HTTP library for Windows that is generally superior
+to the w3c libwww one.
+
+</dl>
+
+<p><i>transportparmsP</i> and <i>transportparmSize</i> are the address and
+size, respectively, of a structure that describes parameters whose meanings
+are specific to the particular transport you are using.  The definition
+of <b>struct xmlrpc_xportparms</b> is not &quot;complete&quot; (in a C sense)
+you always cast between that and a type specific to a transport, named like
+&quot;xmlrpc_TRANSPORT_xportparms&quot;.  Transports typically take variable
+length parameter structures such that the members at the end of the structure
+are optional, so <i>transportparmSize</i> tells how much parameter data you
+are specifying.
+
+<p>The transport parameters are described in <a
+href="#transports">Client XML Transports</a>.
+
+<p>If your clientparms structure is too small to include
+<i>transportparmsP</i> or <i>transportparmsP</i> is a null pointer,
+that selects defaults for all transport-specific parameters.
+
+<p>The whole transport-specific parameters interface was new in
+Xmlrpc-c 1.02 (March 2005).  Before that, all the parameters that are
+now transport-specific parameters were always defaults.
+
+<h6>Supplying Your Own XML Transport</h6>
+
+<p>Select this option by making <i>transport</i> a null pointer and
+<i>transportP</i> non-null.
+
+<p>Details on how to create a transport class are not in this manual.
+Instead, just look at the interface header files and the source code
+for the built-in transport classes.
+
+<p><i>transportOpsP</i> points to an operation vector that serves to
+define the class of XML transport.
+
+<p><i>transportP</i> is a handle for the transport object.  Its meaning
+is entirely determined by the functions identified by <i>transportOpsP</i>.
+
+<p>The ability to supply your own transport was introduced in
+Xmlrpc-c 1.09 (December 2006).
+
+<h5 id="clientdialect">XML-RPC Dialect</h5>
+
+<p><i>dialect</i> selects the <a
+href="libxmlrpc.html#dialect">dialect</a> that the client will use
+when it generates the XML for a method call parameter.
+
+<p>Note that this has no effect on the dialect the client is able to
+interpret in responses from a server.  The client understands all the
+dialects.
+
+<p>The default is i8.
+
+<p>This parameter was new in Xmlrpc-c 1.11 (June 2007).  Before that,
+the dialect is always i8.
+
+<h5 id="clientprogressfn">Progress Function</h5>
+
+<p>You can specify a function to be called periodically to report the progress
+of each RPC.  This works only if you use the Curl transport (If you don't,
+you can specify the function, but it will never get called) and only with
+the asynchronous RPC facility.
+
+<p><i>progress_fn</i> is a function (a function pointer to one, actually) that
+the client calls every second while a transaction is in progress to tell
+you how much progress has been made toward transporting your call and
+response.
+
+<p>NULL means don't call anything.  This is the default.
+
+<p>A progress function (type <b>xmlrpc_progress_fn</b>) has the following
+prototype:
+
+<pre>
+<code>
+    void
+    progress(struct xmlrpc_progress_data data);
+</code>
+</pre>
+<p>
+The <i>data</i> argument tells you the progress of the current transaction.
+Its type is as follows.
+<pre>
+<code>
+    struct xmlrpc_transfer_progress {
+        double total;
+        double now;
+    };
+    
+    struct xmlrpc_progress_data {
+        struct xmlrpc_transfer_progress call;
+        struct xmlrpc_transfer_progress response;
+    };
+</code>
+</pre>
+
+<p>Note that only the progress of data transfer gets reported.  That's because
+data transfer is normally the only thing that progresses at observable speed.
+If it takes a while to process data coming or going, or to look up the IP
+address of the server, or to establish a TCP connection, you won't have any
+indication of that progress (except that you won't see any data moving).
+Likewise, in the time between when the call has been transported and the
+response has not begun to be transmitted, you will have no indication of the
+progress the server is making executing the RPC.
+
+<p>The transport doesn't necessarily know the &quot;total&quot; values.  For
+example, before the RPC has executed, the transport couldn't possibly know how
+much response data there will be.  In those cases, the value is zero.
+
+<p>This function is essentially a passthrough of the similar function in the
+Curl library.  So for details, check out the Curl library (option
+<b>CURLOPT_PROGRESS_FUNCTION</b>).  (But if you find something there worthy
+of putting here in the Xmlrpc-c manual, be sure to report that to the
+Xmlrpc-c maintainter).
+
+<p>This parameter was new in Xmlrpc-c 1.24 (September 2010).
+
+
+<h4 id="client_destroy"><b>Function: xmlrpc_client_destroy()</b></h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+void 
+xmlrpc_client_destroy(xmlrpc_client * const clientP);
+</code>
+</pre>
+
+<p>This function destroys a client object.  It releases resources used by
+the object.
+
+<p><i>clientP</i> is the handle of the client to be destroyed.  You
+got it from a prior <b>xmlrpc_client_create()</b> call.
+
+<p>You must not use the client handle for anything after you execute
+<b>xmlrpc_client_destroy()</b>.
+
+<p>You must not call this on a client that has RPCs in progress via
+the asynchronous RPC facility.  To ensure there are none, call
+<b>xmlrpc_client_event_loop_finish()</b>.
+
+<p><b>xmlrpc_client_destroy()</b> was new in Xmlrpc-c 1.05 (March 2006).
+Before that, you must use the <a href="#globalclient">global client</a>.
+
+
+<h3 id="globalclient">Global Client (Simpler Interface)</h3>
+
+<p>There can be zero or one global client per program (A &quot;program&quot;
+is all the code and threads that share one memory space).
+
+<p>To create the global client, call <b>xmlrpc_client_init2()</b>.
+This additionally sets up library global constants, i.e. it has the
+effect of calling <b>xmlrpc_client_setup_global_const()</b>.
+
+<p>You call this once at the beginning of your program, before calling
+anything else in <b>libxmlrpc_client</b>, and while your program is
+still one thread.
+
+<p>When you're done using the object, call
+<b>xmlrpc_client_cleanup()</b>.  After that, you can start over with a
+new object by calling <b>xmlrpc_client_init2()</b> again.
+<b>xmlrpc_client_cleanup()</b> destroys the global client and abandons
+global constants (i.e. has the effect of calling
+<b>xmlrpc_client_teardown_global_const()</b>.  In truth, this call is
+unnecessary.  All it does is free resources.  If your program is
+sloppy enough to use the global client (as opposed to creating a
+private client of its own), it might as well be more sloppy and let
+the operating system clean up the global client automatically as the
+program exits.
+
+
+<h4 id="client_init2">Function: xmlrpc_client_init2()</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+void 
+xmlrpc_client_init2(xmlrpc_env *                const envP,
+                    int                         const flags,
+                    char *                      const appname,
+                    char *                      const appversion,
+                    struct xmlrpc_clientparms * const clientparmsP,
+                    unsigned int                const parmSize);
+
+
+</code>
+</pre>
+
+<p>This creates the global Xmlrpc-c client object.  You must not call
+this while the global Xmlrpc-c client object already exists.
+
+<p>This function is identical to <a
+href="#create_client"><b>xmlrpc_create_client()</b></a> except that it
+creates the global client rather than a private one, and returns no
+handle.  (With the global client, you use library functions designed for
+the global client, so they know implicitly to use this client).
+
+<p>This function is not thread-safe.  Results are undefined not only
+if you call it and another <b>libxmlrpc_client</b> function at the
+same time from separate threads, but if you call it while any other
+thread is running at all.  The reason for this restriction is that the
+function internally calls non-threadsafe functions in other libraries
+and you don't even know what libraries those are, so the only way you
+know another thread isn't calling that other library simultaneously is
+if there is no other thread running.  So you typically call
+<b>xmlrpc_client_init2()</b> at the beginning of a threaded program,
+while it is still just one thread and let the relevant threads inherit
+the global client.
+
+
+<h4 id="client_init">Function: xmlrpc_client_init()</h4>
+
+<p>This is an older, less functional version of
+<b>xmlrpc_client_init2()</b>.  It exists for backward compatibility.
+Don't use that in new code, but if you're maintaining old code, you
+can easily guess what it does based on the documentation of
+<b>xmlrpc_client_init2()</b>.
+
+
+<h4 id="client_cleanup">Function: xmlrpc_client_cleanup()</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+void 
+xmlrpc_client_cleanup(void);
+</code>
+</pre>
+
+<p>This destroys the global Xmlrpc-c client object.  You call this
+before exit from the program to release resources.  You may also call
+it in order to create a new global Xmlrpc-c client object, since you
+can't have more than one existing at once.
+
+<p>You must not call this if the global client has RPCs in progress
+via the asynchronous RPC facility.  To ensure there are none, call
+<b>xmlrpc_client_event_loop_finish_asynch()</b>.
+
+<p>This function is thread-unsafe in a way analogous to
+<b>xmlrpc_client_init2()</b>.
+
+
+<h2 id="rpc">Performing An RPC</h2>
+
+<p>The purpose of using <b>libxmlrpc_client</b> is to perform RPCs.
+The functions in this section do that.  All the other functions in the
+library are just overhead to support these functions.
+
+<p>When we say &quot;make an XML-RPC call,&quot; we refer only to
+delivering the XML for it to the server.  The server's implementation of
+it, and the response side of the transaction are not included.
+
+<p>&quot;Perform an RPC&quot; means to conduct the entire transaction:
+make the call, have the server do its thing, and receive the response.
+
+<h3 id="syncrpc">Synchronous RPCs</h3>
+
+<p>The easiest function to use to perform an RPC call is
+<b>xmlrpc_client_call2f()</b>.  As arguments, you supply the URL of your
+server, the name of the XML-RPC method you are invoking, and the
+XML-RPC parameters.  You supply those parameters as a <a
+href="libxmlrpc.html#formatstring">format string</a> followed by a
+variable number of arguments as required by the format string.  You
+get the response back as an <a href="libxmlrpc.html#xmlrpc_value">XML-RPC
+value</a>.
+
+<h4 id="xmlrpc_client_call2f">Function: xmlrpc_client_call2f()</h4>
+
+<p>
+Example:
+
+<pre>
+<code>
+    xmlrpc_value * resultP;
+    xmlrpc_client_call2f(&amp;env, clientP, url, methodName, &amp;resultP,
+                &quot;(ii)&quot;, (xmlrpc_int32) 5, (xmlrpc_int32) 7);
+</code>
+</pre>
+
+Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_call2f(xmlrpc_env *    const envP,
+                         xmlrpc_client * const clientP,
+                         const char *    const serverUrl,
+                         const char *    const methodName,
+                         xmlrpc_value ** const resultPP,
+                         const char *    const format,
+                         ...);
+</code>
+</pre>
+
+<p><i>clientP</i> is the handle of the client to use.  You got it
+from a prior <b>xmlrpc_client_create()</b> call.
+
+<p><i>server_url</i> is the same as the argument to <a
+href="#server_info_new"><b>xmlrpc_server_info_new()</b></a>.  (But
+it's just what you'd expect it to be, so don't feel you have to go
+read that).
+
+<p><i>method_name</i> is the name of the XML-RPC method you are
+invoking (it's a name defined by the particular XML-RPC server).
+This is an ASCIIZ string.
+
+<p><i>resultPP</i> is a pointer to the variable in which
+the function returns the handle for the XML-RPC result.
+
+<p><i>format</i> is a <a href="libxmlrpc.html#formatstring">format
+string</a> that describes the XML-RPC parameters.
+
+<p>The variable arguments (<b>...</b>) are the values for the XML-RPC
+parameters.  Their number, type, and meaning are determined by
+<i>format</i>.
+
+<p><i>format</i> and the variable arguments together describe an <a
+href="libxmlrpc.html#xmlrpc_value">XML-RPC value</a>.  That value must be
+of the array type.  Each element of the array is an XML-RPC parameter
+of the RPC, in array index order.  This odd use of an XML-RPC value is
+a historical mistake (at one time, the <b>xmlrpc_value</b> type was
+meant to be a general purpose data structure -- an extension to the C
+language, rather than just an entity for XML-RPC use).  Do not let it
+fool you into thinking that you're specifying an array as the single
+parameter of the RPC.  In XML-RPC, an RPC takes any number of
+parameters, and the <em>elements</em> of this array are those
+parameters.
+
+<p>If the RPC fails at the server (i.e. the server's response is an
+XML-RPC fault), <b>xmlrpc_client_call2f()</b> fails.  The error code
+and description in *<i>envP</i> in that case are what the server said
+in its fault response.
+
+<p><b>xmlrpc_client_call2f()</b> was new in Xmlrpc-c 1.05 (March 2006).
+Before that, you must use the <a href="#globalclient">global client</a>.
+
+
+<h4 id="xmlrpc_client_call2">Function: xmlrpc_client_call2()</h4>
+
+<p>This is like <b>xmlrpc_client_call2f()</b>, but is more flexible in
+your ability to specify the XML-RPC parameters and the server information.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+xmlrpc_client_call2(xmlrpc_env *               const envP,
+                    struct xmlrpc_client *     const clientP,
+                    const xmlrpc_server_info * const serverInfoP,
+                    const char *               const methodName,
+                    xmlrpc_value *             const paramArrayP,
+                    xmlrpc_value **            const resultPP);
+</code>
+</pre>
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_env env;
+    xmlrpc_client * clientP;
+    xmlrpc_value * resultP;
+    xmlrpc_server_info * serverInfoP;
+    xmlrpc_value * paramArrayP;
+    xmlrpc_value * addend1P;
+    xmlrpc_value * addend2P;
+
+    serverInfoP = xmlrpc_server_info_new(
+        &amp;env, &quot;http::/localhost:8080/RPC2&quot;);
+    
+    paramArrayP = xmlrpc_array_new(&amp;env);
+
+    addend1P = xmlrpc_int_new(&amp;env, 5);
+    addend2P = xmlrpc_int_new(&amp;env, 7);
+
+    xmlrpc_array_append_item(&amp;env, myArrayP, addend1P);
+    xmlrpc_array_append_item(&amp;env, myArrayP, addend2P);
+
+    xmlrpc_DECREF(addend1P);
+    xmlrpc_DECREF(addend2P);
+
+    xmlrpc_client_call2(&amp;env, clientP, serverInfoP, &quot;sample.add&quot;,
+                        paramArrayP, &amp;resultP);
+
+    xmlrpc_DECREF(paramArrayP);
+    xmlrpc_server_info_free(serverInfoP);
+</code>
+</pre>
+
+<p>For the XML-RPC parameters, you supply an <b>xmlrpc_value</b> of
+array type <i>paramArrayP</i>, in which each element of the array is
+an XML-RPC parameter.  This value has the same meaning as the one you
+specify via format string with <a
+href="#xmlrpc_client_call2f"><b>xmlrpc_client_call2f()</b></a>.
+
+<p>Note that <b>xmlrpc_client_call2f()</b> is useless when you don't
+know at compile time what kinds of parameters the method requires.  But
+<b>xmlrpc_client_call2()</b> lets you build up the parameter list using
+runtime program intelligence.
+
+<p>For the server information, you supply <i>serverInfoP</i>.  While
+<b>xmlrpc_client_call2f()</b> lets you specify only the server's URL,
+<i>serverInfoP</i> can specify more information necessary to work with
+the server.  For example, you may need to authenticate yourself to the
+server, so you may have to supply some credentials.
+<i>serverInfoP</i> can do that.  See the description of a <a
+href="#server_info">xmlrpc_server_info</a> object.
+
+<p><b>xmlrpc_client_call2()</b> was new in Xmlrpc-c 1.05 (March 2006).
+Before that, you must use the <a href="#globalclient">global client</a>.
+
+
+<h4 id="xmlrpc_client_call">Function: xmlrpc_client_call()</h4>
+
+<p>This is identical to <a
+href="#xmlrpc_client_call2f"><b>xmlrpc_client_call2f()</b></a> except that it
+uses the global client.  Ergo, there is no <i>clientP</i> argument.
+
+<p>Also, it uses the more traditional and compact, but harder to read,
+form in which the return value of the function is used to return
+information.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value * 
+    xmlrpc_client_call(xmlrpc_env *    const envP,
+                       const char *    const serverUrl,
+                       const char *    const methodName,
+                       const char *    const format,
+                       ...);
+</code>
+</pre>
+
+
+<h4 id="xmlrpc_client_call_params">Function: xmlrpc_client_call_params()</h4>
+
+<p>This is like <b>xmlrpc_client_call()</b> except that you specify
+the XML-RPC method parameters like you do for
+<b>xmlrpc_client_call2()</b>, which is more flexible.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value * 
+    xmlrpc_client_call_params(xmlrpc_env *   const envP,
+                              const char *   const serverUrl,
+                              const char *   const methodName,
+                              xmlrpc_value * const paramArrayP);
+                              
+</code>
+</pre>
+
+<h4 id="xmlrpc_client_call_server">Function: xmlrpc_client_call_server()</h4>
+
+<p>This is like <b>xmlrpc_client_call()</b> except that you specify
+the server information like you do for <b>xmlrpc_client_call2()</b>,
+which is more expressive.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value * 
+    xmlrpc_client_call_server(xmlrpc_env *         const envP,
+                              xmlrpc_server_info * const serverInfoP,
+                              const char *         const methodName,
+                              const char *         const format,
+                              ...);
+</code>
+</pre>
+
+
+<h4 id="xmlrpc_client_call_server_params">
+Function: xmlrpc_client_call_server_params()</h4>
+
+<p>This is like <b>xmlrpc_client_call()</b> except that you specify
+the XML-RPC parameters and server information like you do for
+<b>xmlrpc_client_call2()</b>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value * 
+    xmlrpc_client_call_server_params(
+        xmlrpc_env *         const envP,
+        xmlrpc_server_info * const serverInfoP,
+        const char *         const methodName,
+        xmlrpc_value *       const paramArrayP);
+</code>
+</pre>
+
+
+
+<h3 id="asyncrpc">Asynchronous RPCs</h3>
+
+<p>All the preceding functions for performing an RPC do the entire
+thing while the caller waits.  But some programs want to use a type of
+explicit threading where the function returns immediately while the
+RPC is still in progress so the caller can proceed to different work
+(perhaps starting more RPCs) and the caller syncs up with the RPC
+later.
+
+<p><b>libxmlrpc_client</b> provides an asynchronous RPC facility for
+that.
+
+<p><strong>But:</strong> the asynchronous client facility is not so
+asynchronous that you can just start an RPC and forget about it.  When you
+start an RPC, you must eventually finish it and recognize that it has
+completed.  Until then, it is using resources and may not even progress.
+RPCs are inherently synchronous, in that there's a response that tells the
+client that the server has completed its work.  If you want a communication
+style where you just throw a message out and walk away and it arrives when it
+arrives, you should consider something other than an RPC protocol.  A simple
+UDP packet sometimes works.  JSON-RPC, despite its name, has facilities for
+that too.
+
+<p>If you're just looking for a way to avoid waiting indefinitely for a slow
+RPC, the asynchronous RPC facility is not for you.  You probably want the <a
+href="#interrupting">RPC interruption</a> facility.
+
+
+<p>By the way, there's no such thing as &quot;an asynchronous
+call.&quot; &quot;asynchronous&quot; describes the overall
+relationship of the RPCs to the execution of the caller.  The
+relationship is asynchronous because the two are not in lock step.
+Saying that an individual call is asynchronous is like saying that an
+individual note of a song is in 4/4 time.
+
+<p>The proper appellation of a call that returns before all the work
+is done is a &quot;no-wait&quot; call.
+
+<p>There is a no-wait version of each of the RPC functions mentioned
+above.  For private clients, the functions are
+<b>xmlrpc_client_start_rpc()</b> and <b>xmlrpc_client_start_rpcf()</b>
+(analogous to <b>xmlrpc_client_call2()</b> and
+<b>xmlrpc_client_call_2f()</b>).  For the global client, the functions
+are <b>xmlrpc_client_call_asynch()</b>,
+<b>xmlrpc_client_call_server_async()</b>, and
+<b>xmlrpc_client_call_asynch_params()</b> (note the inconsistency in
+these names -- it was a mistake).
+
+<p>For these no-wait versions, we need to define another entity -- the
+&quot;RPC request.&quot; An RPC request is a request through
+<b>libxmlrpc_client</b> for an RPC.  The main thing an RPC request
+does is the RPC, but in pathological conditions an RPC request might
+not do an RPC at all.  The RPC request exists before and after the RPC
+does.
+
+<p>The no-wait version of the RPC calls makes an RPC request, as
+opposed to performing an RPC.  Performing of the RPC typically comes
+later.  So there is an additional argument with which you identify a
+function to be called to handle the response to the XML-RPC call.  This
+is called a response handler.  There is another argument that supplies
+an argument to be passed to the response handler.  The response
+handler gets that argument in addition to information from the XML-RPC
+response.  The response handler is slightly misnamed, because it
+handles all completions of RPC requests.  For example, if a problem
+prevents <b>libxmlrpc_client</b> from even starting the RPC, which
+means there is no XML-RPC response, the response handler still gets
+called.
+
+<p>It's natural to believe that the response handler is a completion
+function that gets called the moment the RPC request completes, like
+an I/O interrupt.  But that's not what it is.
+
+<p>When you start an RPC (e.g. by calling
+<b>xmlrpc_client_start_rpc()</b>), you must eventually call an RPC
+finishing function such as <b>xmlrpc_client_event_loop_finish()</b>.
+What that does is complete all RPC requests that have been started.
+This includes waiting for RPCs to complete if they haven't already.
+For each of these RPC requests (when the RPC has completed), the RPC
+finishing function calls the response handler.  It also does other
+things that are necessary to complete the RPC request, so you must
+call it eventually even if you don't care about the completions.  An
+RPC finishing function doesn't specify a particular RPC to finish.
+One call finishes all RPCs a particular client has started.
+
+<p>For a private client, the RPC finishing functions are
+<b>xmlrpc_client_event_loop_finish()</b> and
+<b>xmlrpc_client_event_loop_finish_timeout()</b>.  The former waits as
+long as it takes for all the client's RPCs to complete; the latter
+returns after a timeout you specify so you can do other stuff and come
+back to it.
+
+<p>For the global client, the equivalent finishing functions are
+<b>xmlrpc_client_event_loop_finish_asynch()</b> and
+<b>xmlrpc_client_event_loop_finish_asynch_timeout()</b>.
+
+<p>If you find yourself needing timeouts, you should consider dumping
+the whole aynchronous RPC facility and using general purpose threading
+as recommended above.  But it does allow you to intersperse XML-RPC
+transactions with other work in simple ways.  <strong>It does not,
+however, give you a way to abandon a long-running RPC</strong>.  It
+gives you a way to temporarily suspend waiting for an RPC to complete,
+but you must eventually wait for every RPC to complete.  There is no
+such thing as a cancelled RPC in this facility.
+
+<p>The timeout RPC finishing functions give you no way to know whether
+the finishing function timed out or the RPCs completed.  If you need
+to know all the RPCs are completed, call
+<b>xmlrpc_client_event_loop_finish_async()</b>.
+
+<p>An RPC finishing function will return early if the process receives
+a signal (assuming the signal does not terminate the process).  The
+interface does not give you any good way to know whether the function
+returned because a wait was interrupted by a signal, because all the
+RPCs completed, or because the wait timed out.  But as with the
+timeout, interrupting the wait for the RPC to complete does not excuse
+you from eventually completing the RPC.  So you have to use your
+imagination to find a way to make sure you eventually give an RPC
+finishing function a chance to complete every RPC in spite of
+interruptions.  Some day, we will fix this interface.
+
+<p>Don't confuse interrupting the finishing function with interrupting
+the RPCs it's trying to finish.  When you set a client's <a
+href="#interrupting">interrupt flag</a>, that causes all the client's
+RPCs to abort.  You still need a subsequent call to a finishing
+function to cause the RPCs to finish failing and free resources and
+such, but that call will be quick, as the RPCs are no longer trying to
+do anything but clean up.
+
+<p>The exact nature of the asynchronicity depends highly on the client
+XML transport involved.  The no-wait call may in actuality wait for
+the RPC to finish.  Or it might not even start it, and the RPC
+finishing function might do all the work.  See the sections on the
+transports (e.g. <a href="#curl">curl</a>) for details.
+
+<p>By the way, people sometimes like to refer to the response handler
+as a callback.  It isn't.  A callback is something that gets called
+within the context of the call with which it is associated.  I.e. A
+calls into B, specifying a C callback.  Before returning to A, B calls
+C.  An example of using a callback is a sort routine.  The sort
+routine gets two arguments: a set of values and a collating function
+that compares two such values.  The sort routine calls the collating
+function on various pairs of values as part of putting them all in
+order.  The calling of the collating function is a callback.
+
+
+<h4 id="xmlrpc_start_rpc">Function: xmlrpc_start_rpc()</h4>
+
+<p>This is a no-wait version of <b>xmlrpc_client_call2()</b>.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+    xmlrpc_client_start_rpc(xmlrpc_env *               const envP,
+                            struct xmlrpc_client *     const clientP,
+                            const xmlrpc_server_info * const serverInfoP,
+                            const char *               const methodName,
+                            xmlrpc_value *             const paramArrayP,
+                            xmlrpc_response_handler          responseHandler,
+                            void *                     const userData);
+</code>
+</pre>
+
+<p>
+The arguments are the same as for <b>xmlrpc_client_call2()</b> except
+that intead of <i>resultP</i> argument, there is <i>responseHandler</i>
+and <i>userData</i>.  <i>responseHandler</i> is the function that gets called
+to report the result of the RPC and <i>userData</i> is a pointer, opaque
+to <b>libxmlrpc_client</b>, that gets passed to that function.
+
+
+<h4 id="xmlrpc_start_rpcf">Function: xmlrpc_start_rpcf()</h4>
+
+<p>This is a no-wait version of <b>xmlrpc_client_call2f()</b>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_start_rpcf(xmlrpc_env *    const envP,
+                             xmlrpc_client * const clientP,
+                             const char *    const serverUrl,
+                             const char *    const methodName,
+                             xmlrpc_response_handler responseHandler,
+                             void *          const userData,
+                             const char *    const format,
+                             ...) {
+</code>
+</pre>
+
+<p>
+The arguments are the same as for <b>xmlrpc_client_call2f()</b> except
+that intead of <i>resultP</i> argument, there is <i>responseHandler</i>
+and <i>userData</i>, the same as for <b>xmlrpc_client_start_rpc()</b>.
+
+
+<h4 id="xmlrpc_start_rpcf_va">Function: xmlrpc_start_rpcf_va()</h4>
+
+<p>This is a no-wait version of <b>xmlrpc_client_call2f_va()</b>.
+
+<p>Prototype:
+
+<pre>
+<code>
+  void
+  xmlrpc_client_start_rpcf_va(xmlrpc_env *    const envP,
+                              xmlrpc_client * const clientP,
+                              const char *    const serverUrl,
+                              const char *    const methodName,
+                              xmlrpc_response_handler responseHandler,
+                              void *          const userData,
+                              const char *    const format,
+                              va_list               args) {
+</code>
+</pre>
+
+<p>
+The arguments are the same as for <b>xmlrpc_client_call2f_va()</b> except
+that intead of <i>resultP</i> argument, there is <i>responseHandler</i>
+and <i>userData</i>, the same as for <b>xmlrpc_client__start_rpc()</b>.
+
+
+<h4 id="responsehandler">Response Handler</h4>
+
+<p>Whenever you make an RPC request via one of the functions that does
+not wait for it to complete, you supply a response handler function
+and a parameter for it.  If the function succeeds, the response
+handler eventually gets called.  If the function fails, the response
+handler never gets called.  Note that I'm talking about the library
+function itself failing.  The RPC or RPC request might fail even
+though the function that made the request succeeded, and in that case
+the response handler definitely gets called.
+
+<p>The primary purpose of the response handler is to process the
+XML-RPC response to the XML-RPC call that was requested.  But in
+pathological cases, the request does not result in any XML-RPC call
+being made; or any XML-RPC response being received; or the response
+being capable of being processed.  In those cases, the response
+handler handles the failure.
+
+<p>The <b>xmlrpc_response_handler</b> type is a function pointer to a
+response handler.  The prototype of response handler is as follows:
+
+<pre>
+<code>
+void (*xmlrpc_response_handler) (const char *   server_url,
+                                 const char *   method_name,
+                                 xmlrpc_value * param_array,
+                                 void *         user_data,
+                                 xmlrpc_env *   faultP,
+                                 xmlrpc_value * resultP);
+</code>
+</pre>
+
+<p><i>server_url</i>, <i>method_name</i>, and <i>param_array</i> are
+the information you provided to describe the RPC when you requested it.
+
+<p><i>user_data</i> is the response handler argument you specified when
+you requested the RPC.
+
+<p><i>faultP</i> is a pointer to an <a href="libxmlrpc_util.html#env">error
+environment variable</a> that describes either the error response to
+the XML-RPC call or the client-side failure of <b>libxmlrpc_client</b>
+to make the XML-RPC call or process its response or indicates that the
+RPC and RPC request were successful.
+
+<p><i>resultP</i> is a pointer to an <a
+href="libxmlrpc.html#xmlrpc_value">XML-RPC value</a> which is the result
+of the RPC.  This is undefined unless <i>faultP</i> indicates success.
+
+<p>None of the objects passed to the response handler have references
+to them that belong to the response handler, so there is no reference
+for the response handler to release.  The caller naturally maintains
+its own reference on the objects for the duration of the call, so you
+know they aren't going to go away.
+
+<p>A call to any client function may wait for a response handler to
+run for any RPC of that same client, whether the RPC is related to the
+call or not.  Keep that in mind in ordering your resources to avoid
+deadlock.  In particular, you <em>cannot call any client function</em>
+against the same client <em>within</em> your response handler.
+
+<h3 id="ryorpc">Roll Your Own RPC</h3>
+
+<p>You can do an RPC at the XML level if you want:  build your own call XML
+and parse the response XML.
+
+<p><b>xmlrpc_client_transport_call()</b> merely transports XML to the server
+and collects the XML the server sends back.  It does not look at the XML
+at all; in fact, it need not even be XML.
+
+<p>Example:
+<pre>
+<code>
+    xmlrpc_mem_block * respXmlP;
+    xmlrpc_mem_block * callXmlP;
+    xmlrpc_value * paramP;
+    xmlrpc_value * sumP;
+
+    paramP = xmlrpc_build_value(&amp;env, &quot;(ii)&quot;, 5, 7);
+
+    XMLRPC_MEMBLOCK_NEW(char, callXmlP, 0);
+
+    xmlrpc_serialize_call(&amp;env, callXmlP, &quot;sample.add&quot;, paramP);
+
+    xmlrpc_client_transport_call(&amp;env, serverP, callXml, &amp;respXml);
+
+    sumP = xmlrpc_parse_response(&amp;env, 
+                                 XMLRPC_MEMBLOCK_CONTENTS(char, respXmlP),
+                                 XMLRPC_MEMBLOCK_SIZE(char, respXmlP));
+
+    XMLRPC_MEMBLOCK_FREE(responseXmlP);
+    XMLRPC_MEMBLOCK_FREE(callXmlP);
+</code>
+</pre>
+
+
+
+<h2 id="server_info">Server Information Object</h2>
+
+<p>An <b>xmlrpc_server_info</b> structure is an object that describes
+an XML-RPC server.  It identifies the server and tells how to talk to
+it.  You can use an <b>xmlrpc_server_info</b> object as input to a
+function that makes an XML-RPC call to the indicated server.  This is
+<em>not</em> an object that represents the server itself -- just
+information about it.  The key distinction is that the object contains
+no information about the state of the server or of the client's use of
+the server.  There is no expectation that all access to that server
+will be via this object.
+
+<p>An <b>xmlrpc_server_info</b> object contains the following
+information about a server:
+<ul>
+<li>The URL of the server (e.g. http://localhost:8080/RPC2).
+
+<li>The kind of authentication (if any) you want to do with the server,
+and username and password if applicable.
+</ul>
+
+<h3 id="server_info_basic">Basic xmlrpc_server_info functions</h3>
+
+<p>To create an <b>xmlrpc_server_info</b> object, call
+<b>xmlrpc_server_info_new()</b>.  To destroy one, call
+<b>xmlrpc_server_info_free()</b>.
+
+<h4 id="server_info_new">Function: xmlrpc_server_info_new()</h4>
+
+Overview:
+
+<pre>
+<code>
+xmlrpc_server_info *
+xmlrpc_server_info_new(xmlrpc_env * const envP,
+                       const char * const serverUrl);
+</code>
+</pre>
+
+<p>This creates an <b>xmlrpc_server_info</b> object.
+
+<p>You must eventually destroy the object with <b>xmlrpc_server_info_free</b>
+to free its resources.
+
+<p>The object created says no identification is required.
+
+<p>An example URL argument is:
+<pre>
+  <tt>http://www.oreillynet.com/meerkat/xml-rpc/server.php</tt>
+</pre>
+
+<p>The URL must be an absolute URL (you can recognize an absolute URL by the
+fact that has a double slash after the &quot;http:&quot;) As the URL of an
+XML-RPC server, it must be an HTTP URL (that means, among other things, that
+the URL specifies a scheme of &quot;http&quot;).  While XML-RPC requires
+&quot;http&quot;, there is a common variation on XML-RPC where the scheme is
+&quot;https&quot;.
+
+<p>You can create an <b>xmlrpc_server_info</b> object containing the
+same information as an existing one with <b>xmlrpc_server_info_copy()</b>.
+
+
+<h4 id="server_info_free">Function: xmlrpc_server_info_free()</h4>
+
+Overview:
+
+<pre>
+<code>
+void
+xmlrpc_server_info_free(xmlrpc_server_info * const serverP);
+</code>
+</pre>
+
+<p>This destroys an <b>xmlrpc_server_info</b> object.
+
+
+<h4 id="server_info_copy">Function: xmlrpc_server_info_copy()</h4>
+
+Overview:
+
+<pre>
+<code>
+xmlrpc_server_info * 
+xmlrpc_server_info_copy(xmlrpc_env *         const envP,
+                        xmlrpc_server_info * const serverP);
+</code>
+</pre>
+
+<p>This creates a new <b>xmlrpc_server_info</b> object which is a copy of
+the one pointed to by <i>serverP</i>.
+
+<p>You must eventually destroy the object with <b>xmlrpc_server_info_free</b>
+to free its resources.
+
+
+<h3 id="server_info_auth">Authentication</h3>
+
+<p>In an <b>xmlrpc_server_info</b> object, you indicate what kind of
+authentication (and identification) you want to do with the server.
+
+<p>A freshly created <b>xmlrpc_server_info</b> specifies no
+authentication at all.  Functions in this section declare that you're
+willing to authenticate various other ways.  It is up to the client
+XML transport whether actually to do it or not; not all transports
+know how to do all of them.  Furthermore, there is negotiation with
+the server involved.  Both the server and client have to be willing to
+use a particular method.
+
+<p>All of the XML transports can do HTTP basic authentication.  Only
+the Curl transport can do the others.  And depending on the version of
+Curl library with which you link your program, it may not be able to
+do some of those.  Any Curl library built after 2005 should at least
+be able to do digest authentication.
+
+
+<h4 id="set_user">Function: xmlrpc_server_info_set_user()</h4>
+
+Overview:
+
+<pre>
+<code>
+void 
+xmlrpc_server_info_set_user(xmlrpc_env *         const envP,
+                            xmlrpc_server_info * const serverInfoP,
+                            const char *         const username,
+                            const char *         const password);
+</code>
+</pre>
+
+<p>This sets the username and password to be used in identifying and
+authenticating the client, for those authentication methods that involve
+usernames and passwords.
+
+<p>This function by itself does not enable any authentication.  You
+must separately call a function such as
+<b>xmlrpc_server_info_allow_auth_basic</b> as well.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> identifies the <b>xmlrpc_server_info</b> object in which
+the information is to be changed.
+
+<p><i>username</i> and <i>password</i> are the username and password
+values as defined by HTTP basic authentication.
+
+<p>When the function fails, it leaves the <b>xmlrpc_server_info</b>
+object unchanged.
+
+<p>This function was new in Xmlrpc-c 1.13 (December 2007).
+
+<h4 id="allow_auth_basic">Function: xmlrpc_server_info_allow_auth_basic()</h4>
+
+<pre>
+<code>
+void 
+void 
+xmlrpc_server_info_allow_auth_basic(xmlrpc_env *         const envP,
+                                    xmlrpc_server_info * const serverInfoP);
+</code>
+</pre>
+
+<p>This sets the <b>xmlrpc_server_info</b> object to indicate that HTTP
+basic authentication is allowed with the server.
+
+<p>You must set a username and password with
+<b>xmlrpc_server_info_set_user()</b> before calling this, or it will
+fail.
+
+<p>Use <b>xmlprc_server_info_disallow_auth_basic()</b> to undo this.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> identifies the <b>xmlrpc_server_info</b> object in which
+the information is to be changed.
+
+<p>This function was new in Xmlrpc-c 1.13 (December 2007).
+
+<h4 id="disallow_auth_basic">
+Function: xmlrpc_server_info_disallow_auth_basic()</h4>
+
+Overview:
+
+<pre>
+<code>
+void 
+void 
+xmlrpc_server_info_disallow_auth_basic(xmlrpc_env *         const envP,
+                                       xmlrpc_server_info * const serverInfoP);
+</code>
+</pre>
+
+<p>This sets the <b>xmlrpc_server_info</b> object to indicate that HTTP
+basic authentication is not allowed with the server.
+
+<p>This undoes what <b>xmlprc_server_info_allows_auth_basic()</b>
+does.
+
+<p>This function was new in Xmlrpc-c 1.13 (December 2007).
+
+<h4 id="allow_auth_digest">
+  Function: xmlrpc_server_info_allow_auth_digest()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_allow_auth_basic()</b>,
+except for HTTP digest authentication.
+
+<h4 id="disallow_auth_digest">
+Function: xmlrpc_server_info_allow_auth_digest()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_disallow_auth_basic()</b>,
+except for HTTP digest authentication.
+
+<h4 id="allow_auth_negotiate">
+Function: xmlrpc_server_info_allow_auth_negotiate()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_allow_auth_basic()</b>,
+except for HTTP GSS-Negotiate authentication.
+
+<h4 id="disallow_auth_negotiate">
+Function: xmlrpc_server_info_allow_auth_negotiate()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_disallow_auth_basic()</b>,
+except for HTTP GSS-Negotiate authentication.
+
+<h4 id="allow_auth_ntlm">Function: xmlrpc_server_info_allow_auth_ntlm()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_allow_auth_basic()</b>,
+except for HTTP NTLM authentication.
+
+<h4 id="disallow_auth_ntlm">Function: xmlrpc_server_info_allow_auth_ntlm()</h4>
+
+<p>This is analogous to <b>xmlrpc_server_info_disallow_auth_basic()</b>,
+except for HTTP NTLM authentication.
+
+
+<h4 id="set_basic_auth">Function: xmlrpc_server_info_set_basic_auth()</h4>
+
+<p><strong>This function is obsolete.</strong> In new code, use
+<b>xmlrpc_server_info_allow_auth_basic</b> and
+<b>xmlrpc_server_info_set_user</b> instead.
+
+<pre>
+<code>
+void 
+xmlrpc_server_info_set_basic_auth(
+    xmlrpc_env *         const envP,
+    xmlrpc_server_info * const serverP,
+    const char *         const username,
+    const char *         const password);
+
+</code>
+</pre>
+
+<p>This has the same effect as and <b>xmlrpc_server_info_set_user</b>
+followed by <b>xmlrpc_server_info_allow_auth_basic</b>.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>serverP</i> identifies the <b>xmlrpc_server_info</b> object in which
+the information is to be changed.
+
+<p><i>username</i> and <i>password</i> are the username and password
+values as defined by HTTP basic authentication.
+
+<p>When the function fails, it leaves the <b>xmlrpc_server_info</b>
+object unchanged.
+
+
+<h4 id="serverdoesntrespond">When Server Doesn't Respond Properly</h4>
+
+<p>If the server is broken or even nonexistent, your RPC may take a long time
+or forever to complete or complete unlike you expect.
+
+<p>See <a href="#brokenserver">Dealing With Broken Servers</a>
+
+
+<h2 id="ssl">SSL (HTTPS)</h2>
+
+<p>An XML-RPC client uses HTTP, which is not encrypted.  However, a common
+variation of the protocol substitutes HTTPS, which uses SSL to encrypt the
+connections so that people can't snoop on them and clients and servers can't
+impersonate others.
+
+<p>To use <b>libxmlrpc_client</b> with HTTPs, use the <a href="#curl">Curl XML
+transport</a>, which uses the SSL facilities of the Curl library.  See the
+section <a href="#curlssl">Curl XML Transport - SSL</a>.
+
+
+<h2 id="interrupting">Interrupting</h2>
+
+<p>There is a facility for interrupting long-running client functions
+with a signal.  Two examples of how this is useful:
+
+<ul>
+<li>In an interactive program, the user types a command that requires your
+program to perform an RPC.  The server is very slow and the user gets
+tired of waiting and hits Control-C.  You want to abort the RPC and the
+user's command, but not the whole program.  You just want to go back to
+your program's command prompt.
+
+<p>Control-C typically causes the system to send a signal of class SIGINT
+to the process, so you need that signal to interrupt your
+<b>xmlrpc_client_call2()</b>.
+
+<li>You want to put a time limit on the RPC and give up if the server
+takes more than 10 seconds to respond.  So you use an alarm() function
+(standard C library) to schedule a SIGALRM signal 10 seconds from now,
+then call <b>xmlrpc_client_call2()</b>.  If 10 seconds from now the
+<b>xmlrpc_client_call2()</b> is still running, you need it to fail
+immediately as a result of that SIGALRM signal.
+
+</ul>
+
+<p>Another way to put a time limit on an RPC is use the <a
+href="#curlparm_timeout"><b>timeout</b></a> parameter of the Curl
+transport.
+
+<h3 id="interrupthow">How To Interrupt A Function</h3>
+
+<p>The program <a href="http://xmlrpc-c.svn.sourceforge.net/viewvc/xmlrpc-c/trunk/examples/interrupted_client.c?view=markup">
+<b>interrupted_client</b></a> in the examples directory of the Xmlrpc-c source
+tree is a complete example of a client program whose long-running RPCs can be
+interrupted.  It was new in Xmlrpc-c 1.13 (December 2007).
+
+<p>The way it works is that you set up a C variable somewhere that
+tells whether you want an interruption or not.  It's called an
+interrupt flag.  Set it to 0 to mean &quot;carry on&quot; and 1 to
+mean &quot;interrupt.&quot; Tell Xmlrpc-c in advance where your flag
+is, with <b>xmlrpc_client_set_interrupt()</b>.  Before you call an
+Xmlrpc-c function, set the interrupt flag to 0.  Set up a
+signal handler that sets the interrupt flag to 1 and returns.
+
+<p>Xmlrpc-c library functions check that flag at certain times and,
+seeing it set, abort what they are doing and return a failure.  So the
+only thing left to consider is just when the library function checks
+the interrupt flag.  Ideally, it checks it before doing anything that
+could take a while, and shortly after every signal is handled.  But it
+doesn't always meet that ideal; see <a
+href="#interruptlimit">Limitations</a>.
+
+<p>There is no way to interrupt a function of the <a
+href="#globalclient">global client</a>.
+
+<p>Remember that if you don't set up a signal handler, a signal
+typically <em>terminates the process</em>.  And if you set up to block a
+signal, the process never receives it, so your signal handler does not
+run and a long-running system call keeps running.
+
+<p>When you set the interrupt flag to 1, all RPCs then in progress via
+the client terminate soon, aborting and failing if necessary.  This
+means in addition to a <b>libxmlrpc_client</b> function returning
+soon, the server also may see an unfinished RPC.  XML-RPC has no
+concept of aborting an RPC, so what the server sees may just be an
+abruptly truncated conversation.
+
+<p>This is different from the timeout in the asynchronous RPC interface.
+That timeout simply makes <b>xmlrpc_client_event_loop_finish_timeout()</b>
+return before the RPCs are finished.  The RPCs still exist and you can
+(and must) eventually finish them with another call.
+
+
+<h4 id="xmlrpc_client_set_interrupt">
+Function: <b>xmlrpc_client_set_interrupt()</b></h4>
+
+<p>
+Example:
+
+<pre>
+<code>
+    static int interrupt;
+    xmlrpc_client * clientP;
+
+    xmlrpc_client_create(&amp;env, XMLRPC_CLIENT_NO_FLAGS, NAME, VERSION, NULL, 0,
+                         &amp;clientP);
+
+    xmlrpc_client_set_interrupt(clientP, &amp;interrupt);
+
+    interrupt = 0;
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_set_interrupt(xmlrpc_client * const clientP,
+                                int *           const interruptP);
+</code>
+</pre>
+
+<p>This function declares an <a href="#interrupting">interrupt
+flag</a> for a client.  Henceforth, you can interrupt various client
+operations by setting that flag to a nonzero value.
+
+<p>To clear the interrupt flag, specify NULL for <i>interruptP</i>.
+
+<p>If you call this while the client is in the middle of something,
+results are undefined.  Normally, you call this only as part of setting
+up a client, shortly after you create it.
+
+<p>This function was new in Xmlrpc-c 1.10 (March 2007).
+
+
+<h3 id="interruptlimit">Limitations</h3>
+
+<p>The system is imperfect.  Only some things are eligible for
+interruption.  Other long-running things may just ignore signals and
+keep you waiting.
+
+<p>One particular thing that <em>is</em> interruptible is, with the
+<b>curl</b> XML transport, the wait for the XML-RPC server to respond
+after the client has sent the XML-RPC call.
+
+<p>When a library function runs for a long time, it's usually because
+it is executing a system call that won't complete until something
+external happens, such as the system receives an HTTP response over
+the network.  The nature of Unix signals is such that a signal will
+usually interrupt any system call taking place at the time of the
+signal.  So after your signal handler returns, the system call returns
+(fails).  The <b>libxmlrpc_client</b> function typically checks the
+interrupt flag soon after such a system call completes.  If the flag
+is set, the function fails immediately.  Otherwise, it just repeats
+the failed system call and the wait goes on.  So you should see the
+Xmlrpc-c library function return soon after the signal.
+
+<p>In many cases that an Xmlrpc-c function ignores or delays response
+to a signal, it's because Xmlrpc-c uses a subordinate library that
+does not respect signals.  If a library function that Xmlrpc-c calls
+does not return when the process receives a signal, there is nothing
+Xmlrpc-c can do to respond to the signal.
+
+<p>The library of greatest significance, with the Curl transport, is
+the Curl library (&quot;libcurl&quot;), which performs HTTP functions.
+Before March 2007, that library has a limitation in that it may take
+up to a second after a signal arrives for it to abort its wait (e.g.
+for a response from the server).  (In case you're curious, this
+limitation is due to the way the interruptibility function evolved
+from another library function -- the ability to make periodic progress
+report callbacks, which itself evolved from a library function that
+actually prints progress reports on the terminal, once per second).
+
+<p>Another case where the interruptibility is not what you would
+expect is where the underlying system is older Linux.  Older Linux
+kernels do not have a pselect() system call.  Consequently, the GNU C
+Library on a system with one of these kernels cannot implement POSIX
+pselect().  <b>libxmlrpc_client</b> depends upon POSIX pselect() for
+its interruptibility.  On these systems, the GNU C Library implements
+its pselect() function with select() and changes the signal mask
+before and after calling select().  This differs from what POSIX
+requires in that if a signal arrives before or just after the select()
+begins, it will not stop the select() from waiting.  Consequently, if
+a signal arrives within a very narrow window of time, and your signal
+handler signals that <b>libxmlrpc_client</b> should abandon whatever
+it's doing, the <b>libxmlrpc_client</b> function that calls the GNU C
+Library's pselect() function will wait anyway.
+
+<p>Thus, on such a system you cannot depend upon a signal interrupting
+a <b>libxmrpc_client</b> call.  It is still useful in many cases,
+though.  For example, if you're trying to respond to control-C, this
+just means that on extremely rare occasions, the user will have to hit
+Control-C again.  For timeouts based on alarm signals, you may want to
+have your signal handler reschedule an alarm signal for a short while
+later just in case the one it's handling falls into one of those blind
+windows.
+
+<p>A pselect() system call showed up in kernel.org Linux in an early
+2007 release.  I don't know what if any GNU C libraries and Linux
+operating systems take advantage of it. 
+
+<p>Before Release 1.11 (June 2007), <b>libxmlrpc_client</b> may delay
+responding to a signal by up to a second when it arrives while a
+synchronous call function (e.g. <b>xmlrpc_client_call2()</b>) is
+executing, even with a current Curl library.  (That's because the
+older <b>libxmlrpc_client</b> uses libcurl's
+<b>curl_easy_perform()</b> synchronous interface for that, and
+<b>curl_easy_perform()</b> is not properly interruptible.  All it does
+is poll for interruptions once per second.  Current
+<b>libxmlrpc_client</b> uses the curl &quot;multi&quot; interface
+instead).
+
+<p>Before Xmlrpc-c 1.10 (March 2007), there is no way to interrupt
+a <b>libxmlrpc_client</b> call (and not have the OS terminate your
+program).
+
+
+<h2 id="transports">Client XML Transports</h2>
+
+<p>The layer of <b>libxmlrpc_client</b> that delivers the XML for an
+RPC to the server and receives the XML for the response back is the
+client XML transport, and you can choose among several of them.  In order
+for the RPC to be true XML-RPC, this transport must use HTTP to transport
+the XML, but in theory it could be something else entirely.
+
+<p>This section describes the individual client XML transports.
+
+<p>A normal <b>libxmlrpc_client</b> can use any of these; you choose
+one when you create the client with <b>xmlrpc_client_init2()</b>.  But
+people often create a variation on <b>libxmlrpc_client</b> that omits
+transports they don't want or for which they don't have the
+prerequisites.
+
+<p>If you don't care (and if you're not doing anything fancy, there's
+really no reason to care), you can let <b>libxmlrpc_client</b> choose
+a transport for you by specifying NULL in place of the transport
+pointer on your <b>xmlrpc_client_init2()</b> call.
+
+<h3 id="curl">Curl</h3>
+
+<p>This transport uses the widely used Curl library to transport the XML
+over HTTP.
+
+<p>People usually render the name of this library as &quot;cURL&quot;.
+We use standard typography instead in this manual, because it is
+easier to read.
+
+<h4 id="curlsession">Curl Sessions</h4>
+
+<p>The Curl library has a concept of a session (it's represented in the
+API by a <b>CURL</b> handle).  The Xmlrpc-c Curl transport uses sessions
+like this:
+
+<p>The transport uses a single Curl session for the life of the
+transport (which is normally the life of the Xmlrpc-c client) for all
+RPCs you perform through the synchronous interface (the
+<b>xmlrpc_client_call2()</b> function).  But every RPC you perform via
+the <em>asynchronous</em> interface gets its own Curl session.  This
+latter situation is not desirable; it exists because of limitations of
+the Curl API -- A session cannot be used simultaneously by multiple
+threads.
+
+<p>Curl sessions matter for these reasons:
+<ul>
+
+<li>Cookies live within the context of a Curl session.  See <a
+href="#cookies_curl">Cookies</a>.
+
+<li>Curl uses persistent HTTP connections within a Curl session.
+Persistent HTTP connections means multiple consecutive RPCs can use
+the same TCP connection and save time and resources.
+
+</ul>
+
+<h4 id="cookies_curl">Cookies</h4>
+
+<p>The cookie mechanism is a feature of HTTP that adds stateful
+connections to this protocol that is fundamentally designed not to
+have them.  There are sociological reasons for this corruption.  The
+mechanism works as follows: In a response, an HTTP server includes an
+arbitrary key/value pair which is meaningful only to the server.
+The client essentially includes that pair in all future requests to
+that server.
+
+<p>The transport stores cookies the server sends and includes them in
+future requests, as defined by HTTP cookie standards.  But it does so
+only within the scope of a <a href="#curlsession">Curl session</a>.  A
+cookie session is a Curl session and the Curl transport treats
+persistent cookies as session cookies -- they do not outlive the Curl
+session.
+
+
+<h4 id="curlssl">SSL</h4>
+
+<p>The transport works with SSL servers, i.e. https: URLs.
+
+<p>By default, the Curl transport will refuse to talk to the server
+(i.e. abort and fail your RPC) unless the server proves it is who you
+expect it to be.
+
+<p>There are two parts to establishing identity: identification and
+authentication (of identity).  Identification is claiming to be
+someone.  Authentication is proving the claim.  You control these two
+things independently with the Curl transport.
+
+<p>In SSL, a server identifies itself by presenting a certificate.
+The certificate contains a Common Name and optionally Subject
+Alternate Names, which are normally host names -- the same names you
+put in a URL to identify the server.  An SSL server authenticates
+its certificate by providing a digital signature.  It may also
+provide a signature from someone else authenticating the server's
+signature, and so on up to someone whose signature you recognize.
+The Curl library comes with a few high level signatures, so as long
+as you trust whoever gave you the Curl library, the chain of trust
+will normally end with a signature you recognize.
+
+<p>You can make the Curl transport bypass the authentication of the
+server's identity (i.e. bypass making sure the server is who its
+certificate says it is) with the <a
+href="#no_ssl_verify">ssl_no_verifypeer</a> option.
+
+<p>You can make the Curl transport bypass identification (i.e. bypass
+making sure the host name that the server claims via its certificate
+matches your URL) with the <a
+href="#no_ssl_verify">no_ssl_verifyhost</a> option.
+
+<p>Note that there isn't much point to authenticating the server's
+certificate if you aren't going to use the authenticated host name.
+The Curl transport doesn't give you any way to use it except to abort
+the RPC if it doesn't match the URL.
+
+<p>Similarly, there isn't a whole lot of reason to verify an unauthenticated
+host name, because any crook who would accept your request addressed to
+someone else would also forge a certificate claiming he is that someone else.
+
+<p>It is common to disable authentication and identification to work
+around a technical problem wherein you're unable to confirm the
+server's identity, but don't really think there's any risk that the
+server is an impostor.  A common technical problem that requires you
+to use <i>no_ssl_verifypeer</i> in order to do any RPCs is that you
+don't have certificate authority (CA) certificates properly installed
+on your client system.
+
+<p>The details of the verification of server identity, including what
+files you need on your system to make it work, are all handled by the
+Curl library.  See Curl documentation for details.  The Curl transport
+has <a href="#ssldetailparm">a bunch of transport parameters</a> to
+control the details of the SSL verification.
+
+
+
+<h4 id="useragent">User Agent</h4>
+
+<p>In HTTP, the &quot;user agent&quot; is the program through which the user
+makes an HTTP request.  For classic web browsing, it is the web browser
+program, such as Internet Explorer 6.0.  An optional header in the HTTP
+request, the <b>User-Agent</b> header, identifies the user agent.  It does
+this with a value that looks like this: &quot;prog1/1.0 prog2/2.1
+prog3/0.9beta&quot;.  It is a sequence of name/version pairs, identifying
+components at successively lower layers.
+
+<p>The Xmlrpc-c Curl transport by default inludes a User-Agent header
+in its requests, whose value is a name/version pair for Xmlrpc-c followed
+by a name/version pair for Curl, separated by spaces.
+
+<p>You can cause it to add additional text to identify your code, using the
+<i>user_agent</i> transport parameter.  The transport prepends the value of
+<i>user_agent</i>, verbatim, separating it from the rest with a space.
+When <i>user_agent</i> is null, which is the default, the transport
+prepends nothing.
+
+<p>If the <i>dont_advertise</i> Curl transport option is true,
+the transport does not include information about Xmlrpc-c and Curl.
+
+<p>If <i>dont_advertise</i> is true and <i>user_agent</i> is null, the
+transport does not include a User-Agent header in the request at all.
+
+<p>The behavior is different before Xmlrpc-c 1.21 (December 2009).  In these
+older releases, the default is not to include a User-Agent header.  If you
+specify non-null <i>user_agent</i>, the transport includes the full User-Agent
+header, including the Xmlrpc-c and Curl information and <i>user_agent</i>
+value.  There is no <i>dont_advertise</i> option.
+
+
+<h4 id="referer">Referer</h4>
+
+<p>In HTTP, the &quot;referer&quot; of a document is the document that
+referred the user to the subject document, normally by containing a hyperlink
+to it.  A request for a document (an XML-RPC call is considered a request for
+a document) may optionally say what page referred the client to it,
+identifying the page by the URL the browser used to load it.
+
+<p>Some web servers, for security reasons relating to cross-site scripting,
+require every request to it to identify a referer, so if your target XML-RPC
+server is also one of these web servers, your RPCs will be rejected unless you
+use this option.
+
+<p>The Xmlrpc-c Curl transport by default does not identify a referer.
+
+<p>If you specify this option, the transport specifies the string you specify
+as the referer in all its HTTP requests.  You are responsible for ensuring the
+referer value is meaningful to the server.
+
+<p>This option was new in Xmlrpc-c 1.29 (December 2011).
+
+
+<h4 id="expectcontinue">Expect/Continue</h4>
+
+<p>Because of the <a href="#pythonhttp">Expect/Continue bug</a> that some
+XML-RPC servers have, the Curl transport never sends an HTTP Expect header
+(and, more importantly, never expects a continue response).
+
+<p>BUT: Before Xmlrpc-c 1.19 (June 2009), with a recent libcurl library and a
+large XML-RPC call, the transport <em>does</em> send the Expect and waits up
+to 3 seconds for the continue response.  If the server doesn't send the
+response, the transport goes ahead and the only problem with the transaction
+is that it takes 3 seconds longer than it should.  (I'm being coy about
+what version of libcurl and what size of body because I don't know).
+
+
+<h4 id="curlparm">Curl Transport-specific Parameters</h4>
+
+<pre>
+<code>
+struct xmlrpc_curl_xportparms {
+    const char * network_interface;
+    xmlrpc_bool  no_ssl_verifypeer;
+    xmlrpc_bool  no_ssl_verifyhost;
+    const char * user_agent
+    const char * ssl_cert;
+    const char * sslcerttype;
+    const char * sslcertpasswd;
+    const char * sslkey;
+    const char * sslkeytype;
+    const char * sslkeypasswd;
+    const char * sslengine;
+    xmlrpc_bool  sslengine_default;
+    enum xmlrpc_sslversion sslversion;
+    const char * cainfo;
+    const char * capath;
+    const char * randomfile;
+    const char * egdsocket;
+    const char * ssl_cipher_list;
+    unsigned int timeout;
+    const char * proxy;
+    unsigned int proxy_port;
+    enum xmlrpc_httpproxytype proxy_type;
+    unsigned int proxy_auth;
+    const char * proxy_userpwd;
+    xmlrpc_bool  gssapi_delegation;
+    const char * referer;
+};
+</code>
+</pre>
+
+<p>Example:
+<pre>
+<code>
+struct xmlrpc_clientparms clientParms;
+struct xmlrpc_curl_xportparms curlParms;
+xmlrpc_client * clientP;
+
+curlParms.network_interface = &quot;eth1&quot;;
+curlParms.no_ssl_verifypeer = TRUE;
+curlParms.no_ssl_verifyhost = TRUE;
+curlParms.user_agent        = &quot;myprog/1.0&quot;;
+
+clientParms.transport          = &quot;curl&quot;;
+clientParms.transportparmsP    = &amp;curlParms;
+clientParms.transportparm_size = XMLRPC_CXPSIZE(user_agent);
+
+xmlrpc_client_create(&amp;env, 0, &quot;myprog&quot;, &quot;1&quot;, 
+                     &amp;clientParms, XMLRPC_CPSIZE(transportparm_size),
+                     &amp;clientP);
+
+</code>
+</pre>
+
+<p>For <i>parmSize</i>, use the <b>XMLRPC_CXPSIZE</b> macro.  This macro gives
+the size of the <b>xmlrpc_curl_xportparms</b> structure up through the member
+you name.  Name the last member in the structure that you set.  You must set
+every member up through that one, but for every member after
+it, <b>libxmlrpc_client</b> will assume a default.
+
+<p>The reason it's important to use <b>XMLRPC_CXPSIZE</b> instead of
+just setting all the members and using <b>sizeof(struct
+xmlrpc_curl_xportparms)</b> is forward compatibility.  Future versions of
+<b>libxmlrpc_client</b> might add new members, and you want the client program
+you write today and compile with that future library to work.
+
+<b>XMLRPC_CXPSIZE</b> also allows you to not worry about members at the end of
+the structure that you don't care about.
+
+<p>It isn't so easy to omit parameters you don't care about from the
+<em>middle</em> of the structure, but the members are defined so that a value
+encoded as bits of zero is the same as the member not being present, so you can
+just set the whole structure to zero bits and then set the members you care
+about to something else.
+
+<h5 id="network_interface">network_interface</h5>
+
+<p><i>network_interface</i> is the Curl library's &quot;interface&quot;
+option.  See documentation of the Curl API for details (the best
+documentation of Curl API options, by the way, is the manual for the
+'curl' program that comes with it and has command line options to
+control all the API options).
+
+<p>But essentially, it chooses the local network interface through which
+to send RPCs to the server.  It causes the Curl library to perform a
+&quot;bind&quot; operation on the socket it uses for the
+communication.  It can be the name of a network interface (e.g. on
+Linux, &quot;eth1&quot;) or an IP address of the interface or a host
+name that resolves to the IP address of the interface.  Unfortunately,
+you can't explicitly state which form you're specifying, so there's
+some ambiguity.
+
+<p>Examples: <b>eth1</b>, <b>64.171.19.66</b>, <b>giraffe.giraffe-data.com</b>.
+
+<p>The value is an ASCIIZ string.  You can free its storage as soon as
+<b>xmlrpc_client_init2()</b> returns.
+
+<p>If this parameter is NULL or not present, the Curl transport uses
+whatever is the default of the Curl library.
+
+<p>This parameter was new in Xmlrpc-c 1.02.
+
+<h5 id="no_ssl_verify">no_ssl_verify_peer, no_ssl_verifyhost</h5>
+
+<p><i>no_ssl_verifypeer</i> and <i>no_ssl_verifyhost</i> are
+meaningful only for an SSL connection (a connection to a server with a
+&quot;https:&quot; URL).  They control how secure the connection is.
+
+<p><i>no_ssl_verifypeer</i> = true means the Curl transport just believes
+that the server is who its certificate says it is.  False means the Curl
+transport will refuse to connect to the server if it can't prove that it
+is who it says it is.  It also means it doesn't care if you have
+proper CA certificates installed on the client system.
+
+<p><i>no_ssl_verifyhost</i> = true means the Curl transport doesn't care
+if the server is the one it was trying to reach.  False means the Curl
+transport will refuse to connect to the server if its certificate does
+not match its URL.
+
+<p>Note that all combinations of these two options are meaningful
+(though not necessarily useful).
+
+<p>The default value is false.
+
+<p>These parameters were new in Xmlrpc-c 1.03 (June 2005).  Before
+that, the Curl transport did whatever is the default for the Curl
+library involved.  In reasonably modern Curl, that's the same as the
+parameters being false, but in really old Curl, the default was
+different.
+
+
+<h5>user_agent</h5>
+
+<p><i>user_agent</i> is a string that identifies the user of the
+Xmlrpc-c client object, for purposes of a <b>User-Agent</b> HTTP
+header.  
+
+<p>If the parameter is NULL or not present, the HTTP request has no
+<b>User-Agent</b> header.  See the discussion of user agents above.
+
+<p>The <i>user_agent</i> parameter was new in Xmlrpc-c 1.03 (June 2005).
+Before that, the Curl transport never used a <b>User-Agent</b> header.
+
+
+<h5 id="ssldetailparm">SSL Details</h5>
+
+<p>These are options that control the details of SSL verification of the
+server identity.  You can usually do without any of these; the defaults
+are the Curl library defaults, which are typically all you need.
+
+<p>All of these options correlate directly to Curl options of the same
+name, so rather than document them here, we refer you to the Curl
+documentation.
+
+<ul>
+<li><b>sslversion</b>
+<li><b>ssl_cert</b>
+<li><b>sslcerttype</b>
+<li><b>sslcertpasswd</b>
+<li><b>sslcerttype</b>
+<li><b>sslkey</b>
+<li><b>sslkeytype</b>
+<li><b>sslkeypasswd</b>
+<li><b>sslengine</b>
+<li><b>sslengine_default</b>
+<li><b>cainfo</b>
+<li><b>capath</b>
+<li><b>randomfile</b>
+<li><b>egdsocket</b>
+<li><b>ssl_cipher_list</b>
+</ul>
+
+<p>All of these parameters were new in Xmlrpc-c 1.04 (November 2005).
+
+
+<h5 id="curlparm_timeout">timeout</h5>
+
+<p><i>timeout</i> is the maximum time <strong>in milliseconds</strong>
+that the transport will allow for network communications.  If it takes
+longer than that, the transaction fails without waiting any more.
+This is just a limit on certain aspects of network communication; it
+does not include time that the server takes between receiving a call
+and sending the response.  Exactly which parts of network
+communication (name server lookup, ARP, TCP connection, data transfer,
+etc.) are subject to this time limit varies from one system to another
+and I can't say any more specifically what is covered.
+
+<p>The actual timeout is what you requested rounded up to the next
+second.  In future Xmlrpc-c, it may have better resolution.
+
+<p><i>timeout</i>=0 means no timeout (wait as long as it takes).
+
+<p>If <i>timeout</i> is 0 or not present, there is no timeout --
+The transport waits as long as it takes.
+
+<p>The Curl library must be Release 7.10 or newer.  If it is not and you
+specify <i>timeout</i>, creation of the transport fails.
+
+<p>This parameter was new in Xmlrpc-c 1.13 (December 2007).
+
+<p>Note that as a matter of good design, it is often better to use an
+alarm signal (SIGALRM) to <a href="#interrupting">interrupt</a> a
+transport operation instead of the <i>timeout</i> parameter.  An alarm
+signal sets a master timeout on a whole sequence of operations without
+all the layers having to be aware of it.  I.e. you don't have to have
+&quot;timeout&quot; arguments on all your functions and have them all
+watch the clock.
+
+<p>If you are writing code that doesn't own the whole environment
+(e.g. a general purpose library), you <em>can't</em> generally set up
+an alarm, but in that case you probably don't want to establish an
+arbitrary time limit either, because the appropriate limit depends
+upon context.  It's often better to have the <em>top level</em> code,
+which does own the whole environment, set up an alarm and just have
+your code be interruptible by signals (as libxmlrpc_client is).
+
+<p>On the other hand, a hardcoded <i>timeout</i> value is by far the easiest
+to code solution to the annoying problem of unresponsive servers.
+
+
+<h5 id="httpproxy">HTTP Proxy Control</h5>
+
+<p>Curl knows how to conduct an HTTP transaction through an HTTP proxy.  You
+control that with the following parameters:
+
+<ul>
+<li><b>proxy</b>
+<li><b>proxy_port</b>
+<li><b>proxy_type</b>
+<li><b>proxy_auth</b>
+<li><b>proxy_userpwd</b>
+</ul>
+
+<p><b>proxy_type</b> has one of these values:
+
+<ul>
+<li><b>XMLRPC_HTTPPROXY_HTTP</b>
+<li><b>XMLRPC_HTTPPROXY_SOCKS5</b>
+</ul>
+
+<p><b>proxy_auth</b> is an OR of these values (it represents a set of
+authentication methods -- Curl will try them all).
+
+<ul>
+<li><b>XMLRPC_HTTPAUTH_BASIC</b>
+<li><b>XMLRPC_HTTPAUTH_DIGEST</b>
+<li><b>XMLRPC_HTTPAUTH_GSSNEGOTIATE</b>
+<li><b>XMLRPC_HTTPAUTH_NTLM</b>
+</ul>
+
+<p>These correlate directly to Curl options of the same name, except as
+explained below, so rather than document them fully here, we refer you to
+the Curl documentation.
+
+<p>The <b>proxy_auth</b> default is different between Xmlrpc-c and Curl.  In
+Curl, the default is HTTP basic authentication.  With Xmlrpc-c, the default is
+no authentication.  That fits better with the Xmlrpc-c client XML transport
+concept of a zero value being the default to make it easier to construct the
+transport parameter.
+
+<p>The special value 0 for <b>proxy_port</b> means the Curl default (whatever
+that is), and there is no way with this parameter to specify port 0.  Note
+that in any case (as with the Curl equivalent options), <b>proxy_port</b>
+is meaningless when you include the port in the value of <b>proxy</b>.
+
+
+<p>All of these parameters were new in Xmlrpc-c 1.23 (June 2010).
+
+<h5 id="curlparm_gssapi">GSSAPI</h5>
+
+<p>When you use GSS authentication, you can give your GSS credentials to the
+server so that it can act on your behalf.  Of course, you do this only when
+you trust the server.  To do that, set <b>gssapi_delegation</b>
+to <b>true</b>.
+
+<p>The default is no delegation.
+
+<p>You can't always choose to delegate or not to delegate; it depends upon the
+capabilities of the Curl library.  Older Curl libraries always delegate; you
+can't stop it.  <b>gssapi_delegation</b> has no effect if you're running with
+one of these Curl libraries.  Curl version 7.21.6 (April 2011) and earlier is
+like this.  Curl version 7.22.0 and later gives you the choice,
+and <b>gssapi_delegation</b> works normally.  In between Curl version 7.21.7
+(June 2011) <em>never</em> delegates.  If you specify <b>gssapi_delegation</b>
+and you have Curl 7.21.7, Xmlrpc-c client creation fails with a message
+telling you need a different Curl.
+
+<p>And that's all assuming you
+actually <em>compiled</em> <b>libxmlrpc_client</b> with a current Curl.  If
+you compile with a Curl older than 7.22.0 and run with a Curl newer that
+7.21.6, and specify <b>gssapi_delegation</b>, client creation will always
+fail.
+
+<p><b>gssapi_delegation</b> was new in Xmlrpc-c 1.28 (September 2011).  Before
+that, you get whatever your Curl library does by default (which means no
+delegation with Curl 7.21.7 and later, and delegation with older Curl).
+
+
+<h4 id="concurrency_curl">Concurrency</h4>
+
+<p>The Curl transport before Xmlrpc-c 1.04 serializes RPCs.  This
+means your program as a whole will never start an RPC before the
+previous one has completed.
+
+<p>In 1.04 and later, the Curl transport performs RPCs concurrently
+(via the Curl library's &quot;multi&quot; facility).  But this applies
+only to the asynchronous interface.  If you use multiple operating
+system threads to request multiple RPCs simultaneously via the
+synchronous interface, the Xmlrpc-c Curl transport will serialize them
+-- A Curl transport will never start an RPC before the previous one
+has completed.
+
+<p>But starting in 1.05, you can have multiple Curl transports in a
+program (one per client).  So your program as a whole might have
+multiple concurrent RPCs going, via the synchronous interface, by
+using multiple operating system threads, each using its own
+<a href="#client">client</a>).
+
+<p>The Curl transport does one DNS server host name lookup at a time,
+and the timeouts in
+<b>xmlrpc_client_event_loop_finish_asynch_timeout()</b> and
+<b>xmlrpc_client_event_loop_finish_timeout()</b> are ineffective
+against long-running name lookups.  This is due to a weakness in the
+Curl library (at least as late as version 7.16.1 -- January 2007).
+
+<p>Before Xmlrpc-c 1.04 (November 2005), the timeouts don't work at
+all; the two <b>finish_async</b> functions are identical.
+
+
+<h4 id="curl_interference">Interference With Other Curl Uses</h4>
+
+<p>Your use of <b>libxmlrpc_client</b> with the Curl transport may
+interfere with other uses in your program of the Curl library.
+
+<p>This is primarily because of a weakness in current Curl (at least
+as late as Curl 7.12.2, November 2005) in which a call to its global
+constant teardown routine, <b>curl_global_cleanup()</b> tears down the
+global constants for every user of the library in the program.
+<b>xmlrpc_client_teardown_global_const()</b>
+makes such a call to
+<b>curl_global_cleanup()</b>.
+
+<p>Therefore, you must make sure that you do not call
+<b>xmlrpc_client_teardown_global_const()</b> while anything else in
+your program is using the Curl library.
+
+<p>As of December 2005, a request is being considered by the maintainer
+of the Curl library to change it such that it remembers how many modules
+are referring to its constants and tears them down only when the last
+referrer goes away.  That would eliminate this interference.
+
+<p>Also note the thread-unsafety of
+<b>xmlrpc_client_setup_global_const()</b> and
+<b>xmlrpc_client_teardown_global_const()</b> (explained in their
+respective sections), which is particularly relevant when you have
+other threads using the Curl library.
+
+<p><b>xmlrpc_client_init2()</b> and <b>xmlrpc_client_cleanup()</b> do
+the same things as <b>xmlrpc_client_setup_global_const()</b> and
+<b>xmlrpc_client_teardown_global_const()</b> in this respect, so the
+same caution applies to them.
+
+<h4 id="curl_debug">Debugging</h4>
+
+<p>Set the <b>XMLRPC_TRACE_CURL</b> environment variable to 1 to
+cause the Curl library to print details of its processing to Standard
+Error.  This environment variable causes the Xmlrpc-c Curl transport to
+set the misnamed <b>CURLOPT_VERBOSE</b> option for every Curl session.
+
+<p>This feature was new in Xmlrpc-c 1.21 (December 2009).
+
+
+<h3 id="libwww">Libwww</h3>
+
+<p>This transport uses the classic Libwww (W3C Libwww to be exact) libraries
+to transport the XML over HTTP.  This is less convenient, less documented,
+and less functional than Curl, so I don't know any reason to use it unless
+you have easier access to the Libwww libraries than to the Curl libraries,
+and therefore built a special version of <b>libxmlrpc_client</b> that
+doesn't have Curl capability.
+
+<p>One way in particular that using Curl is easier is that when something
+prevents Curl from communicating with the server, it reports a fairly
+specific indication of why (which <b>libxmlrpc_client</b> then forwards to
+you.  In contrast, Libwww often just tells you &quot;something failed&quot;
+and you have to guess or trace the Libwww code.
+
+<h4 id="cookies_libwww">Cookies</h4>
+
+<p>The cookie mechanism is a feature of HTTP that adds stateful
+connections to this protocol that is fundamentally designed not to
+have them.  There are sociological reasons for this corruption.  The
+mechanism works as follows: In a response, an HTTP server includes an
+arbitrary key/value pair which is meaningful only to the server.
+The client essentially includes that pair in all future requests to
+that server.
+
+<p>The transport ignores cookies the server sends and sends no cookies
+to the server.
+
+<p>In Xmlrpc-c 1.00 (October 2004) through 1.02 (April 2005), the
+transport recognizes a single cookie named &quot;auth&quot;.  This is
+a cookie shared by all servers; the transport ignores the domain that
+the server tries to associate with the cookie.  The cookie lives for
+the life of the transport (i.e. the life of the client).  The function
+was created for some special purpose lost in history, during
+Xmlrpc-c's pre-1.00 dark age.  The Xmlrpc-c maintainer eventually
+studied it enough to determine that it was more detrimental than
+beneficial.
+
+<h4 id="concurrency_libwww">Concurrency</h4>
+
+<p>The asynchronous facility, in at least one experiment Bryan did,
+was rather disappointing used with the libwww transport.  The no-wait
+call had no visible effect, and the RPC finishing function did each
+RPC serially (waits for one to complete before starting the next one).
+Because <b>libwww</b> is undocumented and its code too complex to read
+easily, Bryan did not determine if there are circumstances under which
+it behaves better.
+
+
+<h3 id="wininet">Wininet</h3>
+
+<p>This is available on Windows only.
+
+<p>This transport has a 30 second timeout on XML-RPC calls.  If the
+server does not respond within that period, the call fails.
+
+<h4 id="wininetparm">Wininet Transport-specific Parameters</h4>
+
+<pre>
+<code>
+struct xmlrpc_wininet_xportparms {
+    int allowInvalidSSLCerts;
+};
+</code>
+</pre>
+
+<p>Example:
+<pre>
+<code>
+struct xmlrpc_clientparms clientParms;
+struct xmlrpc_wininet_xportparms wininetParms;
+xmlrpc_client * clientP;
+
+wininetParms.allowInvalidSSLCerts = TRUE;
+
+clientParms.transport          = &quot;wininet&quot;;
+clientParms.transportparmsP    = &amp;wininetParms;
+clientParms.transportparm_size = XMLRPC_WXPSIZE(allowInvalidSSLCerts);
+
+xmlrpc_client_create(&amp;env, 0, &quot;myprog&quot;, &quot;1&quot;, 
+                     &amp;clientParms, XMLRPC_CPSIZE(transportparm_size),
+                     &amp;clientP);
+
+</code>
+</pre>
+
+
+
+<h2 id="misc">Miscellaneous</h2>
+
+<h3 id="get_default_transport">xmlrpc_client_get_default_transport()</h3>
+
+<p>This function tells you the name of the default XML transport.
+
+<p>It's always &quot;libwww&quot;, but in future versions of
+<b>libxmlrpc_client</b> or other libraries that are variations on 
+<b>libxmlrpc_client</b>, it might be something else.
+
+<p>The default XML transport is the one that gets used if you don't specify
+a particular XML transport when you create the Xmlrpc-c client object.
+
+<pre>
+<code>
+const char * 
+xmlrpc_client_get_default_transport(xmlrpc_env * const envP);
+</code>
+</pre>
+
+
+<h2 id="concurrency">Concurrency</h2>
+
+<h3 id="threadsafe"><b>libxmlrpc_client</b> thread safety</h3>
+
+<p>The library is mostly thread-safe.  See <a
+href="libgeneral.html#threadsafe">Thread Safety</a> for general
+information.
+
+<p>But the objects provided by the library are thread-safe only if you
+use the Curl XML transport.  With Curl, you can call a function that
+operates on a client object or RPC object while another thread is also
+calling a function that operates on the same client or RPC.  But with
+the other transports, you can't.
+
+<p>If you are using a thread-unsafe XML transport, you can still do
+RPCs from multiple threads; you just have to give each thread its own
+client so that a particular client is accessed by only one thread.  And
+you can't share RPCs between threads either (though it probably would
+never occur to you to do that anyway).
+
+<p>You can get multiple RPCs running concurrently without using
+multiple operating system threads.  <b>libxmlrpc_client</b>'s <a
+href="#asyncrpc">Asynchronous RPC</a> facility allows a single
+operating system thread, using a single client, to have multiple RPCs
+in progress at once.  (It is, in fact, a threading facility).
+
+
+<h3 id="practicalconcurrency">Practical Concurrency</h3>
+
+<p>Just how concurrent two RPCs are depends upon the Xmlrpc-c XML
+transport you use and on the servers and network.  Multiple operating
+system threads and the asynchronous interface make it possible for
+multiple RPCs to be in progress from your program's point of view (you
+can start one without waiting for the previous one to complete).  But
+the XML transport may very well serialize the RPCs -- keep them in a
+list and perform them one at a time.  And if the XML transport doesn't
+do that, the server may do it -- complete one RPC before accepting the
+HTTP connection for the next.
+
+<p>See the <a href="#concurrency_curl">Curl transport documentation</a>
+for details on the concurrency characteristics of that transport type.
+
+
+<h2 id="brokenserver">Dealing With Broken Servers</h2>
+
+<h3 id="immune">Client Is Immune To Broken Server</h3>
+
+<p>It is a basic design goal of Xmlrpc-c that no matter how broken a
+server is, a client of the server will tolerate it.  The server cannot
+make the client crash.  When a client operation fails because of a bad
+server, failure information tells you the server is the problem.
+
+<p>However, it is of course possible for your own client code that
+uses Xmlrpc-c libraries to be written poorly enough that a bad server
+would bring it down.  For example, if an RPC produces a negative
+integer result and Xmlrpc-c client facilities dutifully pass that up
+to your code, but your code is expecting a positive integer, you could
+have big trouble.
+
+<h3 id="badserverhang">Client Hang Because Of Bad Server</h3>
+
+<p>One common form of server defect that is really hard for a client
+to tolerate is where the server simply doesn't respond.  The server could
+be hung in an infinite loop or deadlock and to the client it looks just
+like an RPC that takes a long time to execute.
+
+<p>A very common form of this is where the server is actually non-existent.
+You call <b>xmlrpc_client_call2()</b> to execute an RPC on this hypothetical
+server and while you'd expect the call to fail immediately with a fault
+string telling you there's no such server, it just hangs.  In truth, it
+normally doesn't really hang.  It does in fact fail eventually, but it can
+take as long as several minutes to do it.
+
+<p>What this is is a weakness of TCP.  The Xmlrpc-c code is simply
+trying to make an HTTP connection to the server and the operating
+system TCP connection-making service takes all this time to admit that
+there's no server there.  It's probably doing a lot of retrying in the
+meantime, thinking the lack of response may be due to packets getting
+lost in the network.  IP generally doesn't have a means to indicate to
+a sender that a packet can't be delivered because the &quot;to&quot;
+address doesn't exist; rather, the network merely discards the packet
+and the sender is supposed to give up if it doesn't get a response
+after a while.  In some situations, it is actually possible for the
+network to tell the client that the server isn't there, but for
+security reasons, it doesn't (information is power; the network wants
+to keep the hackers guessing).
+
+<p>Now, this several minutes of waiting is probably annoying because
+you know that if there hasn't been a response to a couple of tries
+within a few seconds, there isn't going to be one.  But it's a
+function that's buried deep in your operating system, so there is no
+way Xmlrpc-c can spare you the wait.
+
+<p>What you can do about this is the general solution to all of the
+client hangs caused by bad servers: Use an alarm signal.  On Unix, a
+process can ask the OS to send an alarm signal to it at a specified
+time in the future (see the standard C library function
+<b>alarm()</b>).  You can make that signal <a
+href="#interrupting">interrupt your call</a> to <b>libxmlrpc_client</b>
+
+<p>When you interrupt a <b>libxmlrpc_client</b> function that was
+waiting on a server, it breaks whatever TCP connection there was, so
+if the server really is functioning, it will find out you aborted the
+RPC and you don't have to worry about orphan results coming in later.
+
+<p>By the way, another apparent solution that you may think of is to
+use the asynchronous RPC interface.  That doesn't help with the
+nonexistent server problem, though, because an RPC start function
+doesn't return until it has at least delivered the call to the server.
+
+<p>A slightly more sophisticated approach to the venerable but primitive
+alarm signal is to use OS threads.  Create a thread to do the RPC.  Then
+wait, with timeout, for the thread to complete.  If the wait times out,
+send a signal to the RPC thread you created to interrupt it.
+
+<p>Finally, with the Curl XML transport, you can simply specify a
+timeout value for all XML transportation functions, using the <a
+href="#curlparm"><i>timeout</i></a> transport-specific client
+parameter.  This is easy, but not as flexible as using a signal.
+
+
+<h3 id="boguscontentlength">Bogus Content Length</h3>
+
+<p>Per the XML-RPC spec, an HTTP response which is an XML-RPC response must
+have a Content-Length header and its value must be the size of the XML-RPC
+response message.  <b>libxmlrpc_client</b> facilities are thus allowed to fail
+the XML-RPC call if the response does not have the required Content-Length
+header or does not contain the specified amount of contents.  With the Curl or
+Libwww XML transport, <b>libxmlrpc_client</b> does not require a
+Content-Length header, but with the Wininet XML transport, it does.
+
+<p>An HTTP chunked response does not have a Content-Length header, so
+cannot be an XML-RPC response.  But there are some pseudo-XML-RPC
+servers that send an HTTP chunked response without a Content-Length
+header or a pseudo-HTTP chunked response with a Content-Length header
+with a liberal (greater than actual) value.
+
+<b>libxmlrpc_client</b> facilities accept and process naturally an
+HTTP chunked response, with the Curl and Libwww XML transports.  With
+the Wininet transport, <b>libxmlrpc_client</b> accepts a pseudo-HTTP
+response which is chunked and also has a Content-Length header.  That
+header must specify the actual content length (i.e. the number of
+characters after decoding according to the Transfer-Encoding header).
+
+<p>Even though an HTTP server never sends a chunked response with a
+Content-Length header, a true HTTP client ignores the Content-Length
+header in a chunked response -- i.e. it tolerates the server error.
+An XML-RPC client need not.  This is a rare case where an XML-RPC
+client is excused from also being an HTTP client.  As stated above,
+the Wininet XML transport takes advantage of that excuse, so a
+<b>libxmlrpc_client</b>-based XML-RPC client with a Wininet transport
+is not an HTTP client.
+
+<h3 id="pythonhttp">Python Expect/Continue Bug (3 Second Delay)</h3>
+
+<p>In HTTP 1.1 (but not 1.0), the client can send the header &quot;Expect:
+100-continue&quot;, which tells the server that the client isn't going to send
+the body of the HTTP request until the server tells it to by sending a
+&quot;continue&quot; response.  The server is obligated to send that response.
+
+<p>The point of this is that the client doesn't want to spend a lot of
+resources generating and sending a body that the server is just going to
+reject based on the headers (for example because the body, according to the
+headers, is too big for the server to handle).
+
+<p>But some servers that are otherwise HTTP 1.1 don't hold up their end of the
+deal: they just ignore the Expect header and leave the client hanging.  (This
+is presumably just a matter of implementation mistake or expedience).
+
+<p>Users have reported this using Python 2.7 and 3.2 (note that we are not
+saying the bug is <em>in </em> Python).  No users of Python servers have
+reported <em>not</em> seeing this bug.
+
+<p>Xmlrpc-c's Curl client XML transport works around this problem as
+described <a href="#expectcontinue">here</a>, but note that in some cases
+the bug still causes RPCs to take 3 seconds.
+
+<p>We don't know whether other XML transports are susceptible to this bug.
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>This section describes some facilities and techniques for debugging
+programs that use <b>libxmlrpc_client</b>.
+
+<h3 id="xmlrpc_env">Error Environment Variable</h3>
+
+<P>First of all, if a library call fails, look at the error message!  Almost
+every Xmlrpc-c library call returns a detailed English description of why it
+failed.  See <a href="libxmlrpc_util.html#env">Error Environment Variable</a>.
+
+<p>And you must check each call for failure.  If you fail to notice that a
+library call has failed, you will be quite confused about the results of
+subsequent calls.  <strong>Note that example code often <em>doesn't</em> check
+each call for failure</strong>, because it clutters code which is trying to
+demonstrate something else.  So if the example doesn't work for you, insert
+error checking in the obvious places.
+
+<h3 id="standard_error">Standard Error</h3>
+
+<p>The trace facilities described here write messages to the Standard
+Error file descriptor via the Standard Error stream of the standard C
+library (<b>stderr</b>).  So make sure you have one.  Many server
+processes don't (they explicitly close the one that the system setup
+code provides).
+
+<h3 id="trace_xml">XMLRPC_TRACE_XML environment variable</h3>
+
+<p>If you set the <b>XMLRPC_TRACE_XML</b> environment variable to
+<b>1</b>, the <b>libxmlrpc_client</b> transports will print to
+Standard Error the XML of the call and of the response, in addition to
+their normal processing.
+
+<p>To be exact, what the transport prints is the bytes that are
+presented as XML -- it doesn't know or care at this point whether it
+is valid XML.  The transport writes to Standard Error each byte that
+it recognizes as a printable ASCII character (except backslash).  For
+every other byte, it writes a traditional backslash escape sequence
+(for example, newline is &quot;\n&quot;).  For backslash
+(&quot;\&quot;), the transport prints a double backslash
+(&quot;\\&quot;) so you know it is not part of an escape sequence for
+a nonprintable character.
+
+<p>The transport prints each line of the XML on a separate line (i.e.
+after it prints &quot;\n&quot; for a newline in the XML, it prints
+an actual newline).
+
+<p>Note that this same environment variable does the same thing for
+Xmlrpc-c servers.
+
+<h3 id="trace_curl">XMLRPC_TRACE_CURL environment variable</h3>
+
+<p>If you are using the Curl XML transport,
+<a href="#curl_debug">XMLRPC_TRACE_CURL</a> can be useful.
+
+
+<h2 id="version">Library Version</h2>
+
+<p><b>xmlrpc_client_version()</b> tells you what version (release, level) of
+<b>libxmlrpc_client</b> is linked to your program.
+
+<p>Example:
+
+<pre>
+<code>
+    unsigned int major, minor, point;
+    xmlrpc_client_version(&amp;major, &amp;minor, &amp;point);
+
+    printf(&quot;libxmlrpc_client version %u.%u.%u\n&quot;, major, minor, point);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_version(unsigned int * const majorP,
+                          unsigned int * const minorP,
+                          unsigned int * const pointP);
+</code>
+</pre>
+
+<p>This is declared in <b>&lt;xmlrpc-c/client.h&gt;</b> as follows:
+
+<P>The numbers returned are those you see in regular text references to
+the version of XML-RPC For C/++ from which that <b>libxmlrpc_client</b> comes,
+E.g. &quot;1.16.31.&quot;
+
+<p>This function was new in Xmlrpc-c <b>1.25</b> (December 2010).  Before
+that, you can use the following external integer variables (Still available,
+but now deprecated, because it's not possible to export integer variables
+directly in a Windows DLL).
+
+<pre>
+<code>
+    extern unsigned int const xmlrpc_client_version_major;
+    extern unsigned int const xmlrpc_client_version_minor;
+    extern unsigned int const xmlrpc_client_version_point;
+</code>
+</pre>
+
+<p>These symbols were new in Xmlrpc-c 1.13 (December 2007).
+
+</body>
+</html>

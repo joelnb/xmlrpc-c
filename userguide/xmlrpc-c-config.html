@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+<BODY>
+
+<h1><b>xmlrpc-c-config</b></h1>
+
+<P><B>xmlrpc-c-config</B> is a program that helps you build programs
+that use the Xmlrpc-c programming libraries.  It's like -config
+programs that go with many Unix programming libraries.
+
+<p>Here's an example of what it does:
+
+<pre>
+<tt>
+    $ xmlrpc-c-config c++2 client --libs
+
+    -L/usr/local/xmlrpc-c/lib   -lxmlrpc++ -lxmlrpc_client -lxmlrpc
+    -lxmlrpc_util -lxmlrpc_xmlparse -lxmlrpc_xmltok -L/usr/local/curl/lib \
+    -lcurl -L/usr/local/openssl/lib -lssl -lcrypto -ldl -lz 
+
+</tt>
+</pre>
+
+<p>(I split the output into multiple lines for presentation).
+
+<p>The problem <b>xmlrpc-c-config</b> solves is how to know what
+libraries to use in compiling and linking a program that uses Xmlrpc-c
+libraries.  You don't always know where on the system the library
+files (link-time libraries and compile-time header files) are.  But
+that's not the worst of it.  The Xmlrpc-c libraries are built to
+depend upon other libraries.  If you link your program to an Xmlrpc-c
+library, you must also link it to some other library such as the Curl
+HTTP library in the example above.
+
+<p>So when you run <b>xmlrpc-c-config</b>, it prints to Standard Output
+information about all this.  It's designed to be usable in automated
+fashion in a make file.
+
+<p><b>xmlrpc-c-config</b> is designed to be in a default executable
+search path (typically controlled by the <b>PATH</b> environment
+variable), even if no other part of Xmlrpc-c is.  That way, you can
+always find it.
+
+<p><b>xmlrpc-c-config</b> is customized for a particular system.  When
+you build Xmlrpc-c, the builder creates <b>xmlrpc-c-config</b> with
+built-in information about how Xmlrpc-c is built and installed on your
+system.  You have to supply information such as where you intend to
+install it as part of configuring the build.
+
+<p>The command syntax is:
+
+<p><b>xmlrpc-c-config</b>
+<i>features</i>
+<i>options</i>
+
+<p><i>features</i> is a list of features of the Xmlrpc-c libraries
+your program wants to exploit.  The features interact with each other,
+so the order is important.  Specifically, <b>c++2</b> and <b>c++</b>
+affect the features listed <em>afterward</em>, so if you want C++
+versions of all the facilities, be sure to list that feature
+<em>first</em>.
+
+<p>The possible values are:
+
+<dl>
+<dt><b>c++2</b>
+
+<dd>This means you want to use the regular C++ versions of the libraries.
+
+<dt><b>c++</b>
+
+<dd>This means you want to use the legacy wrapper C++ versions of the
+libraries.
+
+<dt><b>client</b>
+
+<dd>This means you want to use the XML-RPC client facilities.
+
+<DT><b>abyss-server</b>
+
+<dd>This means you want to use the Abyss-based XML-RPC server facilities.
+
+<dt><b>cgi-server</b>
+
+<dd>This means you want to use the facilities that help a CGI script
+that functions as an XML-RPC server.
+
+<dt><b>pstream-server</b>
+
+<dd>This means you want to use the packet stream server facilities (i.e.
+your program is a packet stream pseudo-XML-RPC server).
+
+<dt><b>server-util</b>
+
+<dd>This means you want to use the low-level server utilities such as
+registry management.  This is just for programs that use these facilities
+explicitly rather than higher level server facilities such as you get
+with <b>abyss-server</b>.  You don't need to request this feature to
+account for indirect usage of the facilities via other facilities.
+
+</dl>
+
+<P><i>options</i> is a list of tokens describing the information you
+want.  The possible values are:
+
+<dl>
+<dt><b>--cflags</b>
+
+<dd>Print -I options suitable for compiling a program.
+
+<dt><b>--libs</b>
+
+<dd>Print -L and -l options and library file names, suitable for putting
+on a link command.
+
+</dl>
+
+<p>There are also the following special case forms:
+
+<p><b>xmlrpc-c-config --help</b> shows you brief help information.
+
+<p><b>xmlrpc-c-features</b> lists the feature keywords, in case you
+forget them.
+
+
+<p>There are other options, but they haven't been maintained and may not
+be useful.  In any case, we don't describe them here.
+
+
+<p>Warning:  There are lots of different kinds of -config programs in
+the world.  Many look similar to this, but have significant
+differences.
+
+
+<h2>Examples</h2>
+
+<p>You can find a good example of how to use <b>xmlrpc-c-config</b> in
+the make files in the <b>examples/</b> directory of the Xmlrpc-c
+source tree.  The make files there don't use the regular
+<b>xmlrpc-c-config</b> because they're supposed to use the Xmlrpc-c
+libraries that you have built but not yet installed.  So instead, they
+use an alternate version called <b>xmlrpc-c-config.test</b>.  The
+comments in the make files tell you how a make file that's not in the
+Xmlrpc-c source tree would differ.
+
+<p>Here's a quick example fragment from a GNU Make make file:
+
+<pre>
+<code>
+INCLUDES = $(shell $(XMLRPC_C_CONFIG) client --cflags)
+
+LIBS = $(shell $(XMLRPC_C_CONFIG) client --libs)
+
+myclient.o:
+        cc -c $(INCLUDES) myclient.c
+
+myprog:
+        cc -o myclient $(LIBS) myclient.o
+
+</code>
+</pre>
+
+
+
+</BODY>
+</HTML>

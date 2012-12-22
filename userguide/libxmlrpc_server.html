@@ -1,0 +1,1365 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc_server</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C</a>
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.
+
+<p>The <b>libxmlrpc_server</b> library provides functions for use in
+a program that is an XML-RPC server.  These functions by themselves
+are not enough to implement a server; you need other facilities to 
+do the bulk of the work, such as <b>libxmlrpc_server_abyss</b>.
+<b>libxmlrpc_server</b> contains only facilities that are common to
+multiple kinds of server implementations.
+
+<p>When using <b>libxmlrpc_server</b>, you must also use the <a
+href="libxmlrpc.html"><b>libxmlrpc</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server</b> library routines depend on it.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Examples</a>
+<li><a href="#method_registry">Method Registry</a>
+  <ul>
+    <li><a href="#howto">How To Write A Method Function</a>
+    <ul>
+      <li><a href="#methodfunctionex">Example Method Function</a>
+    </ul>
+    <li><a href="#defaultmethod">The Default Method Function</a>
+    <li><a href="#registryobject">The Registry Object</a>
+    <li><a href="#addmethod">Adding Methods To The Registry</a>
+    <ul>
+      <li><a href="#xmlrpc_registry_add_method3">
+            xmlrpc_registry_add_method3</a>
+      <li><a href="#xmlrpc_registry_add_method2">
+            xmlrpc_registry_add_method2</a>
+      <li><a href="#xmlrpc_registry_add_method">xmlrpc_registry_add_method</a>
+      <li><a href="#xmlrpc_registry_add_method_w_doc">
+            xmlrpc_registry_add_method_w_doc</a>
+    </ul>
+    <li><a href="#registerdefault">Registering A Default Method Function</a>
+    <li><a href="#miscoptions">Miscellaneous Registry Options</a>
+    <ul>
+      <li><a href="#disable_introspection">
+        <b>xmlrpc_registry_disable_introspection</b></a>
+      <li><a href="#set_shutdown"><b>xmlrpc_registry_set_shutdown</b></a>
+      <li><a href="#set_dialect"><b>xmlrpc_registry_set_dialect</b></a>
+    </ul>
+    <li><a href="#systemmethod">System Methods</a>
+    <ul>
+      <li><a href="#introspection">Introspection</a>      
+      <ul>
+        <li><a href="#system.listMethods">system.listMethods</a>
+        <li><a href="#system.methodSignature">system.methodSignature</a>
+        <li><a href="#system.methodHelp">system.methodHelp</a>
+      </ul>
+      <li><a href="#systemOther">Other</a>      
+      <ul>
+        <li><a href="#system.capabilities">system.capabilities</a>
+        <li><a href="#system.getCapabilities">system.getCapabilities</a>
+        <li><a href="#system.methodExist">system.methodExist</a>
+        <li><a href="#system.shutdown">system.shutdown</a>
+        <li><a href="#system.multicall">system.multicall</a>
+      </ul>
+    </ul>
+    <li><a href="#executemethod">Executing A Method</a>
+      <ul>
+      <li><a href="#xmlrpc_registry_process_call2">
+          <b>xmlrpc_registry_process_call2</b></a>
+      <li><a href="#xmlrpc_registry_process_call">
+          <b>xmlrpc_registry_process_call</b></a>
+      </ul>
+    <li><a href="#faults">Faults</a>
+    <li><a href="#queryregistry">Querying The Registry</a>
+      <ul>
+         <li><a href="#max_stacksize"><b>xmlrpc_registry_max_stackSize</b></a>
+      </ul>
+    <li><a href="#debugging">Debugging</a>
+      <ul>
+        <li><a href="#xmlrpc_env">Erorr Environment Variable</a>
+        <li><a href="#standard_error">Standard Error</a>
+        <li><a href="#trace_xml">
+        XMLRPC_TRACE_XML Environment Variable</a>
+      </ul>
+  </ul>
+  <li><a href="#version">Library Version</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>xmlrpc_server.h</B> header file declares the interface to
+<b>libxmlrpc_server</b>.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>Because the <b>libxmlrpc</b> library is a prerequisite, you'll also
+need its header file (<b>libxmlrpc.h</b>).
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server</b> library is <b>libxmlrpc_server.a</b> or
+<b>libxmlrpc_server.so</b>.  The classic linker option to cause the
+library to be linked into your program is <tt>-l xmlrpc_server</tt>.
+These are hints; you'll have to modify this according to conventions
+of your particular platform.  You'll also have to figure out where the
+library resides and how to make your linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_server</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>A complete example of an XML-RPC server program that uses
+<b>libxmlrpc_server</b> is <a href="index.html#serverexample">here</a>.
+
+<h2 id="method_registry">Method Registry</h2>
+
+<p>An XML-RPC server consists of 1) machinery to receive XML-RPC calls
+and send responses to them (called the XML-RPC protocol driver) and 2)
+methods.  The protocol driver can be constant for various XML-RPC
+server applications.  It's the methods that make a particular XML-RPC
+server what it is.  In the small example server mentioned above, which
+provides the service of adding two numbers together,
+<b>libxmlrpc_server_abyss</b> and an Abyss http server provide the
+protocol driver, and the &quot;sample_add&quot; method code is what
+makes it an addition server.
+
+<p><b>libxmlrpc_server</b> provides a facility to connect the XML-RPC
+protocol driver with the methods.  It is called the method registry.
+It forms a uniform interface that all methods can use to interact with
+all protocol drivers.
+
+<p>The essential structure of an Xmlrpc-c server program is like this:
+The program contains code for each of a bunch of methods.  The program
+creates a method registry and adds each of its methods to the
+registry.  The program then starts up a protocol driver and passes to
+it the full registry.
+
+<p>The protocol driver executes an XML-RPC call through the method registry.
+It passes the XML for the XML-RPC call to the method registry, and the
+method registry executes the appropriate registered method and returns
+the XML for the XML-RPC response to the protocol driver.
+
+
+<h3 id="howto">How To Write A Method Function</h3>
+
+<p>You implement a method as a C function, a pointer to which you
+register with the method in the method registry.
+
+<p>There are two types of method functions, an old one called Type 1
+and a newer one called Type 2.  The difference is that the Type 2
+method function gets more information in its arguments.  New code
+should use Type 2.
+
+<p>A Type 2 method function must have the following prototype:
+
+<pre>
+<code>
+xmlrpc_value *
+mymethod(xmlrpc_env *   envP,
+         xmlrpc_value * paramArrayP,
+         void *         serverInfo,
+         void *         callInfo);
+</code>
+</pre>
+
+<p>Type 1 is the same except the <i>callInfo</i> argument is missing.
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.  You return in this variable the completion
+status of the method.  It comes pre-initialized to a valid state that
+indicates no error has occurred.  You need set it only if an error
+occurs.  The method registry uses the information from this as the
+fault information in the XML-RPC response.
+
+<p><i>paramArrayP</i> gives you the parameters of the XML-RPC call as
+an <a href="libxmlrpc.html#xmlrpc_value">XML-RPC value</a>.  This
+value is an array with one element per parameter, in order.  It might
+be an empty array.  Note that each parameter may be a structure or
+array itself.  It is a historical mistake that <i>*paramArrayP</i> is
+a <b>xmlrpc_value</b> type (at one time, the <b>xmlrpc_value</b> type
+was meant to be a general purpose data structure -- an extension to
+the C language, rather than just an entity for XML-RPC use).  Do not
+let that fool you into thinking that the parameter of the RPC is an
+array.  In XML-RPC, an RPC takes any number of parameters, and the
+<em>elements</em> of this array are those parameters.
+
+<p>The caller (the method registry) naturally provides a reference to
+the parameter xmlrpc_values to cover the method function's use of
+them.  The caller releases such references after the method function
+returns.
+
+<p>The XML-RPC caller (the XML-RPC client) determines what form of
+parameters you get.  Unlike most programming languages, Xmlrpc-c (and
+XML-RPC) give the method writer no way to insist that parameters
+arrive in a certain form.  For example, a method that adds two
+integers together might receive as parameters 3 strings and an array
+of date/times from a confused client.  So the method has to check
+its parameter types.
+
+<p>But the client has no control over the fact that <b>paramArrayP</b>
+points to an array.  That's part of the Xmlrpc-c method registry.
+
+<p><i>serverInfo</i> is a pointer to a data structure that gives some
+information about the server that is calling the method function.  It
+is always the same for a particular method for the life of a server.
+It is opaque to Xmlrpc-c.  It is a value that the server registers for
+the method as part of starting up the server.
+
+<p>If the registry does not contain any server information for
+the method (the code that registered the method didn't provide any),
+<i>serverInfo</i> is a null pointer.
+
+<p>The sample add server doesn't even use <i>serverInfo</i>, but
+here is an example of how a variation on that server might use it:
+Let's say you want the sample add server to keep a log of all the sums
+it reports, for legal purposes.  So at startup time, the server opens
+a log file.  It puts the file descriptor in a &quot;struct
+sumlog&quot; structure and registers a pointer to that structure with
+the sample_add method as its server context.  Now, when the server is
+running, every time the method function runs, it gets that pointer.
+It uses it to get the file descriptor, and uses that to record the sum
+that it computes.
+
+<p>WARNING: Some HTTP servers, and therefore any XML-RPC server based
+on one of them, use multiple processes to handle incoming connections.
+Some forms of XML-RPC servers based on <b>libxmlrpc_server_abyss</b>
+do.  When this is the case, <i>serverInfo</i> does not point to the
+same memory as it did in the process that registered the method.  It
+will normally be a copy of that memory, though, so if you regard it as
+read-only after you register the method, it is still useful.
+
+<p><i>callInfo</i> is a pointer to non-XML-RPC information about the
+XML-RPC call.
+The server supplies <i>callInfo</i> when it calls the
+registry to process the XML-RPC call, such as with
+<a href="#xmlrpc_registry_process_call2">
+<b>xmlrpc_registry_process_call2()</b></a>.  The server doesn't have
+to supply a value for this (old servers couldn't if they wanted to).
+If it doesn't, the method function gets a null pointer.
+
+<p>The value pointed to by <i>callInfo</i> is opaque to the registry;
+its meaning is entirely dependent upon the kind of server, so to use
+it, your method handler function must know what kind of server is
+calling it.  For example, for an Abyss server, it is an Abyss session
+handle (type <b>TSession *</b>), which the method function can use to
+get information from the Abyss server about how the XML-RPC call
+arrived.  In particular, Abyss can typically tell you the IP address
+and TCP port number of the client.  See <a
+href="libxmlrpc_abyss.html#requesthandlerservice"> Request Handler
+Services</a> in the Abyss manual.
+
+<p>See the documentation of the XML-RPC server that uses the registry
+for an explanation of <i>callInfo</i>.  
+
+<p>The return value is meaningful only when the value you return via
+<i>envP</i> indicates success.  The return value is a pointer to an
+XML-RPC value which is the result value of the RPC.  The method
+registry puts this in the XML-RPC response.  You must return the value
+with one reference on it to cover the caller's use of it.  The caller
+(method registry) releases the reference when it is done with it.  If
+you return failure (via <i>envP</i>, the caller ignores the return
+value, so be sure you don't add any references to anything for the
+caller.
+
+
+<h4 id="methodfunctionex">Example Method Function</h4>
+
+<pre>
+<code>
+static xmlrpc_value *
+sample_add(xmlrpc_env *   const envP, 
+           xmlrpc_value * const paramArrayP, 
+           void *         const serverInfo) {
+
+    xmlrpc_int32 x, y, z;
+
+    /* Parse our argument array. */
+    xmlrpc_parse_value(envP, paramArrayP, &quot;(ii)&quot;, &amp;x, &amp;y);
+    if (envP->fault_occurred)
+        return NULL;
+
+    /* Add our two numbers. */
+    z = x + y;
+
+    /* Return our result. */
+    return xmlrpc_build_value(envP, &quot;i&quot;, z);
+}
+</code>
+</pre>
+
+
+<h3 id="defaultmethod">The Default Method Function</h3>
+
+<p>When the client specifies a method name that is not in the method
+registry, the method registry calls the &quot;default method
+function&quot; that you registered.  A registry contains zero or one
+default method function.  You can use this to bypass much of the work
+that the registry does and do your own dispatching of methods: just
+don't register any methods, and all XML-RPC calls will result in a
+call to your default method function.
+
+<p>If you don't register a default method function and an XML-RPC call
+specifies a method name that is not in the registry, the registry
+services automatically return a &quot;no such method&quot; fault
+response.
+
+<p>A default method function has the following prototype:
+
+<pre>
+<code>
+xmlrpc_value *
+my_default_method(xmlrpc_env *   envP,
+                  const char *   host,
+                  const char *   methodName,
+                  xmlrpc_value * paramArrayP,
+                  void *         serverInfo);
+
+</code>
+</pre>
+
+<p><i>envP</i>, <i>paramArrayP</i>, and <i>serverInfo</i> are the
+same as for the regular method function (above).
+
+<p><i>methodName</i> is the method name the client specified in the
+XML-RPC call.  It is a UTF-8 NUL-terminated string, in the case
+(upper/lower) specified in the XML-RPC call.
+
+<p><i>host</i> is meaningless.  See <a
+href="#xmlrpc_registry_add_method2"><b>xmlrpc_registry_add_method2()</b></a>
+for an explanation of the history of this argument.
+
+<p>The interface is otherwise analogous to that for the regular method
+function (above).
+
+<h3 id="registryobject">The Registry Object</h3>
+
+<p>The registry itself has type <b>xmlrpc_registry</b>.  
+
+<p>There is one registry per XML-RPC server.
+
+<p>You create a registry with <b>xmlrpc_registry_new()</b> and destroy
+one with <b>xmlrpc_registry_free()</b>.
+
+<h3 id="addmethod">Adding Methods To The Registry</h3>
+
+<p>You can create a method in the registry by calling 
+<b>xmlrpc_registry_add_method3()</b>.  Call this once for each method
+your server is to have.
+
+<p>The slightly more complex <b>xmlrpc_registry_add_method_w_doc</b>
+is the same as <b>xmlrpc_registry_add_method()</b> except that it has
+additional arguments for you to specify documentation of the method.
+The registry uses this documentation to implement the introspection
+<a href="#systemmethod">system methods</a>.
+
+<h4 id="xmlrpc_registry_add_method3">xmlrpc_registry_add_method3</h4>
+
+<p>This function adds a method to a registry.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_registry * registryP;
+    xmlrpc_method2 method;
+
+    ...
+
+    struct xmlrpc_method_info3 const methodInfo = {
+        .methodName     = &quot;sample.add&quot;,
+        .methodFunction = &amp;sample_add,
+    };
+    xmlrpc_registry_add_method3(&amp;env, registryP, &amp;methodInfo);
+</code>
+</pre>
+
+
+<p>The prototype is as follows:
+
+<pre>
+<code>
+typedef xmlrpc_value *
+(*xmlrpc_method2)(xmlrpc_env *   const envP,
+                  xmlrpc_value * const paramArrayP,
+                  void *         const serverInfo,
+                  void *         const callInfo);
+
+struct xmlrpc_method_info3 {
+    const char *      methodName;
+    xmlrpc_method2    methodFunction;
+    void *            serverInfo;
+    size_t            stackSize;
+    const char *      signatureString;
+    const char *      help;
+};
+
+void
+xmlrpc_registry_add_method3(
+    xmlrpc_env *                       const envP,
+    xmlrpc_registry *                  const registryP,
+    const struct xmlrpc_method_info3 * const infoP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.
+
+<p><i>registryP</i> identifies the registry to which you are adding
+the method (you must have created it with <b>xmlrpc_registry_new()</b>).
+
+<p><i>infoP</i> points to a structure of information about the method
+you're adding.  The structure has no higher meaning -- it is just a
+convenient way to pass arguments to
+<b>xmlrpc_registry_add_method3</b>.  It is designed so that the value
+that means &quot;not present&quot; for any optional member is
+represented as zero bits.
+
+<ul>
+
+<li><i>methodName</i> is the name you are assigning to the new method.
+This is the name an XML-RPC caller uses to identify what method he is
+calling.  If there is already a method by that name in the registry,
+the add fails.  The name is composed of Unicode characters and case
+matters: if you register a function for &quot;myMethod&quot;, a call
+to &quot;mymethod&quot; will not use that function.  <i>methodName</i>
+is a UTF-8 NUL-terminated string.
+
+<li><i>methodFunction</i> is a pointer to the <a
+href="#methodfunction">method function</a> for the method.
+
+<li><i>stackSize</i> is the amount of stack space, in bytes, that
+<i>methodFunction</i> requires.  This includes the stack space
+requirements of any function that <i>methodFunction</i> calls.  If you
+estimate too low, results are undefined (the function could overrun
+its stack).  If you estimate too high, you may waste memory.
+
+<p>Zero means you don't know, which causes
+<b>xmlrpc_registry_add_method3()</b> to assume 128K.
+
+<li><i>signature</i> is a string that describes the information that
+the <a
+href="#system.methodSignature"><b>system.methodSignature</b></a>
+method is to return for the method that you are adding.  The
+information is supposed to tell the form of parameters that the method
+takes.
+
+<p>The string looks something like this example:
+
+<code>
+i:iii,s:
+</code>
+.
+
+It is a list of signature strings, separated by commas.  In the example, there
+are two signatures:
+<ul>
+<li><code>i:iii</code>
+<li><code>s:</code>
+</ul>
+
+<p>Each signature string describes one form of calling the method.  A signature
+string has the form:
+
+<pre>
+     <i>&lt;resultType&gt;</i><b>:</b><i>&lt;1stParmType&gt;</i><i>&lt;2ndParmType&gt;</i>...
+</pre>
+
+<p><i>resultType</i> and <i>xxxParmType</i> are one character, corresponding
+to the type given here by the XML element name:
+
+<dl>
+<dt><i>i</i> <dd>int
+<dt><i>b</i> <dd>boolean
+<dt><i>d</i> <dd>double
+<dt><i>s</i> <dd>string
+<dt><i>8</i> <dd>dateTime.iso8601
+<dt><i>6</i> <dd>base64
+<dt><i>S</i> <dd>struct
+<dt><i>A</i> <dd>array
+<dt><i>n</i> <dd>nil
+</dl>
+
+<p>Note that there is no way to describe the specific contents of a struct
+or array.
+
+<p>Note that XML-RPC method always has exactly one return value, so
+there is always one character followed by a colon (<b>:</b>).  An
+XML-RPC method can have any number of parameters, including zero, so
+there can be any number of characters, including zero, after the
+colon.
+
+<p>To decline to state the signatures, use a null pointer for
+<i>signature</i>.  If you do that, <b>system.MethodSignature</b> will return a
+special response that says, &quot;I frankly have no idea.&quot;
+
+<p>A signature list of &quot;?&quot; is equivalent to a null pointer and
+before Xmlrpc-c 1.05 (March 2006), that was the only way.  But it is
+deprecated now.
+
+<li><i>help</i> is the help text that <a
+href="#system.methodHelp"><b>system.methodHelp</b></a> will return for
+the method.  To decline to supply help text, use a null pointer for
+<i>help</i>.  If you do that, <b>system.methodHelp</b> will return
+text that says something to the effect of, &quot;wouldn't you like to
+know?&quot;
+
+<li><i>serverInfo</i> is a pointer to a data structure that gives
+information about the server that will call the method function.  It
+is opaque to Xmlrpc-c; the data structure must be meaningful to the
+method function.  This may be a null pointer to indicate no server
+context.
+
+</ul>
+
+<p>This function was new in Xmlrpc-c 1.16 (September 2008).  In older
+Xmlrpc-c, use
+<a href="#xmlrpc_registry_add_method2">
+<b>xmlrpc_registry_add_method2()</b></a> instead.
+
+
+<h4 id="xmlrpc_registry_add_method2">xmlrpc_registry_add_method2</h4>
+
+<p>This function adds a method to a registry.
+
+<p>This function is obsolete; use <b>xmlrpc_registry_add_method3()</b>
+if possible.
+
+<p>The prototype is as follows:
+
+<pre>
+<code>
+void
+xmlrpc_registry_add_method2(xmlrpc_env *      envP,
+                            xmlrpc_registry * registryP,
+                            const char *      methodName,
+                            xmlrpc_method     methodFunction,
+                            const char *      signature,
+                            const char *      help,
+                            void *            serverInfo);
+
+</code>
+</pre>
+
+<p><i>envP</i> and <i>registryP</i> arguments are analogous to
+the corresponding arguments of <b>xmlrpc_registry_add_method3()</b>.
+The remaining arguments are analogous to the like-named members of
+the <b>struct xmlrpc_method_info3</b> which is an argument to
+<b>xmlrpc_registry_add_method3()</b>.
+
+<p>This function was new in Xmlrpc-c 1.07 (October 2006).  In older
+Xmlrpc-c, use
+<a href="#xmlrpc_registry_add_method_w_doc">
+<b>xmlrpc_registry_add_method_w_doc</b></a> instead.
+
+
+<h4 id="xmlrpc_registry_add_method">xmlrpc_registry_add_method</h4>
+
+<p>This function adds a method to a registry.
+
+<p>This function is obsolete; use
+<a href="#xmlrpc_registry_add_method3">
+<b>xmlrpc_registry_add_method3()</b></a> instead if possible.
+
+<p>The prototype is as follows:
+
+<pre>
+<code>
+void
+xmlrpc_registry_add_method(xmlrpc_env *      envP,
+                           xmlrpc_registry * registryP,
+                           const char *      host,
+                           const char *      methodName,
+                           xmlrpc_method     methodFunction,
+                           void *            serverInfo);
+
+</code>
+</pre>
+
+<p>Arguments have the same meaning as the identically named arguments
+of 
+<a href="#xmlrpc_registry_add_method2">
+<b>xmlrpc_registry_add_method2()</b></a>.
+
+<p><i>host</i> is meaningless.  (It was once planned to be used so
+that a single registry could contain separate methods for separate
+hosts.  Note that an HTTP server (and thus an XML-RPC server) can
+serve multiple hosts, each of which has a unique host name, such as
+&quot;xmlrpc_1.giraffe-data.com&quot;.  But current strategy is to
+handle multiple hosts by having a separate registry for each one.
+However, nothing for distinguishing multiple hosts exists today).
+
+
+<h4 id="xmlrpc_registry_add_method_w_doc">xmlrpc_registry_add_method_w_doc</h4>
+
+<p>This function adds a method to a registry.  It is just like <a
+href="#xmlrpc_registry_add_method2"><b>xmlrpc_registry_add_method2()</b></a>
+except that it registers a Type 1 handler, whereas the latter registers
+a Type 2 handler.
+
+<p>This function is obsolete; use
+<a href="#xmlrpc_registry_add_method3">
+<b>xmlrpc_registry_add_method3()</b></a> instead if possible
+
+<p>The prototype is as follows:
+
+<pre>
+<code>
+void
+xmlrpc_registry_add_method_w_doc(xmlrpc_env *      envP,
+                                 xmlrpc_registry * registryP,
+                                 const char *      host,
+                                 const char *      methodName,
+                                 xmlrpc_method     methodFunction,
+                                 void *            serverInfo,
+                                 const char *      signature,
+                                 const char *      help);
+</code>
+</pre>
+
+<p>The arguments mean the same as for
+<a href="#xmlrpc_registry_add_method2">
+<b>xmlrpc_registry_add_method2()</b></a> and
+<a href="#xmlrpc_registry_add_method">
+<b>xmlrpc_registry_add_method()</b></a>
+
+
+<h3 id="registerdefault">Registering A Default Method Function</h3>
+
+<pre>
+<code>
+
+typedef xmlrpc_value *
+(*xmlrpc_default_method)(xmlrpc_env *   envP,
+                         const char *   callInfoP,
+                         const char *   methodName,
+                         xmlrpc_value * paramArrayP,
+                         void *         serverInfo);
+
+void
+xmlrpc_registry_set_default_method(xmlrpc_env *          envP,
+                                   xmlrpc_registry *     registryP,
+                                   xmlrpc_default_method handler,
+                                   void *                serverInfo);
+
+</code>
+</pre>
+
+<p>This function registers a <a href="#defaultmethod">default method
+function</a>.  A registry can have at most one default method
+function.  If one is already registered,
+<b>xmlrpc_registry_set_default_method()</b> fails.
+
+<p>The function is analogous to that of <b>xmlrpc_registry_add_method()</b>.
+
+
+<h3 id="miscoptions">Miscellaneous Registry Options</h3>
+
+<h4 id="disable_introspection">
+<b>xmlrpc_registry_disable_introspection</b></h4>
+
+<p>This function modifies the registry so that the built in
+introspection <a href="#systemmethod">system methods</a> do not exist,
+as they do by default.
+
+<p>There is no way to reverse this.
+
+<p>Example:
+
+<pre>
+<code>
+  xmlrpc_env env;
+  xmlrpc_registry * const registryP = xmlrpc_registry_new(&amp;env);
+
+  xmlrpc_registry_disable_introspection(registryP);
+</code>
+</pre>
+
+
+<h4 id="set_shutdown"><b>xmlrpc_set_shutdown</b></h4>
+
+<p>This function modifies the registry to set the shutdown function.
+By default, a registry has no shutdown function, which means it has no
+way to shut down the server.  In particular, the <b>system.shutdown</b>
+<A href="#systemmethod">system method</A> always fails.
+
+<p>There is no way to reverse this.
+
+<p>Example:
+
+<pre>
+<code>
+  
+  static xmlrpc_server_shutdown_fn requestShutdown;
+  
+  static void
+  requestShutdown(xmlrpc_env * const faultP,
+                  void *       const context,
+                  const char * const comment,
+                  void *       const callInfo) {
+  
+      int * const terminationRequestedP = context;
+  
+      xmlrpc_env_init(faultP);
+  
+      fprintf(stderr, "Termination requested: %s\n", comment);
+      
+      *terminationRequestedP = 1;
+  }
+
+  ...
+
+  {
+      xmlrpc_env env;
+      int terminationRequested;
+
+      xmlrpc_registry * const registryP = xmlrpc_registry_new(&amp;env);
+
+      xmlrpc_set_shutdown(registryP, &amp;requestShutdown, &amp;terminationRequested);
+      ...
+  }
+</code>
+</pre>
+
+<p>Protoype:
+
+<pre>
+<code>
+    void
+    xmlrpc_registry_set_shutdown(xmlrpc_registry *           const registryP,
+                                 xmlrpc_server_shutdown_fn * const shutdownFn,
+                                 void *                      const context);
+</code>
+</pre>
+
+<p><i>registryP</i> identifies the registry in which you're setting the
+shutdown function.
+
+<p><i>shutdownFn</i> is a function pointer to the function.
+
+<p><i>context</i> is a value that has meaning to the shutdown function,
+but is opaque to Xmlrpc-c.
+
+<p>When the registry wants to shut down the server (to wit, when it processes
+a <b>system.shutdown</b> RPC), it calls the shutdown function.  The arguments
+to the shutdown function are:
+
+<ol>
+
+<li>Pointer to an <a href="libxmlrpc_util.html#env">error environment
+variable</a> that the shutdown function sets to indicate the success
+of the shutdown.  The registry passes this information back to the
+XML-RPC client as the result of the <b>system.shutdown</b> method.
+
+<p>Note that this is not a regular error environment variable; it does
+not tell the caller of the function whether the function did what it
+was asked to do; refusing to shut down for a good reason is considered
+a successful execution of the shutdown function, and there is in fact
+no way for a shutdown function to report that it failed.  A practical
+difference between this argument and regular error environment
+variable is that it is not an <em>input</em> to the shutdown function.
+You must always initialize the variable (with
+<b>xmlrpc_env_init()</b>).
+
+<li>The value that was the <i>context</i> argument to
+<b>xmlrpc_registry_set_shutdown</b>.
+
+<li>A comment describing the shutdown (to wit, the parameter of the
+<b>system.shutdown</b> method -- information from the XML-RPC client).
+
+<li>non-XML-RPC transport information about the XML-RPC call that
+requested the shutdown.  This is the same thing as the <i>callInfo</i>
+argument to a Type 2 <a href="#howto">method function</a>.
+
+<p>That means, in the typical case, it's an Abyss session handle (type
+<b>TSession *</b>), and you can use it to find out the IP address and
+port number of the requester and possibly determine whether the requester
+has permission to shut down the server.
+
+<p>Before Xmlrpc-c 1.07 (October 2006), this argument is not present;
+there are only 3 arguments.
+
+</ol>
+
+<p>Note that once you've set a shutdown function, anyone who can get an
+XML-RPC call to your server can cause it to run.  So if you don't want
+just anyone to be able to shut down your server, your shutdown function
+must do some kind of permission check.
+
+
+<h4 id="set_dialect"><b>xmlrpc_set_dialect</b></h4>
+
+<p>This function modifies the registry to set the <a
+href="libxmlrpc.html#dialect">dialect</a> for responses.  By default
+(if you have never set the dialect), when an XML-RPC server executes an
+XML-RPC method via the registry, the response goes in the i8 dialect.
+
+<p>Example:
+
+<pre>
+<code>
+  xmlrpc_env env;
+  xmlrpc_registry * const registryP = xmlrpc_registry_new(&amp;env);
+
+  xmlrpc_registry_set_dialect(&amp;env, registryP, xmlrpc_dialect_apache);
+</code>
+</pre>
+
+<p>Protoype:
+
+<pre>
+<code>
+    void
+    xmlrpc_registry_set_dialect(xmlrpc_env *      const envP,
+                                xmlrpc_registry * const registryP,
+                                xmlrpc_dialect    const dialect);
+</code>
+</pre>
+
+<p><i>registryP</i> identifies the registry in which you're setting the
+dialect.
+
+<p><i>dialect</i> is the dialect you're setting.
+
+<p>This function was new in Xmlrpc-c 1.11 (June 2007).  Before that,
+responses sent via the registry are always in the i8 dialect.
+
+
+<h3 id="systemmethod">System Methods</h3>
+
+<p>There are some methods, called system methods, that the registry
+implements internally (I.e. you don't use
+<b>xmlrpc_registry_add_method</b> to add one).  A system method is
+concerned with the basic operation of the server rather than whatever
+job the particular server does.
+
+<h4 id="introspection">Introspection</h4>
+
+<p><b>libxmlrpc_server</b> provides system methods to implement the
+XML-RPC Introspection facility.  This facility is a
+<a href="http://xmlrpc-c.sourceforge.net/introspection.html">
+standard set of methods</a> that are defined to return information
+about the server that runs them.  In particular, they return a list of
+all the methods the server implements and information about them.
+
+<p>If you consider introspection an unacceptable invasion of privacy,
+you can disable introspection by calling
+<a href="#disable_introspection">
+<b>xmlrpc_registry_disable_introspection()</b></a>.  Then the server
+will not have those methods.  In a new registry, introspection is
+enabled.
+
+<P>The introspection methods are:
+
+<ul>
+<li><b>system.listMethods</b>
+<li><b>system.methodSignature</b>
+<li><b>system.methodHelp</b>
+</ul>
+
+<h5 id="system.listMethods">system.listMethods</h5>
+
+<p>This method returns a list of the methods the server has, by name.
+
+<p>This is an introspection method.
+
+<h5 id="system.methodSignature">system.methodSignature</h5>
+
+<p>This method returns a description of the argument format a
+particular method expects.  You optionally supply this information
+when you add the method to the registry.  If you don't supply the
+information, the response is of a form (defined by the introspection
+standard) that says, &quot;I don't know.&quot;
+
+<h5 id="system.methodHelp">system.methodHelp</h5>
+
+<p>This method returns a text description of a particular method.  You
+supply this information when you add the method to the registry.  If
+you don't this method returns &quot;I know nothing.&quot;
+
+<h4 id="systemOther">Other</h4>
+
+<h5 id="system.capabilities">system.capabilities</h5>
+
+<p>This method returns information about the server's capabilities at
+the XML-RPC level.  A client can use this information to tell how to
+talk to the server.  This is information determined entirely by what
+Xmlrpc-c code is running -- it is hardcoded into Xmlrpc-c.
+
+<p>There are no parameters.
+
+<p>The result is a structure.  The members of the structure are as follows:
+
+<table rules="all" summary="system.capabilities result">
+
+<tr>
+<th>key
+<th>type
+<th>value
+
+<tr>
+<td><tt>facility</tt>
+
+<td>string
+
+<td>This is meant to be the most general class of XML-RPC facility.
+Its value is <tt>xmlrpc-c</tt>, and will be in all future releases of
+Xmlrpc-c.
+
+<tr>
+<td><tt>version_major</tt>
+
+<td>integer
+
+<td>Major version number to qualify <b>facility</b>.  The Xmlrpc-c major
+release number.  E.g. for Xmlrpc-c 1.15.02, it is 1.
+
+<tr>
+<td><tt>version_minor</tt>
+
+<td>integer
+
+<td>Same as <b>version_major</b>, except for the minor number.
+E.g. for Xmlrpc-c 1.15.02, it is 15.
+
+<tr>
+<td><tt>version_point</tt>
+
+<td>integer
+
+<td>Same as <b>version_point</b>, except for the point number.
+E.g. for Xmlrpc-c 1.15.02, it is 2.
+
+<tr>
+<td><tt>protocol_version</tt>
+
+<td>integer
+
+<td>The version of the protocol spoken by the server.  For a true XML-RPC
+server, this is meaningless because there is only one XML-RPC.  But since
+servers often speak extensions of XML-RPC, this number can differentiate.
+
+<p>The number is such that protocol version N is backward compatible with
+version N-1.  I.e. a client can do a simple greater-than test to determine
+how to talk to the server.
+
+<p>Xmlrpc-c returns 2 for this.  That alludes to the fact that it speaks
+an extension to pure and minimal XML-RPC, which would be 1.
+
+</table>
+
+<p>The architectural intent of this method is to have members added in
+future releases of Xmlrpc-c to refer to newly added features.  Clients
+ideally will never make decisions based on the facility, facility
+version, and protocol version.
+
+<p>Note that this is an Xmlrpc-c invention.  This method does not
+exist (so far as I know, May 2008) on any server not running Xmlrpc-c.
+But the architectural intent is that it exist on other servers.
+
+<p>Do not confuse this with <a
+href="#system.getCapabilities"><b>system.getCapabilities</b></a>.  The two
+methods have similar goals; the conceptual differences are:
+
+<ul>
+<li><b>system.getCapabilities</b> is more standard.  Lots of XML-RPC
+server software implements it, whereas <b>capabilities</b> is generally
+available only on servers that run Xmlrpc-c.
+
+<li><b>system.capabilities</b> is more general.  While
+<b>system.getCapabilities</b> contemplates only facilities that are either
+present or not present (and tells you which), <b>system.capabilities</b> can
+represent a parameterized capability.  For example, it could hypothetically
+have a &quot;maximum string size&quot; capability.
+
+</ul>
+
+<p>This method was new in Xmlrpc-c 1.15 (June 2008).
+
+<h5 id="system.getCapabilities">system.getCapabilities</h5>
+
+<p>This method returns information about the server's capabilities at
+the XML-RPC level.  A client can use this information to tell how to
+talk to the server.  This is information determined entirely by what
+Xmlrpc-c code is running -- it is hardcoded into Xmlrpc-c.
+
+<p>This is a <a
+href="http://tech.groups.yahoo.com/group/xml-rpc/message/2897">standard
+method</a> found on many XML-RPC servers, whether they run Xmlrpc-c or not.
+
+<p>There are no parameters.
+
+<p>The result is a structure.  The members of the structure are as
+follows:
+
+<table rules="all" summary="system.getCapabilities result">
+
+<tr>
+<th>key
+<th>type
+<th>value
+
+<tr>
+<td><tt>introspection</tt>
+<td>structure
+<td>
+  <p>As specified by the <a
+  href="http://xmlrpc-c.sourceforge.net/xmlrpc-c/introspection.html">introspection
+  specification</a>:
+
+  <table rules="all" summary="system.getCapabilities introspection result">
+
+  <tr>
+  <th>key
+  <th>type
+  <th>value
+  
+  <tr>
+  <td><tt>specUrl</tt>
+  <td>string
+  <td><tt>http://xmlrpc-c.sourceforge.net/xmlrpc-c/introspection.html</tt>
+
+  <tr>
+  <td><tt>specVersion</tt>
+  <td>integer
+  <td>1
+
+  </table>
+
+</table>
+
+<p>The architectural intent of this method is to have structure members added
+in future releases of Xmlrpc-c to refer to newly added standard features.
+Each will have a characteristic, standard member name.
+
+<p>This method was new in Xmlrpc-c 1.18 (March 2009).
+
+<h5 id="system.methodExist">system.methodExist</h5>
+
+<p>This method tells you whether or not a method by a specified name
+exists on the server.
+
+<p>The method has one argument: the method name in question, as a string.
+
+<p>The result is a boolean value: true means the method exists; false
+means it doesn't.
+
+<p>Note that this is not part of the <a
+href="#introspection">XML-RPC Introspection facility</a>.  So it works
+even on a server on which introspection is disabled.
+
+<p>This method was new in Xmlrpc-c 1.15 (June 2008).
+
+
+<h5 id="system.shutdown">system.shutdown</h5>
+
+<p>This method shuts down the server.
+
+<p>Since shutting down the server is not really something that can be
+done internally to the registry, it does all the work by calling the
+shutdown function that was set in the registry with <a
+href="#set_shutdown"><b>xmlrpc_registry_set_shutdown</b></a> to do
+this.  If you did not set the shutdown function (did not call
+<b>xmlrpc_registry_set_shutdown</b>), <B>system.shutdown</B> fails.
+
+<p>Note that Xmlrpc-c's C Abyss XML-RPC server facilities provide a suitable
+shutdown function when you set the server up properly.  See
+the <a href="libxmlrpc_server_abyss.html#enable_shutdown">
+<b>enable_shutdown</b> server parameter</a>.
+
+<p>This method has one argument: an explanation of why you are shutting down
+the server, as a string.  Your shutdown function gets this string value and
+does what it wants with it; a typical use is to record it in a log for use
+by an administrator.
+
+<h5 id="system.multicall">system.multicall</h5>
+
+<p>This method takes an array describing multiple XML-RPC calls, executes
+them, and returns an array of responses.
+
+
+<h3 id="executemethod">Executing A Method</h3>
+
+<p>This section describes the client-facing interface to the method
+registry.  This is the interface that an XML-RPC protocol driver uses
+to talk to the registry.
+
+<h4 id="xmlrpc_registry_process_call2">
+<b>xmlrpc_registry_process_call2</b></h4>
+
+<p><b>xmlrpc_registry_process_call()</b> executes an XML-RPC call,
+given in XML form, and returns the response, again in XML form.
+This entails looking up the named method in the registry and calling
+the method function associated with it.
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+xmlrpc_registry_process_call2(xmlrpc_env *        envP,
+                              xmlrpc_registry *   registryP,
+                              char *              callXml,
+                              size_t              callLen,
+                              void *              callInfo,
+                              xmlrpc_mem_block ** outputPP);
+</code>
+</pre>
+
+<p><i>envP</i> is an <a href="libxmlrpc_util.html#env">error environment
+variable</a> pointer.  <b>xmlrpc_registry_process_call2()</b> does not
+return failures of the method via this; if the method fails,
+<b>xmlrpc_registry_process_call2()</b> still succeeds, and returns an
+XML-RPC response that indicates the method failure.  <i>envP</i> is
+for internal problems that prevent the method from executing at all.
+
+<p><i>registryP</i> identifies the method registry through which the
+call is to be made.  You must have previously created this registry
+and added appropriate methods to it.
+
+<p><i>callXml</i> and <i>callLen</i> are an ASCII array/length string
+that contains the complete XML of the XML-RPC call.  It isn't necessarily
+valid.
+
+<p>The function returns at <i>outputPP</i> a <a
+href="libxmlrpc_util.html#memoryblock">memory block</a> with elements of
+type <b>char</b>.  It is the complete XML of the XML-RPC response to
+the XML-RPC call.  You create the memory block.  The caller destroys
+it.  The registry ensures that this is a valid XML-RPC response,
+regardless of what the method function does.
+
+<p>To make this function trace the XML input and output, see the <a
+href="#trace_xml">XMLRPC_TRACE_XML</a> environment variable.
+
+<p>This function was new in Xmlrpc-c 1.07 (October 2006).  Before
+that, use <a href="#xmlrpc_registry_process_call">
+<b>xmlrpc_registry_process_call()</b></a>.
+
+
+<h4 id="xmlrpc_registry_process_call"><b>xmlrpc_registry_process_call</b></h4>
+
+<p><b>xmlrpc_registry_process_call()</b> is the same as <a
+href="#xmlrpc_registry_process_call2"></a>
+<b>xmlrpc_registry_process_call2()</b> with a null <i>callInfo</i>
+argument.  It is obsolete; use
+<b>xmlrpc_registry_process_call2()</b> instead if possible.
+
+
+<p>Prototype:
+
+<pre>
+<code>
+xmlrpc_mem_block *
+xmlrpc_registry_process_call(xmlrpc_env *      envP,
+                             xmlrpc_registry * registryP,
+                             char *            host,
+                             char *            callXml,
+                             size_t            callLen);
+</code>
+</pre>
+
+<p>The return value takes the place of the <i>outputPP</i> argument
+of <b>xmlrpc_registry_process_call2()</b>.
+
+<p><i>host</i> is meaningless.  See <a
+href="#xmlrpc_registry_add_method2"><b>xmlrpc_registry_add_method2()</b></a>
+for an explanation of the history of this argument.
+
+<h3 id="faults">Faults</h3>
+
+<p>Method registry facilities that execute an RPC may generate a fault
+response for the RPC.  Sometimes the details of that fault are supplied
+by the registered method function; sometimes they come from Xmlrpc-c
+directly.
+
+<p>Where Xmlrpc-c generates a fault directly, the fault code is one of the
+ones enumerated for <a href="libxmlrpc_util.html#usingenv"><b>environment
+variables</b></a>.  Where Xmlrpc-c takes fault information from the registered
+method function, the fault code is entirely up to that function.  Note that
+this means Xmlrpc-c does not conform to the <a
+href="http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php">Fault Code
+Interoperability standard</a>.
+
+
+<h3 id="queryregistry">Querying The Registry</h3>
+
+<h4 id="max_stackSize"><b>xmlrpc_registry_max_stackSize()</b></h4>
+
+<p>This function tells you the maximum method function stack space
+among all the methods registered in the registry.  You could use this
+information to allocate a stack in a thread that is going to execute
+some method via the registry.  E.g. a thread that calls
+<b>xmlrpc_registry_process_call2()</b>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    size_t
+    xmlrpc_registry_max_stackSize(xmlrpc_registry * const registryP);
+</code>
+</pre>
+
+<p>The value returned concerns only the method functions themselves, using
+information provided by whoever registered them (see the <i>stackSize</i>
+member of the <b>struct xmlrpc_method_info3</b> argument
+to <b>xmlrpc_registry_add_method3</b>).  A thread that executes methods
+also has to allow stack space for whatever calls those functions.
+
+<p>Where the user didn't provide stack size information, Xmlrpc-c guesses.
+
+<p>If there are no methods registered,
+<b>xmlrpc_registry_max_stackSize()</b> returns 0.
+
+<p>This function was new in Xmlrpc-c 1.16 (September 2008).  Older
+Xmlrpc-c provides no facility for managing stack size.
+
+
+<h3 id="debugging">Debugging</h3>
+
+<p>This section describes some facilities and techniques for debugging
+programs that use <b>libxmlrpc_server</b>.
+
+<h3 id="xmlrpc_env">Error Environment Variable</h3>
+
+<P>First of all, if a library call fails, look at the error message!  Almost
+every Xmlrpc-c library call returns a detailed English description of why it
+failed.  See <a href="libxmlrpc_util.html#env">Error Environment Variable</a>.
+
+<p>And you must check each call for failure.  If you fail to notice that a
+library call has failed, you will be quite confused about the results of
+subsequent calls.  <strong>Note that example code often <em>doesn't</em> check
+each call for failure</strong>, because it clutters code which is trying to
+demonstrate something else.  So if the example doesn't work for you, insert
+error checking in the obvious places.
+
+<h4 id="standard_error">Standard Error</h4>
+
+<p>The trace facilities described here write messages to the Standard
+Error file descriptor via the Standard Error stream of the standard C
+library (<b>stderr</b>).  So make sure you have one.  Many server
+processes don't (they explicitly close the one that the system setup
+code provides).
+
+<h4 id="trace_xml">XMLRPC_TRACE_XML Environment Variable</h4>
+
+<p>If you set the <b>XMLRPC_TRACE_XML</b> environment variable to
+<b>1</b>, the <b>libxmlrpc_server</b> registry functions print to
+Standard Error the XML of the call and of the response, in addition to
+their normal processing.
+
+<p>Note that this same environment variable does the same thing for
+Xmlrpc-c clients, in the same way.  See <a
+href="libxmlrpc_client.html#trace_xml">client documentation</a>
+for the gritty details.
+
+<h4 id="driver">Test Drivers</h4>
+
+<p>Once you've implemented an XML-RPC server (regardless of whether you
+use Xmlrpc-c libraries to do it), you need a convenient way to send it
+RPCs and test it out.
+
+<p>Xmlrpc-c's <a href="index.html#xmlrpc"><b>xmlrpc</b></a> program is
+good for that.  It lets you generate just about any XML-RPC RPC and
+see the result.
+
+<p>There used to be online XML-RPC client services, where you fill in a form
+in a web page and either the web server or your browser sends an RPC to an
+XML-RPC server of your choice.  But as of August 2012, the one at
+gggeek.damacom.it doesn't exist, and likewise gggeek.raprap.it, and the one at
+phpxmlrpc.sourceforge.net doesn't work (doesn't make a TCP connection to the
+server, then complains that it didn't get an accectable HTTP response from
+it).
+
+
+<h2 id="version">Library Version</h2>
+
+<p><b>xmlrpc_server_version()</b> tells you what version (release, level) of
+<b>libxmlrpc_server</b> is linked to your program.
+
+<p>Example:
+
+<pre>
+<code>
+    unsigned int major, minor, point;
+    xmlrpc_server_version(&amp;major, &amp;minor, &amp;point);
+
+    printf(&quot;libxmlrpc_server version %u.%u.%u\n&quot;, major, minor, point);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_server_version(unsigned int * const majorP,
+                          unsigned int * const minorP,
+                          unsigned int * const pointP);
+</code>
+</pre>
+
+<p>This is declared in <b>&lt;xmlrpc-c/server.h&gt;</b> as follows:
+
+<P>The numbers returned are those you see in regular text references to
+the version of XML-RPC For C/++ from which that <b>libxmlrpc_server</b> comes,
+E.g. &quot;1.16.31.&quot;
+
+<p>This function was new in Xmlrpc-c <b>1.25</b> (December 2010).  Before
+that, you can use the following external integer variables (Still available,
+but now deprecated, because it's not possible to export integer variables
+directly in a Windows DLL).
+
+<pre>
+<code>
+    extern unsigned int const xmlrpc_server_version_major;
+    extern unsigned int const xmlrpc_server_version_minor;
+    extern unsigned int const xmlrpc_server_version_point;
+</code>
+</pre>
+
+<p>These symbols were new in Xmlrpc-c 1.13 (December 2007).
+
+</body>
+</html>

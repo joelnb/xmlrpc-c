@@ -1,0 +1,395 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server_cgi</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server_cgi</b> function library, which is part of XML-RPC
+For C/C++ (Xmlrpc-c).  Also see <a href="libgeneral.html">General
+Library Information - C</a>
+
+<p>The <b>libxmlrpc_server_cgi</b> library provides functions for use
+in a program that is an XML-RPC server based on CGI (Common Gateway
+Interface) scripts run by a web server.
+
+<p>When using <b>libxmlrpc_server_cgi</b>, you must also use the <a
+href="libxmlrpc.html"><b>libxmlrpc</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server_cgi</b> library routines depend on it.
+
+<p>Similarly, you will need the <a
+href="libxmlrpc_server.html">libxmlrpc_server</a> library.  It
+contains functions for XML-RPC servers that are not specific to
+CGI-based servers.  And <b>libxmlrpc_server_cgi</b> library
+routines depend on it.
+
+<p>There is a C++ equivalent of this library: <a
+href="libxmlrpc_server_cgi++.html"><b>libxmlrpc_server_cgi++</b></a>.
+
+<p>Before Xmlrpc-c 1.03 (June 2005), the library was called
+<b>libxmlrpc_cgi</b>.  The name was changed for consistency with
+other components.
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#aboutcgi">About CGI</a>
+<li><a href="#howtosetup">How To Set Up A CGI-Based Server</a>
+<li><a href="#styles">Styles Of CGI Server Programs</a>
+<li><a href="#howto">How To Write A CGI Server Program</a>
+  <ul>
+  <li><a href="#process_call"><b>xmlrpc_server_cgi_process_call</b></a>
+  <ul>
+  <li><a href="#process_call_example">Example</a>
+  </ul>
+
+  </ul>
+<li><a href="#oldmethod">Old Internal Registry Facility</a>
+  <ul>
+  <li><a href="#init"><b>xmlrpc_cgi_init()</b></a>
+  <li><a href="#cleanup"><b>xmlrpc_cgi_cleanup()</b></a>
+  <li><a href="#add_method"><b>xmlrpc_cgi_add_method()</b></a>
+  <li><a href="#add_method_w_doc"><b>xmlrpc_cgi_add_method_w_doc()</b></a>
+  <li><a href="#process_call_old"><b>xmlrpc_cgi_process_call()</b></a>
+  <li><a href="#registry"><b>xmlrpc_cgi_registry()</b></a>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_server_cgi.h&gt;</B> header file declares the
+interface to <b>libxmlrpc_server_cgi</b>.  
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it, or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>Because the <b>libxmlrpc</b> and <b>libxmlrpc_server</b> libraries
+are prerequisites, you'll also need their header files
+(<b>xmlrpc.h</b> and <b>xmlrpc_server.h</b>).
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server_cgi</b> library is
+<b>libxmlrpc_server_cgi.a</b> or <b>libxmlrpc_server_cgi.so</b>.
+The classic linker option to cause the library to be linked into your
+program is <tt>-l xmlrpc_server_cgi</tt>.  These are hints; you'll
+have to modify this according to conventions of your particular
+platform.  You'll also have to figure out where the library resides
+and how to make your linker look there for it.  Or use 
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_server_cgi</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_server
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>For a complete example of an XML-RPC server program that uses
+<b>libxmlrpc_server_cgi</b>, see <a
+href="index.html#cgiexample">CGI Server Example</a>.
+
+<h2 id="aboutcgi">About CGI</h2>
+
+<p>CGI (Common Gateway Interface) is a standard for use in web servers.
+It is a protocol for the web server to use in calling a user-supplied
+program to perform the meat of an HTTP request.  Whereas a web server
+executes a classic HTTP GET request by sending the contents of a file
+named in the GET request, the web server can be configured instead to
+run an arbitrary CGI program.  The program gets the data that came
+with the GET request and generates the data to be sent back in response.
+CGI also works with requests other than GET, including POST.
+
+<p>Since XML-RPC is implemented over HTTP (and a web server is an HTTP
+server), all you need for an XML-RPC server is a web server configured
+to invoke a CGI program that knows how to execute an XML-RPC call.
+<b>libxmlrpc_server</b>'s <a
+href="libxmlrpc_server.html#method_registry">method registry</a>
+provides all the logic you need to execute an XML-RPC call, so all you
+have to do is hook that up to the CGI interface.
+<b>libxmlrpc_server_cgi</b> gives the facilities to make that
+connection.
+
+<p>It is common to call a CGI program a &quot;CGI script.&quot; The
+term &quot;script&quot; doesn't really convey what it is, though.  A
+script is a description of a simple procedure, normally one that a
+human would typically perform.  The first scripts were written on
+paper and followed by human operators.  Later, they were automated.
+The languages for writing automatic scripts became more and more
+capable and the scripts more and more complex until programs written
+in the scripting language bore far more resemblence to what has always
+been called a &quot;program&quot; than to what was originally called a
+&quot;script.&quot; The distinction most people use today is that if a
+program is written in a language whose roots are in scripting, it's a
+script and otherwise, it's a program.
+
+<p>CGI programs are usually written in a language whose roots are in
+scripting, so they have come to be known as scripts.  But regardless
+of what language you use to write a CGI program, &quot;program&quot;
+is a more meaningful name for it than &quot;script.&quot;
+
+<h2 id="howtosetup">How To Set Up A CGI-Based Server</h2>
+
+<p>How you set up a CGI program is a characteristic of your web server,
+and differs from one web server program to another.
+
+<p>However, if you can make your web server serve simple HTML web
+pages, it's usually an easy step from there to make it a CGI-based
+XML-RPC server.  Just create a file whose name ends in
+&quot;.cgi&quot; instead of &quot;.html&quot;.  That file should
+contain a program (an executable) you created using
+<b>libxmlrpc_cgi</b>.
+
+<p>Note that when you create an XML-RPC server this way, its URL may
+not be of the classic &quot;/RPC2&quot; form.  And that means simple
+programs may not be able to use it, at least not without coaxing.  The
+URL would have the same form as you would use to browse .html files in
+the same place.  For example, if you put the CGI program in a personal
+web directory, the URL might be
+http://www.acme.com/~johndoe/sample_add.cgi.
+
+<p>It's common for a web server to be configured with CGI disabled, for
+security reasons.
+
+<p>For Apache, you the CGI program must go in a directory that has
+the &quot;ExecCGI&quot; option, which gives the user permission to
+run CGI programs in the directory.  Specify that in the Apache
+configuration file.
+
+<p>You must configure the web server to recognize your URL as a CGI
+program to run, as opposed to a plain document to fetch or one of
+various other things.  Usually, you set that up by directory
+(e.g. &quot;cgi-bin&quot;) or filename extension
+(e.g. &quot;.cgi&quot;).  For Apache, you can use either a ScriptAlias
+or AddHandler statement in the configuration file for this.
+
+
+<h2 id="styles">Styles Of CGI Server Programs</h2>
+
+<p>There are lots of ways you can build an XML-RPC server based on the
+CGI interface to a web server.
+
+<p>The most basic (but not easiest) is not to use any Xmlrpc-c
+facilities at all.  Write your own CGI program which takes an XML
+document from the web server, interprets it as an XML-RPC call, and
+returns to the web server an XML response.
+
+<p>The next step up in convenience would be to have your CGI program
+use <a href="libxmlrpc.html#xmlencode">Xmlrpc-c's XML encoding and
+decoding tools</a> to free you from having to know the XML-RPC
+protocol, and other <a href="libxmlrpc.html"><b>libxmlrpc</b></a>
+facilities to process the data easily.  (But if you're writing CGI
+programs, you probably have other facilities available to do that).
+
+<p>The next step up would be to use an Xmlrpc-c method registry.
+Instead of writing your own CGI interface code, have your CGI program
+call <b>xmlrpc_server_cgi_process_call()</b>.  To tell this function
+what methods to execute, you build a <a
+href="libxmlrpc_server.html#method_registry">method registry</a> and
+identify it in <b>xmlrpc_server_cgi_process_call()</b>'s arguments.
+Now you don't have to know the CGI interface.
+
+<p>There is another style in which you don't build a method registry
+separately, but rather use <b>libxmlrpc_server_cgi</b> facilities to
+add individual methods to a server instance.  I don't recommend this
+style.  It used to be (before Xmlrpc-c 1.03 - June 2005) the only one,
+so continues to exist for backward compatibility, but I find it to be
+more complex than the newer <b>xmlrpc_server_cgi()</b> style.
+
+
+<h2 id="howto">How To Write A CGI Server Program</h2>
+
+<p>This section describes how to write a CGI program that uses the
+Xmlrpc-c method registry to implement XML-RPC server functions.
+
+<h3 id="process_call">xmlrpc_server_cgi_process_call()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_server_cgi_process_call(xmlrpc_registry * const registryP);
+
+</code>
+</pre>
+
+<p>This function processes an HTTP request which is supposedly an
+XML-RPC call.  It processes it as defined by the <a
+href="libxmlrpc_server.html#method_registry">method registry</a>
+identified by <i>registryP</i>.
+
+<p>The function gets all the information about the HTTP request and
+returns its results using the global variables (e.g. Unix environment
+variables) of the CGI interface.
+
+
+<h4>Example</h4>
+
+<pre>
+<code>
+    #include &lt;xmlrpc-c/base.h&gt;
+    #include &lt;xmlrpc-c/server.h&gt;
+    #include &lt;xmlrpc-c/server_cgi.h&gt;
+
+    xmlrpc_registry * registryP;
+    xmlrpc_env env;
+
+    xmlrpc_env_init(&amp;env);
+
+    registryP = xmlrpc_registry_new(&amp;env);
+
+    xmlrpc_registry_add_method(
+        &amp;env, registryP, NULL, "sample.add", &amp;sample_add, NULL);
+
+    xmlrpc_server_cgi_process_call(registryP);
+
+</code>
+</pre>
+
+<p>For a complete example, see the program
+<b>xmlrpc_sample_add_server_cgi.c</b> in the examples directory of the
+Xmlrpc-c source tree.
+
+
+<h2 id="oldmethod">Old Internal Registry Facility</h2>
+
+
+<p>Before Xmlrpc-c Version 1.03 (June 2005), the old style is the only
+one available.
+
+<p>The old facility is the same as the new one, except that the
+method registry is in a global variable that you don't normally see
+and you build it using special functions that operate on that global
+variable.
+
+<p>This old facility is deprecated because it complicates programming
+and understanding by using global variables and duplicating function
+of <b>libxmlrpc_server</b>.
+
+
+<h3 id="init">xmlrpc_cgi_init()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_cgi_init(int flags);
+</code>
+</pre>
+
+<p>This sets up the internal method registry.  
+
+<p><i>flags</i> must be zero.
+
+
+<h3 id="cleanup">xmlrpc_cgi_cleanup()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_cgi_cleanup(void);
+</code>
+</pre>
+
+<p>This cleans up the method registry created by
+<b>xmlrpc_cgi_init()</b>.  Call it after you're done with it
+(i.e. after you've called <b>xmlrpc_cgi_process_call()</b>
+
+
+<h3 id="add_method">xmlrpc_cgi_add_method()</h3>
+
+<pre>
+<code>
+void
+xmlrpc_cgi_add_method(char         * method_name,
+		      xmlrpc_method  method,
+		      void *         user_data);
+</code>
+</pre>
+
+<p>This adds a method to the internal method registry.  It is
+analogous to <a
+href="libxmlrpc_server.html#addmethod"><b>xmlrpc_add_method()</b></a>.
+
+<h3 id="add_method_w_doc">xmlrpc_cgi_add_method_w_doc()</h3>
+<pre>
+<code>
+void
+xmlrpc_cgi_add_method_w_doc(char *method_name,
+                            xmlrpc_method method,
+                            void *user_data,
+                            char *signature,
+			    char *help);
+</code>
+</pre>
+
+<p>This adds a method to the internal method registry.  It is
+analogous to <a
+href="libxmlrpc_server.html#addmethod"><b>xmlrpc_add_method_w_doc()</b></a>.
+
+
+<h3 id="process_call_old">xmlrpc_cgi_process_call()</h3>
+<pre>
+<code>
+void
+xmlrpc_cgi_process_call(void);
+</code>
+</pre>
+
+<p>This is the same thing as <a
+href="#process_call"></a><b>xmlrpc_server_cgi_process_call()</b>
+except that it uses the internal method registry.
+
+
+<h3 id="registry">xmlrpc_cgi_registry()</h3>
+
+<pre>
+<code>
+xmlrpc_registry *
+xmlrpc_cgi_registry(void);
+</code>
+</pre>
+
+<p>This gets you a pointer to the internal method registry.  (Which
+means it isn't really internal, and there's even less reason to like
+this old facility).
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>If you set the <a
+href="libxmlrpc_server.html#trace_xml">XMLRPC_TRACE_XML</a>
+environment variable to 1, the CGI program prints to Standard Error
+the XML that it processes and returns.  This is not much more
+informative than trace facilities that are probably available in your
+web server.  But at least it will help you confirm that the CGI
+program is running and you are using the method registry correctly.
+
+</body>
+</html>

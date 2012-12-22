@@ -1,0 +1,336 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC For C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>General Library Information - C</h1>
+
+<p>This chapter contains general information applicable to all of the
+C programming libraries of XML-RPC For C/C++ (<b>libxmlrpc</b>,
+<b>libxmlrpc_server</b>, etc).
+
+<p>You will also find information of general applicability in
+the manual for <a href="libxmlrpc.html"><b>libxmlrpc</b></a>, because
+it includes basic services that you use with all the other libraries.
+
+<p>The equivalent chapter for the C++ libraries is <a
+href="libgeneral++.html">General Library Information - C++</a>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Almost everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.  But you will find that the official
+specification of the protocol is riddled with ambiguity and other usability
+problems.  <a href="http://effbot.org/zone/xmlrpc-errata.htm">This page</a>
+adds to it and accurately describes most so-called &quot;XML-RPC&quot;
+clients and servers.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#successfail">Success/Failure</a>
+<li><a href="#globalconst">Global Constants</a>
+<li><a href="#threadsafe">Thread Safety</a>
+  <ul>
+  <li><a href="#def_threadsafe">Definition of Thread Safety</a>
+  </ul>
+<li><a href="#dialect">XML-RPC Dialects</a>
+<li><a href="#xmlrpccharencoding">XML-RPC Character Encoding</a>
+<li><a href="#characterencoding">Character Encoding In Programs</a>
+</ul>
+
+<h2 id="successfail">Success/Failure</h2>
+
+<p>A library function either succeeds or fails.  The distinction might be
+a little fuzzy sometimes, but the documentation should make it clear what
+is considered successful.
+
+<p>When a library function fails, it returns no information.  Any
+return values or pointed-to return variables have arbitrary values when
+the function returns.
+
+<p>A library function does not change the state of anything when it fails.
+For all practical purposes, it is the same as if the function had not
+been called.
+
+<p>While a library function, when it fails, does return information
+specifying how it failed, you generally aren't supposed to call a
+function just to see how it fails and your program should not analyze
+the failure information.  The failure information is primarily
+intended for forwarding to a human to diagnose a larger problem.
+There generally exist interfaces whereby you can learn from a successful
+execution whatever you would have learned from some failed execution.
+
+
+<h2 id="globalconst">Global Constants</h2>
+
+<p>There are a variety of constants that the libraries use,
+often through their internal use of other libraries, which are too
+complicated for the library loader to set up.  Therefore, a program
+must call a library function after the program is loaded and running
+to finish setting up the library code.  For example, in some
+configurations, <b>libxmlrpc_client</b> uses the GNU TLS library
+internally to provide SSL connections, and inside that library there
+is an elaborate tree that describes the SSL protocol.
+
+<p>Each library that uses such global constants has a global
+initialization and global termination function, and any program that
+uses the library must call them.  For example,
+<b>libxmlrpc_client</b> has <b>xmlrpc_client_setup_global_const()</b>
+and <b>xmlrpc_client_teardown_global_const()</b>, and
+<b>libxmlrpc_abyss</b> has <b>AbyssInit()</b> and <b>AbyssTerm()</b>.
+The global initialization function sets up the global constants.  This
+may allocate resources (e.g. the memory for the GNU TLS tree mentioned
+above), so the global termination function releases them.
+
+<p>The basic rule for constructing a program that uses one of these
+libraries is this: Call the global initialization function immediately
+after the program starts, while it is still only one thread and before
+it uses the library at all.  Call the global termination function
+immediately before the program exits, when the program is again only
+one thread and after its last use of the library.
+
+<p>You can call both of these multiple times, as long as all calls
+meet these requirements and the number of calls to each is the same.
+
+<p>It isn't actually required that the functions be called at the
+beginning and end of the program -- that's just usually the easiest
+way to do it.  It <em>is</em> required that the functions be called
+when no other thread in the program is running.
+
+<p>These global constant functions are <em>not thread-safe</em>, so you
+must not call them when any other thread in the program is running.
+It isn't good enough that no other thread be using
+<b>libxmlrpc_client</b> at the time, because these functions
+internally call similar functions of other libraries, and those
+functions are similarly thread-unsafe.  You can't generally know what
+these libraries are, or whether other threads are using them.
+
+<p>The global constant situation merits special consideration when the
+code you are writing to use the library is not the main program, but
+rather a modular piece of a program, e.g. another library.  As a
+module, your code doesn't know about other parts of the program -- it
+doesn't know whether they use an Xmlrpc-c library or not.  And its
+code doesn't necessarily run at the start and end of the whole
+program.
+
+<p>A module like this must have global initialization and termination
+functions of its own.  The module thus has control at the beginning
+and end of the program and has a place to call the Xmlrpc-c global
+initialization and termination functions.  Note that if multiple
+modules in the program use a particular library, they all will
+separately call that library's global initialization and termination
+functions, and that's OK because only the first global initialization
+and last global termination in a program changes anything (the
+libraries use a reference count in static memory).
+
+<p>Some libraries offer simplified interfaces in which the global
+initialization and termination are done for you under the covers; but
+such an interface has the same restrictions and the global
+initialization and termination functions: it isn't thread-safe.
+
+<p>The manual for each Xmlrpc-c library tells you what its global
+initialization and termination functions are.
+
+<h2 id="threadsafe">Thread Safety</h2>
+
+<p>The library functions are thread-safe.  They do not use static variables.
+
+<p>Functions that set up and tear down <a href="#globalconst">global
+constants</a> are an exception (but not really a significant one, since
+it's easy to call those while the program is only one thread).
+
+<p>The <em>objects</em> based on the libraries are generally not thread-safe,
+so you must make sure no two threads access a particular object at the same
+time.
+
+<p>The <b>xmlrpc_value</b> structure in <b>libxmlrpc</b> and the
+<b>xmlrpc_c::value</b> class in <b>libxmlrpc++</b> that is based on it deserve
+special mention.  These are thread-safe in Xmlrpc-c 1.33 and later if you use
+them properly, but in earlier Xmlrpc-c they are not only thread-unsafe
+themselves but make many other objects thread unsafe because these other
+objects refer to them.  See <a href="libxmlrpc.html#valueshare">XML-RPC
+Values</a> for details.
+
+<p>The objects provided by <b>libxmlrpc_client</b>
+and <b>libxmlrpc_client++</b>
+are <a href="libxmlrpc_client.html#threadsafe">mostly</a> thread-safe, so you
+can have multiple threads using the same transport and talking to the same
+server.
+
+<p>The libraries' thread safety depends of course upon thread-safety
+of all the libraries it uses.  Your standard C library in particular
+must be thread-safe.  As far as I know, all libraries that Xmlrpc-c
+uses in typical configurations are thread-safe.
+
+<h3 id="def_threadsafe">Definition of Thread Safety</h3>
+
+<p>A <em>function</em> is &quot;thread-safe&quot; if you can call it from
+multiple threads simultaneously without causing something totally
+unacceptable like a crash, hang, or memory leak.  A function which was
+written without threads in mind -- particularly a function written
+before multiple threads were possible -- may very well not meet this
+criterion.
+
+<p>A thread-safe function might still cause a disaster when you call
+it from multiple threads if it's part of a larger thread-unsafe
+procedure.  For example, a function that adds to a linked list is
+probably thread-safe.  But if you call it to add to a linked list that
+some other thread is presently adding something else to, you have
+threading trouble.
+
+<p>An <em>object</em> is thread-safe if you can call its methods
+simultaneously from multiple threads without screwing up the object or
+causing the totally unaccepted behavior mentioned above.  If a linked
+list object is thread-safe, you can call its add method (i.e. its
+official designated add function) from multiple threads simultaneously
+without corrupting the list.
+
+<p>A library is thread-safe if all its functions and all the object
+classes it defines are thread-safe.
+
+<p>That's all thread safety is.  You can use multiple threads without
+crashing your program.  But people often expect more from a threaded
+program and incorrectly call their expectation &quot;thread
+safety.&quot; You may be trying to use threads because you want the
+performance benefits of doing two things at once.  But a thread-safe
+library won't necessarily give you that.  The easiest way to make a
+library thread-safe is to use a big lock to serialize everything --
+make sure no two threads are ever executing the meat of the library at
+the same time.  You could have 100 threads, and one at a time does
+useful work while 99 wait for the library's lock.
+
+<p>So while thread-safety is a good start, you may want to ask about
+actual concurrency.
+
+
+<h2 id="dialect">XML-RPC Dialects</h2>
+
+<p>XML-RPC For C/C++ facilities implement a superset of the XML-RPC
+protocol.  I.e. the set of messages and communications you can do with
+these facilities is a superset of those specified by XML-RPC.
+
+<p>In the manual, we generally treat the extensions to XML-RPC as if they
+are part of XML-RPC, but where it matters, we point out the distinction.
+
+<p>In particular, there are <a
+href="libxmlrpc.html#extensiontype">additional data types</a> you can
+use for parameter lists and results.
+
+<p>There are two popular versions of the XML-RPC extension data type
+nil.  In one, its value is encoded into an XML-RPC message with an XML
+element named <tt>nil</tt>.  In the other, the XML element name is
+<tt>ex:nil</tt>.  (The &quot;ex&quot; is a namespace and is meant to
+make it clear that it is an extension data type).
+
+<p>Similarly, some clients and servers use <tt>i8</tt> for the 64
+bit integer type, while others use <tt>ex:i8</tt>.
+
+<p>We refer to these distinct versions of the protocol as dialects.
+Xmlrpc-c names the &quot;ex&quot; dialect &quot;Apache&quot;, since it
+originated with the <a
+href="http://ws.apache.org/xmlrpc/types.html">Apache Java XML-RPC
+facility</a>.  It names the other &quot;i8,&quot; for lack of a better
+name.
+
+<p>The two dialects are compatible enough that Xmlrpc-c facilities for
+<em>interpreting</em> XML-RPC messages can and do handle both all the
+time.
+
+<p>But the Xmlrpc-c facilities that <em>generate</em> XML-RPC messages need to
+be told which dialect to use, because a partner that handles only one dialect
+(e.g. one based on the Apache Java XML-RPC facility) must be sent that
+dialect.  So Xmlrpc-c lets you choose on a per-client and per-server basis
+which dialect to use.
+See <a href="libxmlrpc_client.html#client_create"><b>xmlrpc_client_create()</b></a>
+and
+<a href="libxmlrpc_server.html#set_dialect"><b>xmlrpc_registry_set_dialect()</b></a>.
+
+<p>If it annoys you that there are two standards for this, which means
+you can't make a single Xmlrpc-c-based program that works with all
+XML-RPC partners, remember that you really can't use these data types
+at all if you want maximum interoperability, because many potential
+partners speak only original true XML-RPC.
+
+<p>To refer to a dialect, Xmlrpc-c has the type <b>xmlrpc_dialect</b>.
+It is an enumerated type with these values, whose meanings are obvious:
+
+<ul>
+<li><B>xmlrpc_dialect_i8</B>
+<li><B>xmlrpc_dialect_apache</B>
+</ul>
+
+
+<h2 id="xmlrpccharencoding">XML-RPC Character Encoding</h2>
+
+<p>XML-RPC messages (calls and responses) are XML documents, which use Unicode
+characters.  The character encoding of those characters is flexible.
+
+<p>All XML-RPC messages Xmlrpc-c generates use UTF-8 character encoding and
+include an XML Processing Instruction (&quot;&lt;?xml ... ?&gt;&quot;) that
+says so.
+
+<p>When Xmlrpc-c interprets an XML-RPC message, it understands the following
+character encodings and respects the declaration made by an XML Processing
+Instruction (&quot;&lt;?xml ... ?&gt;&quot;) of which of these is in use.  If
+the encoding specified is anything else, the Xmlrpc-c facility that needs to
+interpret the message fails.  If there is no XML Processing
+Instruction, Xmlrpc-c assumes UTF-8.
+
+<ul>
+<li>ISO 8859-1
+<li>US ASCII
+<li>UTF-8
+<li>UTF-16
+<li>UTF-16 Big Endian
+<li>UTF-16 Little Endian
+</ul>
+
+<p>The above is true if you use the normal built-in version of Expat as its
+XML library.  If you use a special build of <b>libxmlrpc</b> that uses
+<b>libxml2</b> or any other XML library, the character encoding behavior is
+determined by that library.  In no case does <b>libxmlrpc</b> tell the XML
+library to use any particular character encoding.
+
+
+<h2 id="characterencoding">Character Encoding In Programs</h2>
+
+<p>In XML-RPC, strings and structure member names are composed of Unicode
+characters; i.e. they can essentially contain any character known to man,
+from capital A to o-circumflex to euro sign.
+
+<p>Therefore, many Xmlrpc-c library services take Unicode strings as inputs
+and produce Unicode strings as outputs.  (Where possible, though, they always
+work in traditional ASCII).
+
+<p>There are various ways of representing a Unicode character in bits.  The
+one Xmlrpc-c uses most of the time is UTF-8.  However, there are a few things
+you can do in UTF-16 if you prefer.  This manual tells you wherever it refers
+to a string what kind of encoding is involved.
+
+<p>If you stick to the subset of Unicode characters that can be represented in
+ASCII (plain English text), you don't have to worry about the complexity of
+Unicode and UTF-8.  All ASCII text is UTF-8 Unicode text, so you can just use
+ASCII, with its simple one byte per character encoding and take it easy.  Note
+that ASCII codes are all 7 bits -- the high order bit is zero.  So make sure
+your strings never contain a byte with the high order bit set.
+
+<p>If your program contains non-ASCII string literals, you may need to take
+special care to understand your editor and compiler and even filesystem to
+avoid surprises.  What appears one way on your screen may not be what the
+compiler sees when it compiles the code.  On Windows, you can save a character
+encoding attribute with a file.  If that attribute of your source file doesn't
+match what is actually in that source file, your string literals don't say
+what you think they do.
+
+</body>
+</html>

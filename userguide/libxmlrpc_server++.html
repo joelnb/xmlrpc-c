@@ -1,0 +1,681 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server++</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server++</b> function library, which is part of XML-RPC
+For C/C++ (Xmlrpc-c).  Also see <a href="libgeneral++.html">General
+Library Information - C++</a>
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.
+
+<p>The <b>libxmlrpc_server++</b> library provides C++ classes for use in
+a program that is an XML-RPC server.  These classes by themselves
+are not enough to implement a server; you need other facilities to 
+do the bulk of the work, such as <b>libxmlrpc_server_abyss++</b>.
+<b>libxmlrpc_server++</b> contains only facilities that are common to
+multiple kinds of server implementations.
+
+<p>When using <b>libxmlrpc_server++</b>, you must also use the <a
+href="libxmlrpc++.html"><b>libxmlrpc++</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server++</b> classes depend on it.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#method_registry">Method Registry</a>
+  <ul>
+    <li><a href="#systemmethod">System Methods</a>
+    <li><a href="#howto">How To Write A Method</a>
+      <ul>
+        <li><a href="#example_method">Example Method Class</a>
+        <li><a href="#failingtherpc">Failing The RPC</a>
+        <li><a href="#using_method">Using A Method Class</a>
+        <li><a href="#callinfo">callInfo object</a>
+        <li><a href="#methodclassic">old <b>method</b> class</a>
+      </ul>
+    <li><a href="#defaultmethod">The Default Method Object</a>
+    <li><a href="#registry_object">The Registry Object</a>
+      <ul>
+        <li><a href="#constructors">Constructors</a>
+        <li><a href="#addmethod"><b>AddMethod</b> Method</a>
+        <li><a href="#setdefaultmethod"><b>setDefaultMethod</b> Method</a>
+        <li><a href="#disableintrospection">
+          <b>disableIntrospection</b> Method</a>
+        <li><a href="#setdialect"><b>setDialect</b> Method</a>
+        <li><a href="#setshutdown"><b>setShutdown</b> Method</a>
+      </ul>
+    <li><a href="#executing">Executing an XML-RPC Method</a>
+    <li><a href="#faults">Faults</a>
+    <li><a href="#debugging">Debugging</a>
+      <ul>
+        <li><a href="#trace_xml">
+          XMLRPC_TRACE_XML environment variable</a>
+      </ul>
+  </ul>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/xmlrpc_server.hpp&gt;</B> header file declares the
+<b>libxmlrpc_server++</b> classes.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server++</b> library is <b>libxmlrpc_server++.a</b> or
+<b>libxmlrpc_server++.so</b>.  The classic linker option to cause the
+library to be linked into your program is <tt>-l xmlrpc_server++</tt>.
+These are hints; you'll have to modify this according to conventions
+of your particular platform.  You'll also have to figure out where the
+library resides and how to make your linker look there for it.
+
+<p>You can use <a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>,
+specifying the &quot;c++2&quot; feature and a server type feature, to
+find out what libraries to link.  This is designed to be used in a
+build program such as a make file.  When properly installed, it tells
+exactly how to link on your particular system.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc_server++</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc++
+<li>libxmlrpc
+<li>libxmlrpc_server
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+
+<h2 id="example">Example</h2>
+
+<p>See <a href="index.html#serverexamplepp">Introductory Examples</a>
+for a complete example of a simple XML-RPC server written in C++.
+
+
+<h2 id="method_registry">Method Registry</h2>
+
+<p>An XML-RPC server consists of 1) machinery to receive XML-RPC calls
+and send responses to them (called the XML-RPC protocol driver) and 2)
+methods.  The protocol driver can be constant for various XML-RPC
+server applications.  It's the methods that make a particular XML-RPC
+server what it is.  In the small example server mentioned above, which
+provides the service of adding two numbers together, the
+<b>xmlrpc_c::server_abyss</b> object (courtesy of
+<b>libxmlrpc_server_abyss++</b>) provides the protocol driver, and the
+&quot;sample_add&quot; C++ object from the example program is what
+makes it an addition server.
+
+<p><b>libxmlrpc_server++</b> provides a facility to connect the XML-RPC
+protocol driver with the methods.  It is called the method registry.
+It forms a uniform interface that all methods can use to interact with
+all protocol drivers.
+
+<p>The essential structure of an Xmlrpc-c server program is like this:
+The program defines a C++ class for for each of a bunch of methods and
+constructs a single object of each class.  The program creates a
+method registry object and adds registers each of its methods in the
+registry.  The program then constructs a protocol driver object with
+the full registry as a parameter.
+
+<p>The protocol driver object executes an XML-RPC call through the
+method registry.  It passes the XML for the XML-RPC call to the method
+registry, and the method registry executes the appropriate registered
+method and returns the XML for the XML-RPC response to the protocol
+driver.
+
+<h3 id="systemmethod">System Methods</h3>
+
+<p>There are some methods, called system methods, that the registry
+implements internally (I.e. you don't use
+<b>xmlrpc_registry_add_method</b> to add one).  A system method is
+concerned with the basic operation of the server rather than whatever
+job the particular server does.
+
+<p>The registry implements the <a
+href="libxmlrpc_server.html#systemmethod">same system methods</a>
+as the C version of the registry.
+
+<p>To disable introspection, call the C++ registry object's
+<b>disableIntrospection()</b> method.  Then the server will not have
+the Introspection XML-RPC methods.  In a new registry, introspection
+is enabled.  There is no way to enable it after disabling it.
+
+<p>To set up <b>system.method</b>, call the C++ registry
+object's <a href="libxmlrpc_server++.html#setshutdown">
+<b>setShutdown</b> method</a>.
+
+
+<h3 id="howto">How To Write A Method</h3>
+
+<p>The terminology gets confusing here, because we have both XML-RPC
+methods and C++ methods.  You implement an XML-RPC method with a C++
+object, and the meat of that object is one of its C++ methods, called
+<b>execute</b>.
+
+<p>To write the code for an XML-RPC method, you define a C++ class derived
+from Xmlrpc-c's <b>xmlrpc_c::method2</b> class.  Your class must have an
+<b>execute</b> method.  That method has the following prototype:
+
+<pre>
+<code>
+    void
+    execute(xmlrpc_c::paramList        paramList,
+            const xmlrpc_c::callInfo * callInfoP,
+            xmlrpc_c::value *          resultP);
+</code>
+</pre>
+
+<p>The protocol driver calls your method to perform the guts of an
+RPC.  It passes to your method the RPC's parameters as an <a
+href="libxmlrpc++.html#paramlist"><b>xmlrpc_c::paramList</b> object
+</a>.
+
+<p>Your method executes the XML-RPC method and returns the result as
+*<i>resultP</i>.
+
+<p>That is all that is required of the class.  
+
+<p>Your constructor may optionally set the object's <b>_signature</b>
+member.  This is a <b>std::string</b> that documents the method's use
+by the server's XML-RPC Introspection function.  Its value has the
+same meaning as the <i>signature</i> argument to <a
+href="libxmlrpc_server.html#xmlrpc_registry_add_method_w_doc">
+<b>xmlrpc_registry_add_method_w_doc</b> function</a> in the equivalent
+C library.
+
+<p>If your constructor does not set <b>_signature</b>, it is as if you
+set its value to &quot;?&quot; (i.e. unspecified).
+
+<p>This signature has nothing to do with what parameters the method actually
+requires or how the method code interprets them.  That is determined by the
+code in your <b>execute</b> method.
+
+<p>Your constructor may optionally set the object's <b>_help</b>
+member.  This is a <b>std::string</b> that describes in human language
+how to use the method.  The server's XML-RPC Introspection function
+uses this information.
+
+<p>If your constructor does not set <b>_help</b>, the registry uses the
+text, &quot;No help is available for this method&quot;.
+
+<p>Beyond that, you can add members and constructors and destructors
+to suit your needs.  You can even use class members to keep persistent
+state so an RPC can affect future RPCs of the same XML-RPC method.
+But that isn't really in the spirit of XML-RPC.  RPCs are supposed to
+stand alone.
+
+<p>You will normally have exactly one object of each XML-RPC method
+class, and you register that object in the method registry under some
+unique method name.
+
+<h4 id="example_method">Example Method Class</h4>
+
+<pre>
+<code>
+   class sample_add : public xmlrpc_c::method {
+   public:
+       sample_add() {
+           this-&gt;_signature = &quot;i:ii&quot;;
+           this-&gt;_help = &quot;This method adds two integers together&quot;;
+       }
+       void
+       execute(xmlrpc_c::param_list       const paramList,
+               const xmlrpc_c::callInfo * const callInfoP,
+               const xmlrpc_c::value *    const retvalP) {
+          
+           int const addend(paramList.getInt(0));
+           int const adder(paramList.getInt(1));
+
+           *retvalP = xmlrpc_c::value(addend + adder);
+      }
+   };
+</code>
+</pre>
+
+
+<h4 id="failingtherpc">Failing The RPC; Handling Errors</h4>
+
+<p>If your method cannot perform the RPC, it may throw an error.  If
+it throws any kind of object, the protocol driver will complete the
+RPC as a failed RPC.  But it should preferably throw a
+<b>xmlrpc_c::fault</b> or <b>girerr:error</b>.  In the
+<b>xmlrpc_c::fault</b> case, the protocol driver returns an XML-RPC
+fault response as described by the thrown object.  If it throws a
+<b>girerr::error</b>, the protocol driver constructs a fault response
+whose fault string is the error description from the
+<b>girerr:error</b> object in the XML-RPC response, and whose fault
+code is zero.  If <b>execute()</b> throws anything else, the protocol
+driver makes up a fault response that describes an internal server
+error.
+
+<p>Example:
+
+<pre>
+<code>
+    enum faultCodes { CODE_OVERFLOW=3 };
+
+    void
+    execute(xmlrpc_c::param_list       const paramList,
+            const xmlrpc_c::callInfo * const callInfoP,
+            const xmlrpc_c::value *    const retvalP) {
+       
+        int const addend(paramList.getInt(0));
+        int const adder(paramList.getInt(1));
+
+        if (addend > 0 &amp;&amp; adder > 0 &amp; addend + adder &lt; 0)
+            throw(xmlrpc_c::fault(&quot;Sum is too large.&quot;,
+                                  CODE_OVERFLOW);
+
+        *retvalP = xmlrpc_c::value(addend + adder);
+    
+</code>
+</pre>
+
+<h4 id="using_method">Using A Method Class</h4>
+
+<p>A <b>xmlrpc_c::method2</b> is an <a href="libxmlrpc++.html#autoObject">
+auto-object</a>.  Class <b>xmlrpc_c::methodPtr</b> is its pointer class.
+You ordinarily refer to your method object by such a pointer.  In fact,
+it is the only way to register your method object with the method
+registry.
+
+<p>So create the object following this example:
+
+<pre>
+<code>
+    xmlrpc_c::methodPtr const sampleAddMethodP(new sample_add);
+</code>
+</pre>
+
+<p>You will never delete this object; it gets deleted automatically when
+the last reference goes away.
+
+
+<h4 id="callinfo">callInfo object</h4>
+
+<p>As you see, one of the arguments to your <B>execute</B> method is a pointer
+to a <b>xmlrpc_c::callInfo</b> object.  It gives you information about how the
+XML-RPC call arrived.  You can usually ignore this as in the example above.
+The most common thing people use it for is to find out the IP address of
+the caller.
+
+<p><b>xmlrpc_c::callInfo</b> is an abstract base class.  What <i>callInfo</i>
+really points to is some derived class of it that is particular to the kind of
+server in question.  For example, if it is an Abyss-based XML-RPC server (via
+<b>libxmlrpc_server_abyss++</b>), then <i>callInfoP</i> points to an object of
+that library's
+<a href="libxmlrpc_server_abyss++.html#class_callinfo_serverAbyss"></a>
+<b>xmlrpc_c::callInfo_serverAbyss</b> class.
+
+<h4 id="methodclassic">old <b>method</b> class</h4>
+
+<p><b>xmlrpc_c::method2</b> was new in Xmlrpc-c 1.19 (June 2009).  Before
+that, you have to use <b>xmlrpc_c::method</b> instead (and it continues to
+work fine with current Xmlrpc-c).  It's the same except that its
+<b>execute</b> method does not have the <i>callInfoP</i> argument.  The
+information available via <i>callInfoP</i> is not available in any way with
+<b>method</b>.
+
+
+<h3 id="defaultmethod">The Default Method Object</h3>
+
+
+<p>When the client specifies a method name that is not in the method
+registry, the protocol driver calls the <b>execute</b> method of the
+&quot;default method object&quot; that you registered.  A registry
+contains zero or one default method object.
+
+<p>You can use this to bypass much of the work that the registry does
+and do your own dispatching of methods: just don't register any
+methods, and all XML-RPC calls will result in a call to your default
+method object.  But if you're going to do that, it would probably be
+cleaner just to derive your own method registry class from
+<b>xmlrpc_c::registry</b> and write your code as that class' methods.
+
+<p>If you don't register a default method object and an XML-RPC call
+specifies a method name that is not in the registry, the registry
+services automatically return a &quot;no such method&quot; fault
+response.
+
+<p>A default method object, which is of Class
+<b>xmlrpc_c::defaultMethod</b>, is just like a regular method object
+except that its <b>execute</b> method has two more parameters:
+
+<pre>
+<code>
+    void
+    execute(std::string         methodName,
+            xmlrpc_c::paramList paramList,
+            xmlrpc_c::value *   resultP);
+</code>
+</pre>
+
+<p><i>methodName</i>) tells you the method name that the client
+specified.
+
+<p>There is a class <b>xmlrpc_c::defaultMethodPtr</b> which is analogous to
+<b>xmlrpc::methodPtr</b>.
+
+
+
+<h3 id="registry_object">The Registry Object</h3>
+
+<p>The method registry is an object of Class <b>xmrpc_c::registry</b>.
+
+<p>You construct a registry object and provide it to your server.
+
+<p>A <b>xmlrpc_c::registry</b> is an <a href="libxmlrpc++.html#autoObject">
+auto-object</a>.  Class <b>xmlrpc_c::registryPtr</b> is its pointer class.
+The most convenient way to refer to a registry is by such a pointer, unless
+you can use an automatic (i.e. stack) variable.
+
+<p>Before Xmlrpc-c 1.05 (March 2006), <b>xmlrpc_c::registry</b> is not
+derived from <b>xmlrpc_c::registry</b>.  You must use C++ pointers and
+explicitly ensure that the registry object continues to exist as long
+as it is being used.
+
+<h4 id="constructors">Constructors</h4>
+
+<p>The only constructor is the no-argument constructor.  This creates
+a registry with no methods other than system methods; not even a
+default method.  You build it up from there by calling other methods.
+
+<h4 id="addmethod"><b>addMethod</b> Method</h4>
+
+<p>This method adds an XML-RPC method to the registry.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    xmlrpc_c::methodPtr sampleAddMethodP(new sampleAddMethod);
+    myRegistry.addMethod(&quot;sample.add&quot;, sampleAddMethodP);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    addMethod(string              const name,
+              xmlrpc_c::methodPtr const methodP);
+</code>
+</pre>
+
+<h4 id="setdefaultmethod"><b>setDefaultMethod</b> Method</h4>
+
+<p>This method sets the registry's default method, as decribed in
+<a href="#defaultmethod">The Default Method Object</a>.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    xmlrpc_c::defaultMethodPtr myDefaultMethodP(new myDefaultMethod);
+    myRegistry.setDefaultMethod(myDefaultMethodP);
+</code>
+</pre>
+
+
+<h4 id="disableintrospection"><b>disableIntrospection</b> Method</h4>
+
+<p>This method deletes the built-in <a
+href="#systemmethod">introspection methods</a> from the registry.
+These methods exist in a newly created registry until you delete them.
+There's no way to add them back.  This method is meant to be used as
+an extension of the registry class' constructor.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    disableIntrospection();
+</code>
+</pre>
+
+
+<h4 id="setdialect"><b>setDialect</b> Method</h4>
+
+<p>This method modifies the registry to set the <a
+href="libxmlrpc.html#dialect">dialect</a> for responses.
+
+<p>Examples:
+<pre>
+<code>
+    xmlrpc_c::registry registry;
+    registry.setDialect(xmlrpc_dialect_apache);
+</code>
+<code>
+    xmlrpc_c::registry registry;
+    registry.setDialect(xmlrpc_dialect_i8);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    setDialect(xmlrpc_dialect dialect);
+</code>
+</pre>
+
+<p><i>dialect</i> is the dialect you're setting.
+
+<p>By default (if you have never set the dialect), when an XML-RPC
+server executes an XML-RPC method via the registry, the response goes
+in the i8 dialect.
+
+<p>This method was new in Xmlrpc-c 1.11 (June 2007).
+
+
+<h4 id="setshutdown"><b>setShutdown</b> Method</h4>
+
+<p>This method modifies the registry to indicate a way to implement
+the <b>system.shutdown</b> <a href="#systemmethod">system method</a>.
+Until you execute this method, <b>system.shutdown</b> fails.
+
+<p>Examples:
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+
+    xmlrpc_c::serverAbyss myServer(xmlrpc_c::serverAbyss::constrOpt()
+                                   .registryP(&amp;myRegistry)
+                                   .portNumber(8080)
+                                   );
+
+    xmlrpc_c::serverAbyss::shutdown shutdown(&amp;myServer);
+
+    registry.setShutdown(&amp;shutdown);
+</code>
+</pre>
+
+<pre>
+<code>
+    xmlrpc_c::registry registry;
+    
+    class myshutdown : public xmlrpc_c::registry::shutdown {
+    public:
+        myshutdown(myServerType * const serverHandle) :
+            serverHandle(serverHandle) {}
+
+        void doit(string const&amp; comment,
+                  void * const) const {
+
+            cerr &lt;&lt; &quot;Shutting down because &quot; &lt;&lt; comment &lt;&lt;endl;
+            shutdownMyServer(serverHandle);
+        }
+    
+    private:
+        myServerType * const serverHandle;
+    };
+
+    myshutdown shutdown(&amp;myServer);
+
+    registry.setShutdown(&amp;shutdown);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    setShutdown(registry::shutdown * const shutdownP);
+</code>
+</pre>
+
+<p><i>shutdownP</i> is a pointer to an object that knows how to shut down
+the server that is using this registry.
+
+<p>The <b>registry::shutdown</b> class exists just to be an argument
+to this method.  It is an abstract base class with one method:
+<b>doit</b>.  <B>doit</B> shuts down the server.
+
+<p>This is the prototype of <b>doit</b>:
+
+<pre>
+<code>
+    void doit(string const&amp; comment,
+              void * const  callInfo) const;
+</code>
+</pre>
+
+<p><i>comment</i> is a comment describing the shutdown (to wit, the
+parameter of the <b>system.shutdown</b> method -- information from the
+XML-RPC client).
+
+<p><i>callInfo</i> is non-XML-RPC transport information about the
+XML-RPC call that requested the shutdown.  A typical purpose of this
+would be to tell the IP address of the requester, so <b>doit</b> can
+determine whether the requester has permission to shut down the
+server.
+
+<p>However, <i>callInfo</i> is not implemented today.  Its value is
+meaningless.
+
+<p>Because it is an abstract base class, you must pass an object of a
+class <em>derived</em> from it to <b>setShutdown</b>.  This derived
+class is specific to the kind of server that is to use the registry,
+because its <b>doit</b> method must know how to shut down the server.
+
+
+<p>This method was new in Xmlrpc-c 1.13 (December 2007).  Before that,
+you cannot use <b>system.shutdown</b> to shut down a server.
+
+
+<h3 id="executing">Executing an XML-RPC Method</h3>
+
+<p>This section describes the client-facing interface to the method
+registry.  This is the interface that an XML-RPC protocol driver uses
+to talk to the registry.
+
+<p>The <b>processCall()</b> method executes an XML-RPC call, given in
+XML form, and returns the response, again in XML form.  This entails
+looking up the named method in the registry and calling the
+<b>execute</b> method of the XML-RPC method C++ object associated with
+it.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    processCall(std::string   callXml,
+                std::string * responseXmlP) const;
+
+</code>
+</pre>
+
+<p>For most errors, including if the XML-RPC method object's
+<b>execute</b> method throws anything at all, <b>processCall</b>
+returns an XML-RPC fault response as *<i>responseP</i>.  But it is
+possible for some kinds of error in the server program to cause
+<b>processCall</b> to throw a <b>girerr::error</b>.
+
+<p><i>callXml</i> is the complete XML of the XML-RPC call.  It isn't
+necessarily valid.
+
+<p>The method returns as *<i>responseXmlP</i> a string whose value is
+the complete XML of the XML-RPC response to the XML-RPC call.  The
+registry ensures that this is a valid XML-RPC response, regardless of
+what the method function does.  Caller is responsible for deleting the
+string.
+
+<p>To make this function trace the XML input and output, see the <a
+href="#trace_xml">XMLRPC_TRACE_XML</a> environment variable.
+
+
+<h3 id="faults">Faults</h3>
+
+<p>Method registry facilities that execute an RPC may generate a fault
+response for the RPC.  Sometimes the details of that fault are supplied
+by the registered method object; sometimes they come from Xmlrpc-c
+directly.
+
+<p>Where Xmlrpc-c generates a fault directly, the fault code is one of the
+ones enumerated for the <a
+href="libxmlrpc++.html#class_fault"><b>xmlrpc_c::fault</b></a> class.  Where
+Xmlrpc-c takes fault information from the registered method object, the fault
+code is entirely up to that object.  Note that this means Xmlrpc-c does not
+conform to the <a
+href="http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php">Fault Code
+Interoperability standard</a>.
+
+<h3 id="debugging">Debugging</h3>
+
+<p>This section describes some facilities and techniques for debugging
+programs that use <b>libxmlrpc_server</b>.
+
+<h4 id="trace_xml">XMLRPC_TRACE_XML environment variable</h4>
+
+<p>If you set the <b>XMLRPC_TRACE_XML</b> environment variable to
+<b>1</b>, the <b>libxmlrpc_server</b> registry functions print to
+Standard Error the XML of the call and of the response, in addition to
+their normal processing.
+
+<p>It works the same as for the <a
+href="libxmlrpc_server.html#trace_xml">C server library</a>.
+
+
+</body>
+</html>

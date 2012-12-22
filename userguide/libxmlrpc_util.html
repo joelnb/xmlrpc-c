@@ -1,0 +1,651 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_util</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc_util</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C</a>.
+
+<p><b>libxmlrpc_util</b> provides utilities not specifically related
+to XML-RPC.  But the libraries of Xmlrpc-c use these facilities, so you
+need them to use the XML-RPC-specific libraries.  <b>libxmlrpc_util</b> also
+contains some functions that are not documented for use outside of
+Xmlrpc-c, but rather are intended to be called only by other Xmlrpc-c code.
+<b>libxmlrpc_util</b> is a prerequisite of most other Xmlrpc-c libraries,
+which means you must link it with any program that you link with those other
+libraries.
+
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#assert">Assertions</a>
+<li><a href="#errorhandling">Error Handling</a>
+  <ul>
+    <li><a href="#example_errorhandling">Example</a>
+    <li><a href="#env">Error Environment Variable</a>
+    <li><a href="#usingenv">Using Error Environment Variables</a>
+    <li><a href="#throwerr">Throwing Errors</a>
+  </ul>
+<li><a href="#fatalerror">Fatal Error Handling</a>
+<li><a href="#memoryblock">Memory Blocks</a>
+<li><a href="#base64">Base64 Encoding And Decoding</a>
+<li><a href="#charactercode">Character Code Conversions</a>
+  <ul>
+    <li><a href="#validate_utf8"><b>xmlrpc_validate_utf8()</b></a>
+    <li><a href="#utf8_to_wcs"><b>xmlrpc_utf8_to_wcs()</b></a>
+    <li><a href="#wcs_to_utf8"><b>xmlrpc_wcs_to_utf8()</b></a>
+    <li><a href="#force_to_utf8"><b>xmlrpc_force_to_utf8()</b></a>
+  </ul>
+</ul>
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The <B>&lt;xmlrpc-c/util.h&gt;</B> header file declares the interface
+to <b>libxmlrpc_util</b> and many other things described in this chapter.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the <b>libxmlrpc_util</b>
+library is <b>libxmlrpc_util.a</b> or <b>libxmlrpc_util.so</b>.  The classic
+linker option to cause the library to be linked into your program is
+<tt>-l xmlrpc_util</tt>.  These are hints; you'll have to modify this
+according to conventions of your particular platform.  You'll also
+have to figure out where the library resides and how to make your
+linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p><b>libxmlrpc_util</b> has no prerequisites to link.
+
+
+<h2 id="assert">Assertions</h2>
+
+<p>Xmlrpc-c provides some macros and functions for making assertions
+of various things.  Like the C library <b>assert()</b> function, these
+generate runtime assertion checking code as described above.  But also
+like the <b>assert()</b> function, they <em>don't</em> generate the
+assertion checking code if you compile with the <b>NDEBUG</b> macro defined,
+as with a <b>-DNDEBUG</b> compiler option.
+
+<p>The concept of assertions in code is widely misunderstood, because it
+is somewhat more abstract than C coders are used to.  An assertion is a
+statement in code that declares a certain fact to be true.  It doesn't
+make it true; it just declares that the coder knows it is true.  In a standard
+C library, the <b>assert()</b> function performs this duty.
+
+<p>But what does the statement cause the computer to <em>do</em>?  If
+you're a high level coder, that's none of your business.  You write
+code to describe the solution to a computational problem, and how the
+computer manipulates itself to compute the solution is beyond your
+concern.  Your audience is the human reading your code.
+
+<p>So the most basic function of an assertion is to help the reader read
+the code.  You assert that the value of variable <b>foo</b> is not zero,
+and that helps the reader see that it won't cause a problem to divide by
+it.
+
+<p>Another practical effect of an assertion could be that the compiler
+generates more efficient code with the additional information from your
+higher intelligence about how the program works.  But I've never seen any
+actual compiler capable of that.
+
+<p>An assertion might also help the compiler to point out bugs in your
+program.  You assert that the value of <b>foo</b> is zero, but you
+never initialized <b>foo</b>, so you obviously didn't write the program
+you thought you did.  But I've never seen a compiler with that capability
+either.
+
+<p>Finally, there is run time checking of the assertion.  This one is
+real.  At run time, the program checks that the condition asserted
+really is true.  If it isn't, which means the program is broken, it
+crashes itself.  The advantages of this are twofold: 1) this makes it
+easier to diagnose the bug; 2) it stops the broken program from going on
+to damage something.
+
+<p>People often have trouble seeing the abstract meaning of an
+assertion and simply see it as a statement that tells the computer,
+&quot;crash if X is not true.&quot; But in fact, it's quite the
+opposite: It says, &quot;I assure you X <em>is</em> true.&quot;
+
+<p>People sometimes get the idea that assertion statements are for
+error checking.  That is definitely not what they are for.  If there
+is a possibility that X is false when the program is working
+as designed, you should not assert that X is true.  Instead, check the
+truth of X and if it's false, issue an error message or exit the
+program or return with a failure return code, or something like that.
+
+<p>Incidentally, a common way you know something is true inside a
+subroutine is that you required as an entry condition to the
+subroutine that the caller make sure it is true.  A subroutine assumes
+that it's entry conditions are met, so if you set up the requirement
+that the caller pass only positive values for parameter X, you may
+legitimately assert inside the subroutine that X is positive.  In
+fact, that assertion is a good formal way to state that entry
+condition for the reader of the code.
+
+<p>You can use <b>XMLRPC_ASSERT_PTR_OK()</b> to <a
+href="#assert">assert</a> that a pointer is a valid pointer and not a
+null pointer.
+
+
+<h2 id="errorhandling">Error Handling</h2>
+
+<p>Xmlrpc-c provides facilities for handling errors.  The Xmlrpc-c
+functions use them, and you can use them in your own code.  
+
+<h3 id="example_errorhandling">Example</h3>
+
+<p>Here is an example of how to use these facilities:
+
+<pre>
+<code>
+    xmlrpc_env env;
+
+    xmlrpc_env_init(&amp;env);
+
+    xmlrpc_do_something(&amp;env);
+    if (env.fault_occurred)
+        report_error_appropriately();
+
+    xmlrpc_env_clean(&amp;env);
+
+</code>
+</pre>
+
+
+<h3 id="env">Error Environment Variable</h3>
+
+<p>XML-RPC defines a &quot;fault structure.&quot; It is represented in
+the protocol by a &lt;fault&gt; XML element.  In an XML-RPC response,
+it describes how a request failed, with a fault code and and a fault
+string.  The fault code is supposed to be an integer from a small set
+agreed upon by the client and server and describe the general nature
+of the failure, while the fault string describes the failure in text,
+in a form typically suitable only for presenting to a human user.  The
+fault string is whatever the server thinks best makes the point; there
+are no constraints on it.
+
+<p>Because an error detected in a server often turns into an error
+response to the client, and an error reported in a client is often
+what was reported in an error response from the server, Xmlrpc-c
+represents errors the same way as the XML-RPC fault structure.  That
+makes it easy to pass the error information around.
+
+<p>Xmlrpc-c error handling facilities are based on an &quot;error
+environment&quot; variable (not to be confused with a Unix process
+&quot;environment variable&quot; -- we're talking about a C variable).
+An error environment variable has type <b>xmlrpc_env</b>.  You pass
+one into a function which might recognize an error and fail.  The
+function sets in the error environment variable whether or not it
+failed, and if it did, information about the failure analogous to an
+XML-RPC fault structure.  If the failure has nothing to do with an
+XML-RPC request failing, the fault code is always
+<b>XMLRPC_INTERNAL_ERROR</b>.
+
+<p>I would like to point out that discrete error codes such as XML-RPC
+fault codes and the classic C integer return code, are archaic -- They
+come from an era when a couple of bytes was all a program could spare
+for describing an error.  They have the apparent advantage of being
+machine-friendly, but in practice people almost never write code to
+check the value of a discrete error code.  The code at best checks
+whether a function succeeded or failed, and any more specific
+information than that just gets passed up to a human.
+
+<p>Moreover, if the fact of a particular kind of failure is informative
+enough that a program can take a particular action because of it, then
+the user ought to be able to get that information from a successful RPC
+instead of by analyzing the failure of one.  For example, it is better
+to have a means of querying explicitly whether a file named <b>foo</b> exists
+that to have the user attempt to access the file and recognize a
+special fault for &quot;file doesn't exist.&quot;
+
+<p>Therefore, I recommend you pay little attention to Xmlrpc-c's fault
+codes and instead treat the fault string as the primary error
+indication.  Don't be stingy in your fault strings -- it doesn't cost
+you anything to return 25 words of error information and it might save
+the user a lot of diagnosis time.  Break with the Unix tradition of
+providing at most 3 words of information about any failure.  When a
+subroutine you call fails, include the subroutine's fault string plus
+information about the context in which you called it in the fault
+string you return to your caller.
+
+<h3 id="usingenv">Using Error Environment Variables</h3>
+
+<p>It is possible for a variable of type <b>xmlrpc_env</b> to be
+invalid.  To assert that this is not the case, use
+<b>ASSERT_ENV_OK()</b>.  
+
+<p>Before passing an error environment variable to anything, you must
+initialize it with <b>xmlrpc_env_init()</b>.  This sets the environment
+variable to a valid state that indicates no error has occurred.
+
+<p>When you are done with an error environment variable, you must declare
+such by calling <b>xmlrpc_env_clean()</b> on it.  After that, you cannot
+use it again unless you run <b>xmlrpc_env_init()</b> on it again.
+
+<p>To set an error environment variable to indicate an error has
+occurred, use <b>xmlrpc_env_set_fault()</b>.  The arguments to that
+are a fault code and a fault string.  Or use
+<b>xmlrpc_env_set_fault_formatted()</b>, which is the same except in
+place of the fault string argument, you have a printf-style format
+string followed by printf-style substitution arguments.  Or use
+<b>xmlrpc_faultf()</b>, which is the same as
+<b>xmlrpc_env_set_fault_formatted()</b> except that the fault code is
+always <B>XMLRPC_INTERNAL_ERROR</B> (and its name is shorter!).
+
+<p>In any function call to build an error environment variable, you supply the
+fault string as a
+NUL-terminated <a href="libgeneral.html#characterencoding">UTF-8</a> string of
+XML characters.  (If you aren't familiar with UTF-8, just use ASCII, because
+that meets the UTF-8 requirement.  XML characters are everything but the ASCII
+control characters, plus CR, LF, and Tab).  If your argument is not valid
+UTF-8 XML characters, the function edits it in arbitrary ways to make a string
+that is.
+
+<p>These are the defined fault codes and for each, the integer to
+which it maps should it find its way into an XML-RPC fault
+structure.  The fault code names are defined C identifiers.
+
+<table summary="fault codes">
+<tr><th><td>Fault code name                 <td>XML-RPC code
+<tr><td>XMLRPC_INTERNAL_ERROR               <td>-500
+<tr><td>XMLRPC_TYPE_ERROR                   <td>-501
+<tr><td>XMLRPC_INDEX_ERROR                  <td>-502
+<tr><td>XMLRPC_PARSE_ERROR                  <td>-503
+<tr><td>XMLRPC_NETWORK_ERROR                <td>-504
+<tr><td>XMLRPC_TIMEOUT_ERROR                <td>-505
+<tr><td>XMLRPC_NO_SUCH_METHOD_ERROR         <td>-506
+<tr><td>XMLRPC_REQUEST_REFUSED_ERROR        <td>-507
+<tr><td>XMLRPC_INTROSPECTION_DISABLED_ERROR <td>-508
+<tr><td>XMLRPC_LIMIT_EXCEEDED_ERROR         <td>-509
+<tr><td>XMLRPC_INVALID_UTF8_ERROR           <td>-510
+</table>
+
+<p>The XML-RPC specification does not specify the meaning of any fault
+codes -- it says that is up to the particular client and server or
+some higher standard to specify.  Xmlrpc-c is one such higher
+standard, as expressed above.  I don't know if those fault code
+values are used by any servers and clients other than those that use
+Xmlrpc-c.
+
+<p>Note that Xmlrpc-c does <em>not</em> conform to any part of the <a
+href="http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php">Fault Code
+Interoperability standard</a>.
+
+<p>To determine whether an error environment variable indicates a
+failure or not, just look at the <b>fault_occurred</b> member of the C
+struct which is type <b>xmlrpc_env</b>.  (This is uncharacteristically
+primitive and un-object-oriented.  There really should be a
+<b>fault_occurred()</b> function (method) for querying this).
+
+<p>You must ensure that what you pass to a subroutine as an error
+environment variable is valid and that anything that is passed to you
+as an environment variable is valid when you return.  Conversely, you
+may assume that anything passed or returned to you as an error
+environment variable is valid.  Bear in mind that the functions that
+manage error environment variables may have an argument that is an
+error environment variable, but not <em>the</em> error environment
+variable.  E.g. the argument to <b>xmlrpc_env_init()</b> is an
+environment variable, but its purpose isn't to return error
+information, and obviously, you aren't required to ensure it is valid
+before the call.
+
+<h3 id="throwerror">Throwing Errors</h3>
+
+<p>Xmlrpc-c provides facilities, based on error environment variables,
+for doing bailout style error handling -- basically, a goto around all
+the normal code wherever you detect that something's gone horribly
+wrong.  This mimics what some modern object oriented languages do, but
+since C does not have the infrastructure that those have (mainly,
+automatic destructors of objects), it basically is just an ugly goto,
+with all the associated unreadability and opportunity for coding
+error.
+
+<p>If you like high level code, don't use these facilities.
+
+<p><B>XMLRPC_FAIL()</B> sets the specified environment variable to
+indicate a failure, with the indicated fault code and fault string,
+and then branches to the label <b>cleanup</b>.  You must provide a
+label <b>cleanup</b> that undoes anything your subroutine might have
+done and returns from your subroutine.
+
+<p>Example:
+
+<pre>
+<code>
+static void
+mysubroutine(void) {
+  mymem = malloc(80);
+
+  rc = open(&quot;myfile&quot;, 0);
+  if (rc &lt; 0)
+    XMLRPC_FAIL(&amp;env, XMLRPC_INTERNAL_ERROR, &quot;couldn't open the file&quot;);
+
+  process the file ...
+
+
+cleanup:
+  free(mymem);
+}
+
+</code>
+</pre>
+
+<p>We call what <b>XMLRPC_FAIL</b> does &quot;throwing an error.&quot;
+
+<p><b>XMLRPC_FAIL1()</b> is the same as <b>XMLRPC_FAIL()</b>, except that
+instead of the fault string, you give it a printf-style format string that
+contains 1 substitution and an argument for that substitution.
+
+<p><b>XMLRPC_FAIL2</b> is the same except with 2 substitutions, and
+<B>XMLRPC_FAIL3</B> is the same except with 3 substitutions.
+
+<p><B>XMLRPC_FAIL_IF_NULL()</B> is the same as <b>XMLRPC_FAIL()</b>
+except that you also pass it a pointer, and it throws an error only if
+that pointer is null; otherwise, it does nothing.
+
+<p><b>XMLRPC_FAIL_IF_FAULT()</b> checks the error environment variable
+you supply and if it indicates no error, does nothing.  If it does
+indicate an error, <B>XMLRPC_FAIL_IF_FAULT()</B> throws an error.
+
+
+<h2 id="fatalerror">Fatal Error Handling</h2>
+
+<p>The utilities in this section have nothing particular to do with
+Xmlrpc-c.  They're just conveniences for any C programmer.
+
+<p><b>XMLRPC_FATAL_ERROR()</b> issues a message containing the indicated
+string and the location in the program that you called it, if possible.
+Use this where you detect a bug in your program.
+
+
+<h2 id="memoryblock">Memory Blocks</h2>
+
+<p>Xmlrpc-c provides a data type for managing blocks of memory.  Xmlrpc-c
+uses such blocks of memory in some of its interfaces, and you may find it
+convenient to use for your own purposes too.
+
+<p>The basic object is a &quot;memory block.&quot; A memory block is
+essentially an array whose size you can change at will.  The array
+elements can be of any type (e.g. an array of characters, an array of
+integers, an array of <b>struct foo</b>).
+
+Here's an example:
+
+<pre>
+<code>
+#include &lt;xmlrpc.h&gt;;
+
+struct mystruct {
+    time_t measurementTime;
+    int measurement;
+    bool reported;
+}
+struct mystruct * myArray;
+xmlrpc_mem_block * myMemBlockP;
+
+myMemBlockP = XMLRPC_TYPE_MEM_BLOCK_NEW(struct mystruct, &amp;env, 0);
+
+for (i = 0; i &lt; 5; ++i) {
+    struct mystruct newMeasurement;
+    newMeasurement.time        = time(NULL);
+    newMeasurement.measurement = currentMeasurement();
+    newMeasurement.reported    = FALSE;
+
+    XMLRPC_TYPED_MEM_BLOCK_APPEND(struct mystruct, &amp;env,
+                                  &amp;myMemBlockP, 
+                                  &amp;newMeasurement, 1);
+}
+myArray = XMLRPC_TYPED_MEM_BLOCK_CONTENTS(struct mystruct, myMemBlockP);
+
+printf(&quot;the 3rd measurement was %d\n&quot;, myArray[2]);
+
+myArray[2].reported = TRUE;
+
+...
+
+XMLRPC_TYPED_MEM_BLOCK_FREE(struct mystruct, &amp;myMemBlockP);
+
+</code>
+</pre>
+
+<p><b>xmlrpc_mem_block</b> is the type of a memory block.  This one
+type is used for all memory blocks regardless of the element type, and
+you must indicate on every call to the memory block manipulation
+functions what the type is.
+
+
+<p>To create a memory block, use <b>XMLRPC_TYPED_MEM_BLOCK_NEW()</b>.  To
+destroy one, use <b>XMLRPC_TYPED_MEM_BLOCK_FREE()</b>.
+
+
+<p>To find out the current size (number of elements) of a memory block, use
+<b>XMLRPC_TYPED_MEM_BLOCK_SIZE()</b>.  To change the current size
+(to any number of elements), use <b>XMLRPC_TYPE_MEM_BLOCK_RESIZE()</b>.
+
+<P>To access and update the contents of a memory block, use
+<b>XMLRPC_TYPED_MEM_BLOCK_CONTENTS()</b> to get a pointer that you
+can use as a C array.  (See above example).
+
+<p>Another way to set the contents of the memory block is to use
+<b>XMLRPC_TYPED_MEM_BLOCK_APPEND()</b> to increase the size of the array
+by one and set the added element to the value you specify.
+
+
+<p><b>XMLRPC_TYPED_MEM_BLOCK_INIT()</b> and
+<b>XMLRPC_TYPED_MEM_BLOCK_CLEAN()</b> are like the create and destroy
+functions, but you supply the storage for the <b>xmlrpc_mem_block</b>.
+Example:
+
+<pre>
+<code>
+static void
+myFunction(void) {
+    xmlrpc_env env;
+    xmlrpc_mem_block myMemBlock;
+
+    XMLRPC_TYPED_MEM_BLOCK_INIT(unsigned int, &amp;env, &amp;myMemBlock, 5);
+    -- use myMemBlock --
+    XMLRPC_TYPED_MEM_BLOCK_CLEAN(unsigned int, &amp;myMemBlock);
+}
+
+</code>
+</pre>
+
+
+<h2 id="base64">Base64 Encoding And Decoding</h2>
+
+<p>These are functions to encode byte strings into base64 and decode base64.
+
+<p>Base64 is a code that can represent an arbitrary string of bytes
+as a string of printable characters.  The base64 code uses only the 
+64 printable characters from the ASCII code.  These routines encode those
+characters as ASCII.  The encodings are therefore necessarily UTF-8
+Unicode as well.
+
+<p>In the XML-RPC &lt;base64&gt; XML element, the contents of the element
+are the base64 encoding of a byte string.  So you can use these functions
+to create and interpret an XML-RPC XML stream.  You don't need these
+functions if you use the higher level Xmlrpc-c facilities, because they
+take care of the encoding and decoding of XML for you.  Even if you
+use the <a href="#xmlencode">XML Encoding And Decoding</a> functions,
+the library takes care of it.  You need these functions for XML-RPC only
+if you're assembling your own XML character by character.
+
+<p><b>xmlrpc_base64_encode()</b> encodes a string of bytes into base64.
+
+<p><b>xmlrpc_base64_encode_without_newlines()</b> does the same, but
+encodes it as a single line.  Base64 allows the characters to be
+spread over lines any way you like -- the line breaks are meaningless.
+<b>xmlrpc_base64_encode()</b> uses short lines to make the code easy
+to display.  But some things that look at base64 codes, such as HTTP
+authentication, do not understand that newlines are meaningless, so
+you may need to use <b>xmlrpc_base64_encode_without_newlines()</b> to
+make sure the only one is at the very end.
+
+<p><b>xmlrpc_base64_decode()</b> decodes a string of bytes from base64.
+
+<h2 id="charactercode">Character Code Conversions</h2>
+
+<p>These functions deal with the various ways of representing characters and
+text strings in a program.
+See <a href="libgeneral.html#characterencoding">Character Encoding</a>.
+
+<p>Like XML-RPC, Xmlrpc-c services mostly expect strings in UTF-8 form.
+Note that all ASCII strings are also UTF-8.  A UTF-8 string in which no
+byte has the high bit on is an ASCII string.
+
+<p>Assuming the underlying platform has &quot;wide&quot; character string
+services, Xmlrpc-c can alternatively deal with UCS-2 strings represented
+with the <b>wchar_t</b> data type.
+
+<p>Note that ANSI C does not precisely define the representation used
+by <b>wchar_t</b>.  Xmlrpc-c always uses UCS-2, but your program may
+expect UTF-16, UCS-4, or just about anything else.  If so, you won't
+be able to use these conversion subroutines.
+
+<h3 id="validate_utf8">xmlrpc_validate_utf8()</h3>
+
+<p><b>xmlrpc_validate_utf8()</b> confirms that a text string
+contains valid UTF-8 characters.  It fails if the string does not.
+More precisely, it confirms that the text string contains valid UTF-8
+characters of the Basic Multilingual Plane, which means they could
+be represented as UCS-2.
+
+<p>Prototype:
+
+<pre>
+  <code>
+    void 
+    xmlrpc_validate_utf8(xmlrpc_env * envP,
+                         const char * utf8_data,
+                         size_t       utf8_len);
+    </code>
+  </pre>
+
+<p><i>envP</i> is the handle of an <a href="#env">error environment
+variable</a>.
+
+<p><i>utf8_data</i> points to the bytes which form the alleged UTF-8
+string; <i>utf8_len</i> is its length.
+
+
+<h3 id="utf8_to_wcs">xmlrpc_utf8_to_wcs()</h3>
+
+<p><b>xmlrpc_utf8_to_wcs()</b> converts a UTF-8 character string to a
+UCS-2 &quot;wide&quot; character string (<b>wchar_t</b>).
+
+<p>Prototype:
+
+<pre>
+  <code>
+    xmlrpc_mem_block *
+    xmlrpc_utf8_to_wcs(xmlrpc_env * envP,
+                       const char * utf8_data,
+                       size_t       utf8_len);
+    </code>
+  </pre>
+
+<p><i>envP</i> is the handle of an <a href="#env">error environment
+variable</a>.
+
+<p><i>utf8_data</i> points to the bytes which form the UTF-8
+string; <i>utf8_len</i> is its length.  If this is not valid UTF-8,
+the function fails.
+
+<p>The function returns a newly constructed <a href="#memoryblock">memory
+block</a> which contains the bytes of the UCS-2 string.
+
+
+<h3 id="wcs_to_utf8">xmlrpc_wcs_to_utf8()</h3>
+
+<p><b>xmlrpc_wcs_to_utf8()</b> converts a UCS-2 &quot;wide&quot;
+character string (<b>wchar_t</b>) to UTF-8.
+
+<p>Prototype:
+
+<pre>
+  <code>
+    xmlrpc_mem_block *
+    xmlrpc_wcs_to_utf8(xmlrpc_env *    const envP,
+                       const wchar_t * const wcsData,
+                       size_t          const wcsLen);
+    </code>
+  </pre>
+
+<p><i>envP</i> is the handle of an <a href="#env">error environment
+variable</a>.
+
+<p><i>wcsData</i> points to the string of UCS-2 characters.  <i>wcsLen</i>
+is its length in characters (i.e. the number of bytes it occupies is twice
+<i>wcsLen</i>).
+
+
+<h3 id="force_to_utf8">xmlrpc_force_to_utf8()</h3>
+
+<p><b>xmlrpc_force_to_utf8()</b> is a weird but handy function.  It
+examines the string you pass it to see if it is valid UTF-8, like
+<b>xmlrpc_validate_utf8()</b>, but if it <em>isn't</em>, modifies it
+until it is.  To do this, it 1) replaces some characters that have
+the high bit on with DEL (0x3F) and 2) chops a few characters off the
+end.
+
+<p>This is useful because you may have some memory that is supposed to
+contain a UTF-8 string but in reality contains garbage.  The supposed
+string winds its way through XML-RPC to end up being viewed by a
+human, and you'd like that human to see that it's garbage and deal
+with it.  But the various Xmlrpc-c functions won't transport arbitrary
+garbage; they transport only UTF-8.  The mutations that
+<b>xmlrpc_validate_utf8()</b> makes are small enough that if it's only
+partly garbage, then the non-garbage parts probably will make it all
+the way through.
+
+<p>Prototype:
+
+<pre>
+  <code>
+    void
+    xmlrpc_force_to_utf8(char * const buffer);
+    </code>
+  </pre>
+
+<p><i>buffer</i> points to the quasi-UTF-8 string, which is terminated by a
+zero byte (both as input and output).
+
+<p>This function was new in Xmlrpc-c 1.12 (September 2007).
+
+
+<h3 id="force_to_xml_chars">xmlrpc_force_to_xml_chars()</h3>
+
+<p><b>xmlrpc_force_to_xml_chars()</b> is
+similar to <b>xmlrpc_force_to_utf8()</b>.  It modifies a UTF-8 string to make
+it contain nothing but valid XML characters.  All UTF-8 characters except
+control characters are also XML characters, and CR, LF, and tab are
+XML characters as well.  So this function simply replaces those 29
+non-XML UTF-8 characters with DEL (the XML character with code point 0x3f).
+
+<p>This isn't terribly useful, because of the Xmlrpc-c extension to
+XML-RPC that allows a string to have non-XML characters in it.  But you
+may not want to exploit that extension because your communication partner
+doesn't have a similar extension.  In that case, you will have to make sure
+you never create an XML-RPC string value that contains a non-XML character,
+and <b>xmlrpc_force_to_xml_chars()</b> can help with that.
+
+<p>This function was new in Xmlrpc-c 1.12 (September 2007).
+
+</body>
+</html>

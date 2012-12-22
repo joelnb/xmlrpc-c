@@ -1,0 +1,2274 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User Manual For XML-RPC For C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc++</h1>
+
+<p>This chapter describes the functions in the <b>libxmlrpc++</b>
+function library, which is part of XML-RPC For C/C++ (Xmlrpc-c).  Also
+see <a href="libgeneral.html">General Library Information - C++</a>.
+
+<p><b>libxmlrpc++</b> provides low-level classes that are useful in
+XML-RPC clients and servers.  For example, it includes classes for the
+various data types defined by XML-RPC.  You use these classes with
+every other Xmlrpc-c C++ library, and those libraries also use
+<b>libxmlrpc++</b> internally.  Few Xmlrpc-c applications use only
+<b>libxmlrpc++</b>.
+
+<p>You must know something about XML-RPC (the protocol) to understand this
+chapter.  You don't have to know the details of the protocol, since 
+Xmlrpc-c is meant to spare you from learning that, but you do have to know
+the kinds of things that make up an XML-RPC transaction.
+
+<p>Everything you need to know about XML-RPC is <a
+href="http://www.xmlrpc.com">here</a>.
+
+<p>Everything described in this chapter is new in XML-RPC For C/C++ 1.03
+(June 2005).
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#header">Interface Header File</a>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#errorobject">Error Object</a>
+  <ul>
+    <li><a href="#error">Class <b>girerr::error</b></a>
+    <ul>
+      <li><a href="#constructors_error">Constructors</a>
+      <li><a href="#what_error"><b>what</b> Method</a>
+    </ul>
+  </ul>
+<li><a href="#autoObject">Auto-object</a>
+<li><a href="#constropt">constrOpt paradigm for constructor parameters</a>
+<li><a href="#xmlrpcvalue">XML-RPC Values</a>
+  <ul>
+    <li><a href="#class_value">Class <b>xmlrpc_c::value</b></a>
+    <ul>
+      <li><a href="#constructors_value">Constructors</a>
+      <li><a href="#type_t"><b>type_t</b> Type</a>
+      <li><a href="#type"><b>type</b> Method</a>
+      <li><a href="#cvalue_generic"><b>cvalue</b> method</a>      
+      <li><a href="#isinstantiated"><b>isInstantiated</b> Method</a>
+      <li><a href="#assignto">Assign-to Operator</a>
+    </ul>
+    <li><a href="#class_valueint">Class <b>xmlrpc_c::value_int</b></a>
+    <ul>
+      <li><a href="#constructors_valueint">Constructors</a>
+      <li><a href="#cast_valueint">Cast Operators</a>
+      <li><a href="#cvalue_int"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuei8">Class <b>xmlrpc_c::value_i8</b></a>
+    <ul>
+      <li><a href="#constructors_valuei8">Constructors</a>
+      <li><a href="#cast_valuei8">Cast Operators</a>
+      <li><a href="#cvalue_i8"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valueboolean">Class <b>xmlrpc_c::value_boolean</b></a>
+    <ul>
+      <li><a href="#constructors_valueboolean">Constructors</a>
+      <li><a href="#cast_valueboolean">Cast Operators</a>
+      <li><a href="#cvalue_boolean"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuestring">Class <b>xmlrpc_c::value_string</b></a>
+    <ul>
+      <li><a href="#constructors_valuestring">Constructors</a>
+      <li><a href="#cast_valuestring">Cast Operators</a>
+      <li><a href="#crlfvalue"><b>crlfvalue</b> method</a>
+      <li><a href="#cvalue_string"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuedouble">Class <b>xmlrpc_c::value_double</b></a>
+    <ul>
+      <li><a href="#constructors_valuedouble">Constructors</a>
+      <li><a href="#cast_valuedouble">Cast Operators</a>
+      <li><a href="#cvalue_double"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuedatetime">
+      Class <b>xmlrpc_c::value_datetime</b></a>
+    <ul>
+      <li><a href="#constructors_valuedatetime">Constructors</a>
+      <li><a href="#cast_valuedatetime">Cast Operators</a>
+      <li><a href="#cvalue_datetime"><b>cvalue</b> method</a>
+      <li><a href="#iso860value_datetime"><b>iso8601Value</b> method</a>
+    </ul>
+    <li><a href="#class_valuebytestr">
+      Class <b>xmlrpc_c::value_bytestr</b></a>
+    <ul>
+      <li><a href="#type_valuebytestr">Types</a>
+      <li><a href="#constructors_valuebytestr">Constructors</a>
+      <li><a href="#cast_valuebytestr">Cast Operators</a>
+      <li><a href="#vectorucharvalue"><b>vectorUcharValue</b> Method</a>
+      <li><a href="#cvalue_bytestr"><b>cvalue</b> method</a>
+      <li><a href="#length"><b>length</b> Method</a>
+    </ul>
+    <li><a href="#class_valuenil">
+      Class <b>xmlrpc_c::value_nil</b></a>
+    <ul>
+      <li><a href="#constructors_valuenil">Constructors</a>
+      <li><a href="#cast_valuenil">Cast Operators</a>
+      <li><a href="#cvalue_nil"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuestruct">
+      Class <b>xmlrpc_c::value_struct</b></a>
+    <ul>
+      <li><a href="#type_valuestruct">Types</a>
+      <li><a href="#constructors_valuestruct">Constructors</a>
+      <li><a href="#cast_valuestruct">Cast Operators</a>
+      <li><a href="#cvalue_struct"><b>cvalue</b> method</a>
+    </ul>
+    <li><a href="#class_valuearray">
+      Class <b>xmlrpc_c::value_array</b></a>
+    <ul>
+      <li><a href="#type_valuearray">Types</a>
+      <li><a href="#constructors_valuearray">Constructors</a>
+      <li><a href="#cast_valuearray">Cast Operators</a>
+      <li><a href="#vectorvaluevalue"><b>vectorValueValue</b> method</a>
+      <li><a href="#cvalue_array"><b>cvalue</b> method</a>
+      <li><a href="#size"><b>size</b> Method</a>
+      <li><a href="#arrayvaluearray">
+        <b>arrayValueArray</b> Generator Function</a>
+      <li><a href="#arrayvalueslice">
+        <b>arrayValueSlice</b> Generator Function</a>
+    </ul>
+  </ul>
+<li><a href="#fault">XML-RPC Faults</a>
+  <ul>
+    <li><a href="#class_fault">Class <b>xmlrpc_c::fault</b></a>
+    <ul>
+      <li><a href="#code_t"><b>code_t</b> Type</a>
+      <li><a href="#constructors_fault">Constructors</a>
+      <li><a href="#getdescription"><b>getDescription</b Method></a>
+      <li><a href="#getcode"><b>getCode</b Method></a>
+    </ul>
+  </ul>
+<li><a href="#paramlist">XML-RPC Parameter Lists</a>
+  <ul>
+    <li><a href="#class_paramlist">Class <b>xmlrpc_c::paramList</b></a>
+    <ul>
+      <li><a href="#constructors_paramlist">Constructors</a>
+      <li><a href="#add"><b>add</b Method></a>
+      <li><a href="#addx"><b>addx</b Method></a>
+      <li><a href="#addc"><b>addc</b Method></a>
+      <li><a href="#size_paramlist"><b>size</b Method></a>
+      <li><a href="#subscript">Subscript Operator</a>
+      <li><a href="#getint"><b>getint</b>, etc. Methods</a>
+      <li><a href="#verifyend"><b>verifyEnd</b> Method</a>
+    </ul>
+  </ul>
+<li><a href="#rpcoutcome">XML-RPC RPC Outcome</a>
+  <ul>
+  <li><a href="#class_rpcOutcome">Class <b>xmlrpc_c::rpcOutcome</b></a>
+    <ul>
+      <li><a href="#constructors_rpcoutcome">Constructors</a>
+      <li><a href="#succeeded_rpcoutcome"><b>suceeded</b> Method</a>
+      <li><a href="#getresult_rpcoutcome"><b>getResult</b> Method</a>
+      <li><a href="#getfault_rpcoutcome"><b>getFault</b> Method</a>
+    </ul>
+  </ul>
+<li><a href="#xmlencode">XML Encoding And Decoding</a>
+  <ul>
+    <li><a href="#generatecall"><b>xmlrpc_c::generateCall</b> Function</a>
+    <li><a href="#parsecall"><b>xmlrpc_c::parseCall</b> Function</a>
+    <li><a href="#generateresponse">
+      <b>xmlrpc_c::generateResponse</b> Function</a>
+    <li><a href="#parseresponse"><b>xmlrpc_c::parseResponse</b> Function</a>
+    <li><a href="#parseresponsesucc">
+      <b>xmlrpc_c::parseResponseSuccessful</b> Function</a>
+  </ul>
+<li><a href="#base64">Base64 Encoding And Decoding</a>
+  <ul>
+    <li><a href="#base64frombytes"><b>base64FromBytes</b> Function</a>
+    <li><a href="#bytesfrombase64"><b>bytesFromBase64</b> Function</a>
+  </ul>
+</ul>
+
+
+<h2 id="header">Interface Header File</h2>
+
+<p>The interfaces to the various facilities of <b>libxmlrpc++</b> are declared
+by the header files <b>&lt;xmlrpc-c/base.hpp&gt;</b>,
+<b>&lt;xmlrpc-c/xml.hpp&gt;</b>, <b>&lt;xmlrpc-c/girerr.hpp&gt;</b>,
+and <b>&lt;xmlrpc-c/timeout.hpp&gt;</b>.
+
+<p>Documentation of each class tells you which interface header file
+to use.
+
+<p>You'll have to figure out where on your system this file lives and
+how to make your compiler look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the <b>libxmlrpc++</b>
+library is <b>libxmlrpc++.a</b> or <b>libxmlrpc++.so</b>.  The classic
+linker option to cause the library to be linked into your program is
+<tt>-l xmlrpc++</tt>.  These are hints; you'll have to modify this
+according to conventions of your particular platform.  You'll also
+have to figure out where the library resides and how to make your
+linker look there for it.  Or use
+<a href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>.
+
+<p>There is an older generation C++ library, not documented, that older
+programs (probably written before June 2005) use.  That library is
+<b>libxmlrpc_cpp.a</b>.
+
+<p>The following libraries are prerequisites of <b>libxmlrpc++</b>,
+so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="errorobject">Error Object</h2>
+
+<h3 id="error">Class <b>girerr::error</b></h3>
+
+<p>An object of class <b>girerr::error</b> represents an error that caused
+an Xmlrpc-c method to fail.  It is derived from standard C++ class
+<b>std::exception</b>.
+
+<p>You ordinarily see one of these objects when it gets thrown, as
+described in <a href="#succfail">Success/Failure</a>.
+
+<p>This class is declared in header file <b>xmlrpc-c/girerr.hpp</b>.
+
+<h4 id="constructors_error">Constructors</h4>
+
+<p>The only constructor takes a <b>std::string</b> as an argument.  The
+string is the text description of the error.
+
+
+<p>Example:
+<pre>
+<code>
+    throw(error(&quot;Everything's basically gone to Hell&quot;));
+</code>
+</pre>
+
+<h4 id="what_error"><b>what</b> Method</h4>
+
+<p>The <b>what</b> method returns a text description of the error.
+
+<p>Example:
+<pre>
+<code>
+    try {
+        rpcP-&gt;call();
+    } catch (std::exception const&nbsp;e) {
+        cerr &lt;&lt; &quot;call failed because &quot;
+             &lt;&lt; e.what() &lt;&lt; endl;
+    }
+</code>
+</pre>
+
+<h2 id="autoObject">Auto-object</h2>
+
+<p>Xmlrpc-c uses shared automatic pointers extensively.  With shared
+automatic pointers, an object always knows how many pointers exist to it
+and the object gets destroyed automatically when the last pointer to it
+gets destroyed.  That way, your code never has to explicitly destroy
+an object or worry that it might use a stale pointer.
+
+<p>To do this, Xmlrpc-c defines a class <b>girmem::autoObject</b> (the
+<b>girmem</b> namespace name is essentially arbitrary).  This is an
+abstract base class; various Xmlrpc-c classes are derived from it,
+for example <b>xmlrpc_c::client</b> and <b>xmlrpc_c::method</b>.
+
+<P>Another class, <b>xmlrpc_c::autoObjectPtr</b>, is for the pointers.
+An object of class <b>autoObjectPtr</b> points to an object of class
+<b>autoObject</b>.  <b>autoObjectPtr</b> is also an abstract base class.
+For each class derived from <b>autoObject</b>, there is a corresponding
+class derived from <b>autoObjectPtr</b>, named the same except with a
+&quot;Ptr&quot; suffix.  For example, <b>xmlrpc_c::clientPtr</b>
+and <b>xmlrpc_c::methodPtr</b>.
+
+<p>In our discussion of auto-objects and their pointers, we refer to objects
+of the derived classes as being objects of class <b>autoObject</b> and
+<b>autoObjectPtr</b>, though strict C++ terminology probably says that isn't
+right.  It's just a lot more convenient to treat the base class as a
+superclass.
+
+<p>The constructor, destructor, copy constructor, and assignment operator
+of <b>autoObjectPtr</b> maintain the reference count of the associated
+<b>autoObject</b>.
+
+<p>Each <b>autoObjectPtr</b> object has a pointer dereference operator
+so you can use it like you expect to use a pointer:
+
+<pre>
+<code>
+    void foo callIt(clientPtr const clientP) {
+        clientP->call(...);
+    }
+</code>
+</pre>
+
+<p>You create an <b>autoObjectPtr</b> like this:
+
+<pre>
+<code>
+    clientPtr const clientP(new client(...));
+</code>
+</pre>
+
+<p>If the <b>new</b> fails for lack of memory and returns a NULL pointer,
+the <b>autoObjectPtr</b> constructor throws an error.
+
+<p>An <b>autoObjectPtr</b> object can point to nothing.  Such an object
+exists just to hold a place -- an undefined variable waiting to be assigned.
+But unlike a C++ pointer, when you try to dereference such a pointer, you
+don't get a crash or wild reference, but a thrown error.  You create an
+undefined <b>autoObjectPtr</b> with the no-argument constructor.
+
+<p>You cannot assign to an <b>autoObjectPtr</b> that already points to
+something.  An attempt to do so throws an error.
+
+<h3>Use Paradigm</h3>
+
+<p>To use an <b>autoObject</b> properly, you must create it
+dynamically (with <b>new</b>).  Automatic and static storage class don't
+work.  (But see below, because you obviously don't need <b>autoObject</b>
+behavior with those storage classes).
+
+<p>To use an <b>autoObject</b> properly, you must never refer to it except
+via an <b>autoObjectPtr</b>, but sometimes the vagaries of C++ require you
+to have a C++ pointer to it.  For that purpose, an <b>autoObjectPtr</b> has
+a <b>get</b> method that returns a C++ pointer to the associated
+<b>autoObject</b>.  If you use this, you must make sure that you use
+that pointer (and any copy of it) only while an <b>autoObjectPtr</b>
+to the same object exists.
+
+<p>Alternatively, you can ignore this whole topic and use an
+<b>autoObject</b> like any other C++ object, managing its lifetime the
+conventional way.  The <b>autoObject</b> characteristics appear only
+when you create an <b>autoObjectPtr</b> for it.
+
+For example, you can have an automatic variable of type
+<b>xmlrpc-c::client</b>:
+
+<pre>
+<code>
+    {
+        client myClient(...);
+        myClient.call(...);
+    }
+</code>
+</pre>
+
+Or you can refer to it exclusively by C++ pointers:
+
+<pre>
+<code>
+    client * myClientP = new client(...);
+    myClientP-&gt;call();
+    delete(myClientP);
+</code>
+</pre>
+
+<h2 id="constropt">ConstrOpt Paradigm for Constructor Parameters</h2>
+
+<p>C++ itself does not provide a way for a method to have named
+parameters, and there's no practical way to have optional parameters.
+Both of these are especially useful on constructor methods, so many of
+the Xmlrpc-c classes have a constructor that follows a paradigm that
+provides the equivalent, as in the following example:
+
+<pre>
+<code>
+    country canada(country::constrOpt()
+                   .population(5)
+                   .landarea(10)
+                   .un_member(true)
+</code>
+</pre>
+
+<P>At first sight, this doesn't even look like C++, but if you look
+more closely, you can see that it is.  The periods before the
+parameter names are the &quot;member of&quot; operator.  A more normal
+way (but not as convenient for the present purpose) to write this
+would be:
+
+<code>
+country:constrOpt().population(5).landarea(10)...
+</code>
+
+<p><b>constrOpt</b> is a subclass of <b>country</b>, so the
+construction <b>country::constrOpt()</b> constructs one.
+<b>population</b> is a method of Class <b>constrOpt</b> whose return
+value is a reference to its own object.  The same is true of
+<b>landarea</b> and <b>un_member</b>.  So the code above simply calls
+the <b>population</b>, <B>landarea</B>, and <b>un_member</b> methods,
+in succession, on a new object of Class <b>constrOpt</b> and passes a
+reference to that new object to the <b>country</b> constructor.
+
+<p>The constructor for Class <b>country</b> is simple:
+
+<pre>
+<code>
+    country(country::constrOpt const&amp; opt);
+</code>
+</pre>
+
+<p><b>country::constrOpt</b> is defined such that the constructor of
+<b>canada</b> can find out which of <b>constrOpt</b>'s methods where
+called, and with what argument, thus making the paradigm shown above
+the equivalent of having named optional parameters on the constructor.
+
+<p>In Xmlrpc-c, this constructor option subclass is always named
+&quot;constrOpt&quot; when it exists.  But not all classes have this
+kind of constructor.
+
+<p>You can put the options in any order and omit any you like, so long
+as the particular class constructor is OK with that.  Results are
+undefined if you specify the same option name twice.
+
+<p>The form of the arguments of the option methods
+(e.g. <b>country::constrOpt::population</b>) depends on the method.
+In this example, <b>population</b> and <b>landarea</b> each take one
+unsigned integer and <b>un_member</b> takes a boolean.
+
+<p>If you have a more complex construction to do, you can always build
+up the <b>constrOpt</b> object more explicitly:
+
+<pre>
+<code>
+    country::constrOpt opt;
+    opt.population(5);
+    if (areaIsKnown)
+        opt.landArea(landArea);
+    country const canada(opt);
+</code>
+</pre>
+
+
+<h2 id="xml_rpc_value">XML-RPC Values</h2>
+
+<h3 id="class_value">Class <b>xmlrpc_c::value</b></h3>
+
+<p>An object of class <b>xmlrpc_c::value</b> is an XML-RPC value
+(i.e. what you could represent with a &lt;value&gt; XML element).
+
+<p>You will typically use this for the parameters in an XML-RPC call
+and the result from an XML-RPC response, both in Xmlrpc-c clients and
+servers.
+
+<p>Unlike with Xmlrpc-c's C interfaces, this class is never used for
+anything other than an actual XML-RPC value.
+
+<p>Examples of the kinds of values an object of this class can
+represent are:
+
+<ul>
+<li>An integer
+<li>An array of text strings
+<li>A structure consisting of two integers and an array of text strings
+</ul>
+
+<p>XML-RPC values are, by design, the same kinds of things you can
+represent with basic data types in a language such as C++.  The only
+reason we have a special class for them in Xmlrpc-c is to make the
+connection between your code and the XML-RPC protocol more clear.  You
+can easily convert between the two (for example, between an XML-RPC
+integer and a regular old C++ integer) and will normally do all your
+processing in the regular C++ types and use <b>xmlrpc_c::value</b>
+only as direct inputs and outputs of Xmlrpc-c.
+
+<p>There is a derived class of <b>xmlrpc_c::value</b> for each of the
+XML-RPC types.  (Note that the XML-RPC types are defined in the XML-RPC
+spec).  They are, with the obvious mappings to the XML-RPC types:
+
+<ul>
+<li><b>xmlrpc_c::value_int</b>
+<li><b>xmlrpc_c::value_i8</b>
+<li><b>xmlrpc_c::value_bool</b>
+<li><b>xmlrpc_c::value_double</b>
+<li><b>xmlrpc_c::value_string</b>
+<li><b>xmlrpc_c::value_datetime</b>
+<li><b>xmlrpc_c::value_bytestring</b>
+<li><b>xmlrpc_c::value_nil</b>
+<li><b>xmlrpc_c::value_array</b>
+<li><b>xmlrpc_c::value_struct</b>
+</ul>
+
+<p>If you're familiar with the Xmlrpc-c C interface, you'll note that
+there is no equivalent above to its <b>XMLRPC_TYPE_C_PTR</b> type.
+That's because unlike the C <b>xmlrpc_value</b> type,
+<b>xmlrpc_c::value</b> isn't used to represent anything except XML-RPC
+types.
+
+<p><b>xmlrpc_c::value_nil</b> is <em>not</em> really an XML-RPC type.
+It goes with the common extension of XML-RPC that defines a nil type
+(with XML element type &quot;nil&quot;).
+
+<p>Similarly, <b>xmlrpc_c::value_i8</b> corresponds to the &lt;i8&gt; 64 bit
+integer extension type.
+
+<p><strong><b>xmlrpc_c::value</b> is not an abstract base class.</strong> That
+means you can't operate on a variable of type <b>xmlrpc_c::value</b> and get
+behavior specific to the derived class <b>xmlrpc_c::value_struct</b>.  You
+also can't dynamic cast a <b>xmlrpc_c::value *</b> to
+<b>xmlrpc_c::value_struct *</b>.  See below for instructions for using a base
+class object.
+
+<p>For each of the type-specific derived classes, there are
+constructors to create an object from the usual C++ equivalent data
+type (e.g. to create an <b>xmlrpc_c::value_int</b> from an
+<b>int</b>).  There are also cast operators to cast such an object
+<em>to</em> the usual type.  Except in cases where the language just
+doesn't make casting possible, that is.  In such a case, there is
+a converter method to accomplish the same thing.
+
+<p>Example:
+
+<pre>
+<code>
+    int const planetCount(9);
+    xmlrpc_c::value_int const planetCountX(planetCount);
+    int const bodyCount(static_cast&lt;int&gt;(planetCountX) + moonCount);
+</code>
+</pre>
+
+<p>For each of the type-specific derived classes, there is a
+constructor to create an object out of an object of the base class
+(<b>xmlrpc_c::value</b>) type.  It throws an error if the object 
+represents a value not of the corresponding type (e.g. you try to 
+construct an <b>xmlrpc_c::value_int</b> from an XML-RPC string value).
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::value rpcResult;
+        // Just a placeholder variable.  Not yet an actual XML-RPC value.
+    doMyRpc(&amp;rpcResult);
+        // doMyRpc() does an RPC that is supposed to return an integer result.
+    int const intResult(xmlrpc_c::value_int(rpcResult));
+        // This construction throws an error if what the RPC returned wasn't
+        // really an integer.
+    cout &lt;&lt; &quot;RPC returned&quot; &lt;&lt;
+        static_cast&lt;int&gt;(intResult)
+</code>
+</pre>
+
+
+<p>As mentioned above, <b>xmlrpc_c::value</b> is <em>not</em> an abstract base
+class, but there are situations where code is agnostic to the specific type of
+XML-RPC value (e.g. doesn't care whether it is an integer or a string), so
+represents the value merely as an object of the base class
+<b>xmlrpc_c::value</b>.  The object actually contains all the information
+specific to the particular XML-RPC type; you just can't access it in the usual
+C++ way.  Instead, construct an object of the appropriate derived class,
+giving the base class object as a constructor argument, as in the example
+above, and then operate on that.
+
+<p>As noted above, the constructor fails if the XML-RPC value isn't of the
+corresponding type (e.g. it's a string and you tried to construct an
+<b>xmlrpc_c::value_int</b> from it).  If you don't know at coding time what
+the XML-RPC value type should be, you can use the <b>type</b> method (see
+below) to find out what it actually is, and then construct an object that
+fits.
+
+<p>A placeholder <b>xmlrpc_c::value</b> does not represent an XML-RPC
+value; it is just a variable to which you can assign another
+<b>xmlrpc_c::value</b>.  You can't use it for anything else.  You
+construct a placeholder <b>xmlrpc_c::value</b> with the no-argument
+constructor and it stops being a placeholder as soon as you assign
+some value to it.  A <b>xmlrpc_c::value</b> variable that is not a
+place holder is said to be &quot;instantiated.&quot;  Use the
+<b>isInstantiated</b> method to determine whether a
+<b>xmlrpc_c::value</b> is a placeholder.
+
+<p>If you do attempt to do something with a placeholder <b>xmlrpc_c::value</b>
+other than assign a value to it, that throws an exception.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+
+<h4 id="constructors_value">Constructors</h4>
+
+<p>The no-argument constructor creates a place-holder object as
+described above.
+
+<p>There is a copy constructor.
+
+<h4 id="type_t"><b>type_t</b> Type</h4>
+
+<p><b>type_t</b> is an enumerated type that represents one of the types
+of XML-RPC values.  Its values are, with obvious meaning:
+
+<ul>
+<li>xmlrpc_c::value::TYPE_INT
+<li>xmlrpc_c::value::TYPE_I8
+<li>xmlrpc_c::value::TYPE_BOOLEAN
+<li>xmlrpc_c::value::TYPE_STRING
+<li>xmlrpc_c::value::TYPE_DOUBLE
+<li>xmlrpc_c::value::TYPE_DATETIME
+<li>xmlrpc_c::value::TYPE_BYTESTRING
+<li>xmlrpc_c::value::TYPE_STRUCT
+<li>xmlrpc_c::value::TYPE_ARRAY
+<li>xmlrpc_c::value::TYPE_NIL
+</ul>
+
+<h4 id="type_output"><b>type_t</b> output operator</h4>
+
+<p>There is an output operator for type <b>type_t</b> that generates
+text such as &quot;int&quot; and &quot;array&quot; for its values.
+
+<p>Example:
+
+<pre>
+<code>
+    value::type_t const myType(value::TYPE_STRUCT);
+
+    cerr &lt;&lt; &quot;The type of value is: &quot; &lt;&lt; myType &lt;&lt; endl;
+</code>
+</pre>
+
+<p>This operator was new in Xmlrpc-c 1.26 (March 2011).  Before that, the
+compiler defaults to the integer output operator, using the integer equivalent
+of the enumerations.  E.g. <b>TYPE_ARRAY</b> displays as &quot;6&quot;.
+
+
+<H4 id="type"><b>type</b> Method</H4>
+
+<p>The <b>type</b> method returns the type of XML-RPC value that the
+object represents.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_c::value::type_t type() const;
+</code>
+</pre>
+
+
+<H4 id="cvalue_generic"><b>cvalue</b> Method</H4>
+
+<p>The <b>cvalue</b> method returns the value of XML-RPC value as a native
+C++ data type, such as an integer.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::value_int val1(7);
+    xmlrpc_c::value_string val2(&quot;hello world&quot;);
+
+    cout &lt;&lt; &quot;Value 1: &quot; &lt;&lt; val1.cvalue()
+         &lt;&lt; &quot;Value 2: &quot; &lt;&lt; val2.cvalue();
+</code>
+</pre>
+
+<p>There isn't really a <b>cvalue</b> method of the <b>xmlrpc_c::value</b>
+base class, but each of the derived classes implements one of its own.
+(And it's not a virtual method either, because it's different in each
+derived class, since it has various return value types).
+
+<p>Every derived class has other means of converting the XML-RPC value to a
+native C++ value, and those means (such as typecasts) are generally clearer,
+since they make it obvious to what type they convert.  The point of
+<B>cvalue</B> is that it has the same name in all the derived classes.  That
+sometimes makes code easier to write.
+
+<p>Each derived class picks one native C++ type to associate with its
+<b>cvalue</b> method.  If that isn't the type you want, the derived class
+often has other methods available.
+
+<p><b>cvalue</b> was new in Xmlrpc-c 1.19 (June 2009).
+
+<H4 id="isinstantiated"><b>isInstantiated</b> Method</H4>
+
+<p>The <b>isInstantiated</b> method tells whether the object
+represents an actual XML-RPC value or is just a placeholder (see
+above).  It returns true in the former case; false in the latter.
+
+<p>Prototype:
+
+<pre>
+<code>
+    bool isInstantiated() const;
+</code>
+</pre>
+
+<p>This method was new in Xmlrpc-c 1.13 (December 2007).
+
+<h4 id="assignto">Assign-to Operator</h4>
+
+<p>There is an assign-to operator for assigning an
+<b>xmlrpc_c::value</b> value to an <b>xmlrpc_c::value</b> variable.
+However, you can assign only to a placeholder variable as described
+above.  The operator throws an error if you try to change the value of
+a fully instantiated object.
+
+
+<h3 id="class_valueint">Class <b>xmlrpc_c::value_int</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents an
+XML-RPC integer value (XML element type &quot;int&quot;).
+
+<p>More specifically, it represents an integer value with 4 byte (32
+bit) range (XML element type &quot;i8&quot;).  I.e. it can represent
+integers in the range from -2**32 through 2**32 - 1.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_valueint">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_int</b> object from a C++ <b>int</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_int const param1(7);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valueint">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_int</b> object to a C++ <b>int</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_int const param1(7);
+    int const param1Value(static_cast&lt;int&gt;(param1));
+</code>
+</pre>
+
+<h4 id="cvalue_int"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>int</b>.
+
+
+<h3 id="class_valuei8">Class <b>xmlrpc_c::value_i8</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents
+an XML-RPC 8 byte integer value (XML element type &quot;i8&quot;).
+I.e. it can represent an integer in the range from -2**64 through
+2**64 - 1.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<p>This class was new in Xmlrpc-c 1.07 (October 2006).
+
+<h4 id="constructors_valuei8">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_i8</b> object from a C++
+<b>long long</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_i8 const param1(7);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuei8">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_i8</b> object to a C++ <b>long long</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_i8 const param1(7);
+    long long const param1Value(static_cast&lt;long long&gt;(param1));
+</code>
+</pre>
+
+<h4 id="cvalue_i8"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>long long</b>.
+
+
+<h3 id="class_valueboolean">Class <b>xmlrpc_c::value_boolean</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents
+an XML-RPC boolean (logical; true/false) value (XML element type
+&quot;boolean&quot;).
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_boolean">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_boolean</b> object from a C++
+<b>bool</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_boolean const param1(true);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_boolean">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_boolean</b> object to a C++
+<b>bool</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_boolean const param1(true);
+    bool const param1Value(static_cast&lt;bool&gt;(param1));
+</code>
+</pre>
+
+<h4 id="cvalue_boolean"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>bool</b>.
+
+
+<h3 id="class_valuestring">Class <b>xmlrpc_c::value_string</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents
+an XML-RPC string value (XML element type &quot;string&quot;).  It
+uses the same <a href="libxmlrpc.html#stringtype">definition</a> of
+XML-RPC string as the C version.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_valuestring">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_string</b> object from a C++
+<b>string</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_string const param1(&quot;hello&quot;);
+</code>
+<code>
+    xmlrpc_c::value_string const param1(&quot;Line 1\nLine 2\n&quot;);
+</code>
+<code>
+    xmlrpc_c::value_string const param1(&quot;Line 1\r\nLine 2\r\n&quot;);
+</code>
+<code>
+    xmlrpc_c::value_string const param1(&quot;embedded\rCR&quot;,
+                                        xmlrpc_c::value_string::nlCode_lf);
+</code>
+</pre>
+
+<p>Prototypes:
+
+<pre>
+<code>
+    value_string(std::string const&amp; cppvalue);
+
+    enum nlCode {nlCode_all, nlCode_lf};
+
+    value_string(std::string const&amp; cppvalue,
+                 nlCode      const  nlCode);
+</code>
+</pre>
+
+<p>The <i>nlCode</i> argument tells what kind of line delimiters you
+use in your <i>cppvalue</i> argument.  <b>nlCode_all</b> means, LF
+(line feed), CR (carriage return), and CRLF all mean a line delimiter,
+while <b>nlCode_lf</b> means only LF does and CR is just a character
+in a line.
+
+<p>The constructor that doesn't have the <i>nlCode</i> behaves as if
+<i>nlCode</i>=<b>nlCode_all</b>.
+
+<p>The constructor with <i>nl_Code</i> was new in Xmlrpc-c 1.11
+(June 2007).
+
+<p><i>cppvalue</i> is a UTF-8 string.
+
+<p>ASCII strings are a subset of UTF-8 strings, so if you don't want
+to learn what UTF-8 and UTF-16 are all about, just stick to ASCII.
+Note that all ASCII codes have zero for the high order bit of the
+byte, so if you're taking this easy route, make sure you never have a
+one in your high order bit.
+
+<p>You can also construct a <b>xmlrpc_c::value_string</b> from an
+object of the base class type, as described under <a
+href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<p>Prototype:
+
+<pre>
+<code>
+    value_string(xmlrpc_c::value const baseValue);
+</code>
+</pre>
+
+
+<h4 id="cast_valuestring">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_string</b> object to a C++ <b>string</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_string const param1(&quot;hello&quot;);
+    string const param1Value(static_cast&lt;string&gt;(param1));
+</code>
+</pre>
+
+<p>The <b>string</b> you get uses LF (line feed, unix newline) to
+represent a line delimiter.  If you want CRLF instead, see <a
+href="#crlfvalue"><b>crlfValue</b></a>.
+
+<h4 id="crlfvalue"><b>crlfValue</b> Method</h4>
+
+<p>This method returns the value of the object as a C++ <B>string</B>,
+in which a line delimiter is represented by the two character sequence
+CRLF (carriage return, line feed).
+
+<p>If you want plain unix newline (LF) instead, see
+<a href="#cast_valuestring">Cast Operators</a>.
+
+Example:
+
+<pre>
+<code>
+    xmlrpc_c::value_string const httpDoc(&quot;Line 1\nLine 2\n&quot;);
+    string const httpDoc(value.crlfValue());
+    assert(httpDoc == &quot;Line 1\r\nLine 2\r\n&quot;);
+</code>
+</pre>
+
+<P>Prototype:
+
+<pre>
+<code>
+    std::string
+    crlfValue() const;
+</code>
+</pre>
+
+
+<h4 id="cvalue_string"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>std::string</b>.
+
+
+<h3 id="class_valuedouble">Class <b>xmlrpc_c::value_double</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents an
+XML-RPC floating point number value (XML element type &quot;double&quot;).
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_valuedouble">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_double</b> object from a C++
+<b>double</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_double const param1(3.14);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuedouble">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_double</b> object to a C++
+<b>double</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_double const param1(3.14);
+    double const param1Value(static_cast&lt;double&gt;(param1));
+</code>
+</pre>
+
+<h4 id="cvalue_double"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>double</b>.
+
+
+<h3 id="class_valuedatetime">Class <b>xmlrpc_c::value_datetime</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents an
+XML-RPC point in time value (XML element type &quot;dateTime.iso8601&quot;).
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_valuedatetime">Constructors</h4>
+
+<p>You can construct an <b>xmlrpc_c::value_datetime</b> object from any of
+various C++ data types:
+
+<pre>
+<code>
+    time_t const now_sec(date());
+    xmlrpc_c::value_datetime const param1(now_sec);
+
+    struct timeval now_microsec;
+    gettimeofday(&amp;now_microsec, NULL);
+    xmlrpc_c::value_datetime const param2(now_microsec);
+ 
+    struct timespec now_nanosec;
+    gettimeofday_nsec(&amp;now_nanonsec);
+    xmlrpc_c::value_datetime const param3(now_nanosec);    
+
+    xmlrpc_c::value_datetime const param4(&quot;19980717T14:08:55&quot;);
+
+</code>
+</pre>
+
+<p>The <b>string</b> constructor needs more explanation: The string
+value specifies the point in time in the same strange quasi-ISO8601
+format that is used in XML-RPC XML.  The format follows the example
+given above.
+
+<p>It is <em>not</em> the case that when you use the string
+constructor, you are controlling the XML at a lower level and are
+supplying the actual text for the XML.  You are fundamentally
+identifying a point in time and an Xmlrpc-c facility that generates
+XML encodes a point in time independently.  This is not really a
+useful constructor, except for backward compatibility with older
+versions of Xmlrpc-c's C interface.
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuedatetime">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_datetime</b> object to a C++
+<b>time_t</b>, <b>timeval</b>, or <b>timespec</b>, or
+<b>xmlrpc_datetime</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_datetime const param1(time(NULL));
+    time_t const param1Value(static_cast&lt;time_t&gt;(param1));
+    timeval const param1ValueTv(static_cast&lt;timeval&gt;(param1));
+    timespec const param1ValueTs(static_cast&lt;timespec&gt;(param1));
+    xmlrpc_datetime const param1ValueX(static_cast&lt;xmlrpc_datetime&gt;(param1);
+</code>
+</pre>
+
+<p>The <b>timeval</b> and <b>timespec</b> cast operators wer new
+in Xmlrpc-c 1.15 (June 2008).  The <b>xmlrpc_datetime</b> operator was new
+in Xmlrpc-c 1.31 (June 2012).
+
+<h4 id="cvalue_datetime"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>time_t</b>.
+
+
+<h4 id="iso8601value_datetime"><b>iso8601Value</b> Method</h4>
+
+<p>This method returns the datetime as an ISO 8601 string, the same as the C
+function <a href="libxmlrpc.html#interpretdatetime">
+<b>xmlrpc_read_datetime_8601()</b></a>.
+
+<p>This method was new in Xmlrpc-c 1.31 (June 2012).
+
+
+<h3 id="class_valuebytestr">Class <b>xmlrpc_c::value_bytestring</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents an
+XML-RPC byte string value (XML element type &quot;base64&quot;).
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="types_valuebytestr">Types</h4>
+
+<p>The <b>cbytestring</b> type is a natural C++ analog to the XML-RPC byte
+string type, and is convenient in several <b>xmlrpc_c::value_bytestring</b>
+methods.
+
+<pre>
+<code>
+    typedef std::vector&lt;unsigned char&gt; cbytestring;
+</code>
+</pre>
+
+<p><b>cbytestring</b> was new in Xmlrpc-c 1.22 (March 2010).
+
+<h4 id="constructors_valuebytestr">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_bytestring</b> object from a
+C++ <b>vector&lt;unsigned char&gt;</b>:
+
+<pre>
+<code>
+    unsigned char myByteAry[] = {0x10, 0x11, 0x12, 0x13, 0x14};
+    vector&lt;unsigned char&gt; const myBytes(&amp;myByteAry[0], &amp;myByteAry[4]);
+    
+    xmlrpc_c::value_bytestring const param1(myBytes);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuebytestr">Cast Operators</h4>
+
+<p>There are none.
+
+<p>You might think there should be a cast operator to cast an
+<b>xmlrpc_c::value_bytestring</b> object to a C++
+<b>vector&lt;unsigned char&gt;</b>, but the <b>vector</b> template is
+a little too complex for that; the compiler can't figure out which
+constructor to use.
+
+<p>Instead, use the <b>vectorUcharValue</b> converter method.
+
+<h4 id="vectorucharvalue"><b>vectorUcharValue</b> Method</h4>
+
+<p>The <b>vectorUcharValue</b> method returns the value of the object
+as a C++ <b>vector&lt;unsigned char&gt;</b> data structure:
+
+<pre>
+<code>
+    unsigned char const myByteAry[] = {0x10, 0x11, 0x12, 0x13, 0x14};
+    vector&lt;unsigned char&gt; const myBytes(&amp;myByteAry[0], &amp;myByteAry[4]);
+    xmlrpc_c::value_bytestring const param1(myBytes);
+
+    vector&lt;unsigned char &gt; const param1Value(param1.vectorUcharValue());
+</code>
+</pre>
+
+<h4 id="cvalue_bytestr"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type
+<b>std::vector&lt;unsigned char&gt;</b>.
+
+
+<h4 id="length"><b>length</b> Method</h4>
+
+<p>The <b>length</b> method returns the number of bytes in the byte string.
+
+<p>Prototype:
+
+<pre>
+<code>
+    size_t length() const;
+</code>
+</pre>
+
+
+<h3 id="class_valuenil">Class <b>xmlrpc_c::value_nil</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents a
+non-value or absence of a value (a type defined by a common XML-RPC
+extension) XML-RPC integer value (XML element type &quot;nil&quot;).
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+<h4 id="constructors_valuenil">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_int</b> object with no arguments:
+
+<pre>
+<code>
+    xmlrpc_c::value_int const param1;
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuenil">Cast Operators</h4>
+
+<p>There are none.
+
+<h4 id="cvalue_nil"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>void *</b>, value NULL (0).
+
+
+<h3 id="class_valuestruct">Class <b>xmlrpc_c::value_struct</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents
+an XML-RPC structure value, analogous to a C++ struct.  (XML element
+type &quot;struct&quot;).
+
+<p>An XML-RPC structure value is a mapping of a string to another
+XML-RPC value.  I.e. it is a set of members and each member is an
+ordered pair of (key, value).  The key is the name of the member, and
+is a text string.  The value is any XML-RPC value.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+
+<h4 id="types_valuestruct">Types</h4>
+
+<p>The <b>cstruct</b> type is a natural C++ analog to the XML-RPC structure
+type, and is convenient in several <b>xmlrpc_c::value_struct</b> methods.
+
+<pre>
+<code>
+    typedef std::map&lt;std::string, xmlrpc_c::value&gt; cstruct;
+</code>
+</pre>
+
+<p><b>cstruct</b> was new in Xmlrpc-c 1.22 (March 2010).
+
+
+<h4 id="constructors_valuestruct">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_struct</b> object from a C++
+<b>map&lt;string, xmlrpc_c::value&gt;</b>:
+
+<pre>
+<code>
+    // Make the map value 'structData'
+    map&lt;string, value&gt; structData;
+    pair&lt;string, value&gt; member("the_integer", xmlrpc_c::value_int(9));
+    structData.insert(member);
+        
+    // Make an XML-RPC struct out of it
+    xmlrpc_c::value_struct const param1(structData);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuestruct">Cast Operators</h4>
+
+<p>You can cast an <b>xmlrpc_c::value_struct</b> object to a C++
+<b>map&lt;string, xmlrpc_c::value&gt;</b>:
+
+<pre>
+<code>
+    xmlrpc_c::value_struct const param1(whatever);
+    map&lt;string, xmlrpc_c::value&gt; const param1Value(
+        static_cast&lt;map&lt;string, xmlrpc_c::value&gt; &gt;(param1));
+</code>
+</pre>
+
+<h4 id="cvalue_struct"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type
+<b>std::map&lt;std::string, xmlrpc_c::value&gt;</b>.
+
+
+<h3 id="class_valuearray">Class <b>xmlrpc_c::value_array</b></h3>
+
+<p>This is a derived class of <b>xmlrpc_c::value</b>.  It represents
+an XML-RPC array value.  (XML element type &quot;array&quot;).
+
+<p>An XML-RPC array value is a finite array of other XML-RPC values.
+The elements of the array need not be of uniform type.
+
+<p>This class is declared in header file <b>xmlrpc-c/base.hpp</b>.
+
+
+<h4 id="types_valuearray">Types</h4>
+
+<p>The <b>carray</b> type is a natural C++ analog to the XML-RPC array
+type, and is convenient in several <b>xmlrpc_c::value_array</b> methods.
+
+<pre>
+<code>
+    typedef std::vector&lt;xmlrpc_c::value&gt; carray;
+</code>
+</pre>
+
+<p><b>carray</b> was new in Xmlrpc-c 1.22 (March 2010).
+
+
+<h4 id="constructors_valuearray">Constructors</h4>
+
+<p>You construct an <b>xmlrpc_c::value_array</b> object from a C++
+<b>vector&lt;xmlrpc_c::value&gt;</b>:
+
+<pre>
+<code>
+    // Make the vector value 'arrayData'
+    vector&lt;xmlrpc_c::value&gt; arrayData;
+    arrayData.push_back(xmlrpc_c::value_int(7));
+    arrayData.push_back(xmlrpc_c::value_double(2.78));
+    arrayData.push_back(xmlrpc_c::value_string("hello world"));
+        
+    // Make an XML-RPC array out of it
+    xmlrpc_c::value_array array1(arrayData);
+</code>
+</pre>
+
+<p>You can also construct one from an object of the base class type,
+as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
+
+<h4 id="cast_valuearray">Cast Operators</h4>
+
+<p>There are none.
+
+<p>You might think there should be a cast operator to cast an
+<b>xmlrpc_c::value_array</b> object to a C++
+<b>vector&lt;xmlrpc_c::value&gt;</b>, but the <b>vector</b> template is
+a little too complex for that; the compiler can't figure out which
+constructor to use.
+
+<p>Instead, use the <b>vectorValueValue</b> converter method.
+
+<h4 id="vectorvaluevalue"><b>vectorValueValue</b> Method</h4>
+
+<p>The <b>vectorValueValue</b> method returns the value of the object
+as a C++ <b>vector&lt;xmlrpc_c::value&gt;</b> data structure:
+
+<pre>
+<code>
+    xmlrpc_c::value_array array1(...);
+
+    vector&lt;xmlrpc_c::value&gt; const param1Value(param1.vectorValueValue());
+</code>
+</pre>
+
+<h4 id="cvalue_array"><b>cvalue</b> Method</h4>
+
+<p>See <a href="#cvalue_generic">general documentation of <b>cvalue</b></a>.
+
+<p>This method returns a value of type <b>std::map&lt;xmlrpc_c::value&gt;</b>.
+
+
+<h4 id="size"><b>size</b> Method</h4>
+
+<p>The <b>size</b> method returns the number of elements in the array.
+
+<p>Prototype:
+
+<pre>
+<code>
+    unsigned int size() const;
+</code>
+</pre>
+
+
+<h4 id="arrayvaluearray"><b>arrayValueArray</b> Generator Function</h4>
+
+<p>The <b>arrayValueArray</b> function generates an XML-RPC array object from
+a C++ array.  The type of the array elements corresponds to the type of the
+C++ array element, in the same way as <a
+href="#addc"><b>ParamList.addc()</b></a> arguments.
+
+<p>In the following example, we construct <tt>myArray</tt>, an XML-RPC array
+with three boolean elements.
+
+<pre>
+<code>
+    bool boolarray[] = { true, false, true };
+
+    xmlrpc_c::value_array myArray(arrayValueArray(boolarray, 3));
+</code>
+</pre>
+
+<p><b>arrayValueArray</b> was new in Xmlrpc-c 1.19 (June 2009).
+
+
+<h4 id="arrayvalueslice"><b>arrayValueSlice</b> Generator Function</h4>
+
+<p>The <b>arrayValueSlice</b> function generates an XML-RPC array object from
+a pair of iterators.  The array contains elements from the thing the first
+iterator points to up to (but not including) the thing the second iterator
+points to.  The type of the elements depends upon the type of the thing the
+iterator points to, in the same way as <a
+href="#addc"><b>ParamList.addc()</b></a> arguments.
+
+<pre>
+<code>
+    int intarray[] = { 1, 2, 3, 5, 8, 13, 21 };
+
+    xmlrpc_c::value_array mySlice(
+        arrayValueSlice(&amp;intarray[5], &amp;intarray[7]));
+</code>
+</pre>
+
+<p>In this example, we construct <tt>mySlice</tt>, an XML-RPC array with two
+integer elements.
+
+<p><b>arrayValueSlice</b> was new in Xmlrpc-c 1.19 (June 2009).
+
+
+<h2 id="fault">XML-RPC Faults</h2>
+
+<p>XML-RPC has a concept of a &quot;fault.&quot; A fault is something
+that causes an RPC to fail.  When an RPC fails, there is always one
+fault associated with the RPC.  It is described in the RPC's response.
+
+<p>An XML-RPC fault embodies two pieces of information:
+
+<ol>
+<li>A text description of the fault, called a &quot;fault
+string.&quot;
+
+<li>An integer code, called a &quot;fault code,&quot; that describes
+the class of fault.  XML-RPC doesn't assign particular meanings to
+particular integers, but Xmlrpc-c provides a small set of definitions.
+</ol>
+
+
+<p>I frankly recommend that you just ignore the fault code.  While
+there is a long tradition in programming of representing error
+information in integers, text descriptions are usually much more
+useful.  Integers are more convenient for programs to interpret, but
+in reality programs hardly ever interpret errors beyond a binary
+success/failure.  Where an RPC <em>can</em> have certain well-defined
+failures on which the calling program can act, the RPC really
+shouldn't fail at all.  For example, if an RPC has a file name as an
+argument and the program is fully prepared to respond to the
+eventuality that a file by that name does not exist, then &quot;file
+does not exist&quot; is not a failure.  It's a legitimate successful
+result of that RPC.
+
+
+
+<h3 id="class_fault">Class <b>xmlrpc_c::fault</b></h3>
+
+<p>An object of this class represents an XML-RPC fault.
+
+<h4 id="code_t"><b>code_t</b> Type</h4>
+
+<p>The <b>xmlrpc_c::fault::code_t</b> type is an XML-RPC fault code.
+It is an enumerated type, equivalent to an integer.  Its enumerated
+values are basically a recommendation; you should feel free to cast it to
+any other enumeration or a plain integer and assign any meaning to
+the values.
+
+<p>The XML-RPC specification does not standardize any values.  <p>Note that
+Xmlrpc-c does <em>not</em> conform to any part of the <a
+href="http://xmlrpc-epi.sourceforge.net/specs/rfc.fault_codes.php">Fault Code
+Interoperability standard</a>.  Xmlrpc-c suggests these negative values for
+low level failures, and uses them in its own low-level implementation.
+Xmlrpc-c recommends you use positive values for higher level method-specific
+failures.
+
+<p>The enumerated values are:
+
+<dl>
+<dt>CODE_UNSPECIFIED            <dd>0
+<dt>CODE_INTERNAL               <dd>-500,
+<dt>CODE_TYPE                   <dd>-501,
+<dt>CODE_INDEX                  <dd>-502,
+<dt>CODE_PARSE                  <dd>-503,
+<dt>CODE_NETWORK                <dd>-504,
+<dt>CODE_TIMEOUT                <dd>-505,
+<dt>CODE_NO_SUCH_METHOD         <dd>-506,
+<dt>CODE_REQUEST_REFUSED        <dd>-507,
+<dt>CODE_INTROSPECTION_DISABLED <dd>-508,
+<dt>CODE_LIMIT_EXCEEDED         <dd>-509,
+<dt>CODE_INVALID_UTF8           <dd>-510,
+
+</dl>
+
+
+<h4 id="constructors_fault">Constructors</h4>
+
+<p>You construct a <b>xmlrpc_c::fault</b> object from a
+<b>std::string</b> fault string and an <b>int</b> fault code:
+
+<pre>
+<code>
+    xmlrpc_c::fault(&quot;The rapture has begun.&quot;, 666);    
+</code>
+</pre>
+
+
+<h4 id="getdescription"><b>getDescription</b> Method</h4>
+
+<p>The <b>getDescription</b> method returns the text description of the
+fault (the fault string).
+
+<p>Prototype:
+
+<pre>
+<code>
+    std::string getDescription();
+</code>
+</pre>
+
+
+<h4 id="getcode"><b>getCode</b> Method</h4>
+
+<p>The <b>getCode</b> method returns the fault code of the fault.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_c::fault::code_t getCode();
+</code>
+</pre>
+
+
+
+<h2 id="paramlist">XML-RPC Parameter Lists</h2>
+
+<p>An XML-RPC RPC has a parameter list.  It's part of the call, and
+a copy is provided in the response as well.  The parameter list is simply
+a list of parameters.  It may contain any number of parameters, including
+zero.  The parameters are ordered, and not named.  There's no such thing
+as a missing parameter (but consider the nil value).
+
+<h3 id="class_paramlist">Class <b>xmlrpc_c::paramList</b></h3>
+
+<P>An object of this class represents the parameters to an XML-RPC call.
+You see such objects when you make an XML-RPC call from a client or
+process one in a server, using the higher level Xmlrpc-c facilities.
+
+<p>Examples:
+
+<pre>
+<code>
+    xmlrpc:c::paramList myParams;
+    myParams.add(xmlrpc_c::value_int(5);
+    myParams.add(xmlrpc_c::value_int(7);
+    assert(myParams.size() == 2);
+    assert(static_cast&lt;int&lt;(myParams[1]) == 7);
+
+    // The above are all you need to extract the contents of a parameter list,
+    // but the following show convenient extraction with validation.
+    assert(myParams.getInt(0) == 7);
+    myParams.getString(0);  // throws because param 0 isn't a string
+    myParams.verifyEnd(2);  // does nothing because 2 _is_ the end of the list
+    myParams.verifyEnd(1);  // throws because there are more parameters
+
+    xmlrpc:c::paramList myParams2(2);
+    myParams.add(xmlrpc_c::value_string(&quot;hello&quot;);
+    myParams.add(xmlrpc_c::value_datetime(now());
+</code>
+
+<code>
+    xmlrpc_c::serverAccessor rainFallDb(...);
+    xmlrpc_c::rpcOutcome outcome;
+
+    rainFallDb.call(&quot;addCityRainfall&quot;,
+                    paramList()
+                      .add(value_string(&quot;Seattle&quot;)
+                      .add(value_double(39.2))),
+                    &amp;outcome);             
+</code>
+
+<code>
+    xmlrpc_c::serverAccessor rainFallDb(...);
+    xmlrpc_c::rpcOutcome outcome;
+
+    rainFallDb.call(&quot;addCityRainfall&quot;,
+                    paramList().addc(&quot;Seattle&quot;).addc(39.2),
+                    &amp;outcome);             
+</code>
+
+</pre>
+
+
+<h4 id="constructors_paramlist">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    paramList(unsigned int paramCount = 0);
+</code>
+</pre>
+
+<p>A <b>xmlrpc_c::paramList</b> always starts life empty (you add
+parameters to it later), so there is only one constructor argument, and even
+<em>it</em> is optional.  The argument is a hint as to the number of
+parameters the object ultimately will have.  Using a good hint can
+improve efficiency.
+
+<h4 id="add"><b>add</b> Method</h4>
+
+<p>The <b>add</b> method adds a parameter to the parameter list.  As
+you probably surmise, the order in which you add parameters is the
+order of the parameters for XML-RPC purposes.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_c::paramList &amp;
+    add(xmlrpc_c::value const param);
+</code>
+</pre>
+
+<p>The method returns a reference to the object so that you can stack
+up calls to make more compact, readable code as in the
+&quot;addCityRainfall&quot; example above.
+
+<p>Before Xmlrpc-c 1.10 (March 2007), the return value is void; you cannot
+stack up calls.  So if your program uses the return value and you link it to
+an old Xmlrpc-c library, the results are undefined (i.e. your program will
+probably crash).  If you want to get a link-time error instead in this
+situation, use <b>addx</b>.  If you want it actually to <em>work</em> with an
+old library, use <b>add</b> and don't use the return value.
+
+<h4 id="addx"><b>addx</b> Method</h4>
+
+<p>This is identical to <b>add</b>, but did not exist before
+Xmlrpc-c 1.10.  That means there is no way to get undefined behavior
+from an old Xmlrpc-c library, unlike with <b>add</b>.
+
+<h4 id="addc"><b>addc</b> Method</h4>
+
+<p>This is like <b>add</b>, except that the argument can be any of various
+standard C++ types and the method creates a parameter of a corresponding
+XML-RPC type.  Example:
+
+<pre>
+<code>
+    xmlrpc_c::paramList myParams;
+
+    myParams.addc(7);
+    myParams.addc(&quot;hello world&quot;);
+
+    std::vector&lt;std::string&gt; array1;
+    ...
+    myParams.addc(array1);
+</code>
+</pre>
+
+<p>This example creates a parameter list containing three parameters:
+an XML-RPC integer, an XML-RPC string, and an XML-RPC array of strings.
+
+<p><b>addc</b> is a template function with prototype:
+
+<pre>
+<code>
+    template&lt;class T &gt; xmlrpc_c::paramList&amp; addc(const T &amp; x)
+</code>
+</pre>
+
+<p>The argument may also be an XML-RPC value object (<b>xmlrpc_c::value</b>),
+which makes <b>addc</b> do the same thing as <b>add</b>.
+
+<p>The correspondence between the C++ type of the <b>addc</b> argument and the
+XML-RPC type of the RPC parameter is:
+
+<table summary="addc data types">
+
+<tr>
+<th>C++ type
+<th>XML-RPC parameter type
+
+<tr>
+<td><tt>const char *</tt>
+<td>string
+
+<tr>
+<td><tt>std::string</tt>
+<td>text string
+
+<tr>
+<td><tt>int</tt>
+<td>integer, 32 bit precision
+
+<tr>
+<td><tt>bool</tt>
+<td>boolean
+
+<tr>
+<td><tt>double</tt>
+<td>floating point number
+
+<tr>
+<td><tt>xmlrpc_c::value</tt>
+<td>various
+
+<tr>
+<td><tt>std::map&lt;std:string, X&gt;</tt>
+<td>Structure.  Type of members is determined by C++ data type of X.
+
+<tr>
+<td><tt>std::vector&lt;X&gt;</tt>
+<td>Array.  Type of elements is determined by C++ data type of X.
+
+<tr>
+<td><tt>std::vector&lt;unsigned char&gt;</tt>
+<td>Byte string
+
+</table>
+
+<p>The return value of <b>addc</b> is a reference to the parameter list object
+to which it belongs, so you can chain calls like this if you like:
+
+<pre>
+<code>
+    mParams.addc(5).addc(7);
+</code>
+</pre>
+
+<p><b>addc</b> was new in Xmlrpc-c 1.19 (June 2009).
+
+
+<h4 id="size_paramlist"><b>size</b> Method</h4>
+
+<p>The <b>size</b> method returns the size of the parameter list (how many
+parameters are in it).
+
+<p>Prototype:
+
+<pre>
+<code>
+    unsigned int size();
+</code>
+</pre>
+
+<h4 id="subscript"><b>Subscript Operator</b></h4>
+
+<p>The subscript operator does the obvious thing: it returns the parameter
+(as an <b>xmlrpc_c::value</b>) whose position is the subscript.
+
+<p>If you specify a subscript that is not a position that exists in the
+parameter list (e.g. there are 3 parameters and you specify position 9),
+the method throws a <b>girerr::error</b>.
+
+<h4 id="getint"><b>getInt</b>, etc. Methods</h4>
+
+<p>These methods let you do the boring work of validating and interpreting
+parameter lists with very few lines of code in the most common cases.
+
+<p>If you want to do more sophisticated handling of wrong types, or
+process a parameter that could have various types, get the parameter
+as an <b>xmlrpc_c::value</b> object with the subscript operator and
+process that.  Also use the <b>size</b> method to make sure the
+parameter exists.
+
+<p>The <b>getInt</b> method gets the value of an integer parameter.
+It throws a <b>girerr::error</b> if the parameter you identify does not
+exist or is not an integer.
+
+<p>You may also specify a minimum and maximum acceptable value for the
+parameter.  If the value doesn't conform, the method throws a
+<b>girerr:error</b>.
+
+<p>The other methods are similar, for the other XML-RPC data types.
+
+<p>Prototypes:
+
+<pre>
+<code>
+    int
+    getInt(unsigned int paramNumber,
+           int          minimum = INT_MIN,
+           int          maximum = INT_MAX) const;
+
+    bool
+    getBoolean(unsigned int paramNumber) const;
+
+    double
+    getDouble(unsigned int paramNumber,
+              double       minimum = DBL_MIN,
+              double       maximum = DBL_MAX) const;
+
+    enum timeConstraint {TC_ANY, TC_NO_PAST, TC_NO_FUTURE};
+
+    time_t
+    getDatetime_sec(unsigned int   paramNumber,
+                    timeConstraint constraint
+                        = paramList::TC_ANY) const;
+
+    std::string
+    getString(unsigned int paramNumber) const;
+
+    std::vector&lt;unsigned char&gt;
+    getBytestring(unsigned int paramNumber) const;
+
+    std::vector&lt;xmlrpc_c::value&gt;
+    getArray(unsigned int paramNumber,
+             unsigned int minSize = 0,
+             unsigned int maxSize = UINT_MAX) const;
+
+    std::map&lt;std::string, xmlrpc_c::value&gt;
+    getStruct(unsigned int paramNumber) const;
+
+    void
+    getNil(unsigned int const paramNumber) const;
+
+    long long
+    getI8(unsigned int const paramNumber,
+          long long    const minimum = XMLRPC_INT64_MIN,
+          long long    const maximum = XMLRPC_INT64_MAX) const;
+
+</code>
+</pre>
+
+<p>In the <i>constraint</i> argument of <b>getDatetime_sec</b> method,
+<b>TC_ANY</b> means any datetime is acceptable; <b>TC_NO_PAST</b>
+means datetimes in the past are not acceptable; <b>TC_NO_FUTURE</b>
+means datetimes in the future are not acceptable.  Note that using
+these time constraints can cause some slightly unpredictable behavior
+because what's acceptable depends no exactly when you check the
+parameter.  What was valid when the RPC started might be invalid by
+the time it's checked.  A datetime that is properly in the future when
+you get the parameter might be in the past by the time you do
+something with the datetime.  But as long as you're willing to accept
+somewhat arbitrary behavior when the time is close to the present, the
+constraints can still be quite useful.
+
+<p><b>getNil</b> obviously doesn't actually get anything.  You would
+use this either for the sake of causing an error to be thrown if the
+parameter is not the nil value or just for logical completeness.
+
+<p><b>getI8()</b> was new in Xmlrpc-c 1.11 (June 2007).
+
+
+<h4 id="verifyend"><b>verifyEnd</b> Method</h4>
+
+<p>The <b>verifyEnd</b> method verifies that a specified position is the
+end of the parameter list (e.g. if there are 3 parameters, position 4 is
+the end of the list).
+
+<p>If the specified position <em>is</em> the end of the parameter list,
+the method does nothing at all.  If it is <em>not</em>, the method throws
+a <b>girerr::error</b>.
+
+<P>If you want to do more sophisticated handling of incorrect parameter
+list size, use the <b>size</b> method.
+
+
+<h2 id="rpcoutcome">XML-RPC RPC Outcome</h2>
+
+<p>A completed XML-RPC RPC has an outcome.  That outcome is one of two
+things:
+
+<ul>
+<li>A result.  You get this when the RPC succeeds.
+<li>A fault.  You get this when the RPC fails. It tells you why it failed.
+</ul>
+
+<p>Don't confuse the various ways an RPC can fail to execute with an
+RPC outcome.  If an RPC fails to execute, there is no outcome.  An
+example of an RPC failing to execute is where the server you identify
+doesn't exist.  When an RPC fails to execute, there is usually an
+error thrown, for example from the <b>call</b> method of the
+<b>serverAccessor</b> object you used to attempt the RPC.
+
+
+<h3 id="class_rpcOutcome">Class <b>xmlrpc_c::rpcOutcome</b></h3>
+
+<p>An object of this class represents the outcome of an XML-RPC call.
+You see such objects when you make an XML-RPC call from a client or
+process one in a server, using the higher level Xmlrpc-c facilities.
+For example, the <b>call</b> method of <b>serverAccessor</b> returns
+a <b>rpcOutcome</b> object.
+
+<p>Examples:
+
+<pre>
+<code>
+    xmlrpc_c::serverAccessor rainFallDb(...);
+    xmlrpc_c::rpcOutcome outcome;
+
+    employeeDb.call(&quot;getCityRainFall&quot;,
+                    paramList().add(value_string(&quot;Seattle&quot;)),
+                    &amp;outcome);             
+
+    if (outcome.succeeded())
+        cout &lt;&lt; &quot;Rainfall is &quot;
+             &lt;&lt; static_cast&lt;double&gt;(outcome.getResult())
+             &lt;&lt; endl;
+    else
+        cout &lt;&lt; &quot;getCityRainFall failed: &quot;
+             &lt;&lt; outcome.getFault().getDescription()
+             &lt;&lt; endl;
+</code>
+</pre>
+
+<p>A placeholder <b>rpcOutcome</b> object is one that doesn't actually
+represent an RPC outcome; it's just something to which you can assign
+the value of another RPC outcome.  Any attempt to do anything else
+with it throws an error.
+
+<h4 id="constructors_rpcoutcome">Constructors</h4>
+
+<p>Prototype:
+
+<pre>
+<code>
+    rpcOutcome();
+
+    rpcOutcome(xmlrpc_c::value result);
+
+    rpcOutcome(xmlrpc_c::fault fault);
+</code>
+</pre>
+
+<p>To create a successful RPC outcome (an RPC result), use the
+<b>value</b> constructor.
+
+<p>To create a failed RPC outcome (a fault) use the <b>fault</b>
+constructor.
+
+<p>To create a placeholder RPC outcome, which you can use only to
+subsequently assign another RPC outcome to it, use the default
+(no-argument) constructor.
+
+<h4 id="succeeded_rpcoutcome"><b>succeeded</b> Method</h4>
+
+<p>The <b>succeeded</b> method tells you whether the outcome is a success
+or failure.
+
+<p>Prototype:
+
+<pre>
+<code>
+    bool succeeded() const;
+</code>
+</pre>
+
+<h4 id="getresult_rpcoutcome"><b>getResult</b> Method</h4>
+
+<p>The <b>getResult</b> method tells you the result of the RPC, assuming
+it has one (i.e. it succeeded).  If the outcome is not success (the RPC
+has no result), the method throws an error.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value getResult() const;
+</code>
+</pre>
+
+<p>If your program does not need to distinguish between XML-RPC
+failures and failures at other levels in your program, you can just
+&quot;assume&quot; all RPCs succeed and call <b>getResult</b> on the
+outcome.  Where the RPC fails, your code will throw an error.
+
+<h4 id="getfault_rpcoutcome"><b>getFault</b> Method</h4>
+
+<p>The <b>getFault</b> method tells you how the RPC failed, assuming
+it did.  If the outcome is not failure, the method throws an error.
+
+<p>Prototype:
+
+<pre>
+<code>
+    xmlrpc_value getFault() const;
+</code>
+</pre>
+
+<p>You ordinarily call <b>success</b> first to determine that the RPC
+did in fact fail.
+
+
+<h2 id="xmlencode">XML Encoding And Decoding</h2>
+
+<p>These are the facilities for generating the XML of an XML-RPC call
+and interpreting the XML of an XML-RPC response.  They translate between
+XML and the classes described earlier in this chapter.
+
+<p>Xmlrpc-c has higher level facilities that make and take XML-RPC
+calls and responses and take care of this XML stuff for you; you don't
+need this section if you use the high level client and server
+facilities.
+
+<p>In these functions, we distinguish subtly between XML text and actual XML.
+Actual XML is a sequence of Unicode code points, whereas the inputs and
+outputs of these functions are just is just the text which is implied by such
+code points (as a C++ <b>std::string</b>); if Unicode is involved at all, it
+is at a lower layer.
+
+
+<h3 id="generatecall"><b>xmlrpc_c::generateCall</b> Function</h3>
+
+<p>This function generates XML text for an XML-RPC call.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::paramList myParamList;
+    myParamList.add(value_int(5));
+    myParamList.add(value_int(7));
+    string callXml;
+
+    xmlrpc_c::xml::generateCall(&quot;sample.add&quot;, myParamList, &amp;callXml);
+
+    cout &lt;&lt; &quot;The XML is: &quot; &lt;&lt; callXml &lt;&lt;endl;
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void generateCall(std::string         <i>methodName</i>,
+                      xmlrpc_c::paramList <i>paramList</i>,
+                      std::string *       <i>callXmlP</i>);
+</code>
+</pre>
+
+
+<h3 id="parsecall"><b>parseCall</b> Function</h3>
+
+<p>This function parses the XML text for an XML-RPC call.
+
+<p>Example:
+
+<pre>
+<code>
+    string const callXml(
+
+      &quot;&lt;?xml version="1.0" encoding="UTF-8"?&gt;\r\n&quot;
+      &quot;&lt;methodCall&gt;\r\n&quot;
+      &quot;&lt;methodName&gt;sample.add&lt;/methodName&gt;\r\n&quot;
+      &quot;&lt;params&gt;\r\n&quot;
+      &quot;&lt;param&gt;&lt;value&gt;&lt;i4&gt;5&lt;/i4&gt;&lt;/value&gt;&lt;/param&gt;\r\n&quot;
+      &quot;&lt;param&gt;&lt;value&gt;&lt;i4&gt;7&lt;/i4&gt;&lt;/value&gt;&lt;/param&gt;\r\n&quot;
+      &quot;&lt;/params&gt;\r\n&quot;
+      &quot;&lt;/methodCall&gt;\r\n&quot;
+
+    );
+
+    string              methodName;
+    xmlrpc_c::paramList paramListP;
+
+    xmlrpc_c::parseCall(callXml, &amp;methodName, &amp;paramList);
+
+    cout &lt;&lt; &quot;It is a call of method &quot; &lt;&lt; methodName
+         &lt;&lt; &quot;with &quot; &lt;&lt; paramList.size() &lt;&lt;parameters
+         &lt;&lt; endl;
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void parseCall(std::string           <i>callXml</i>,
+                   std::string *         <i>methodNameP</i>,
+                   xmlrpc_c::paramList * <i>paramListP</i>,);
+</code>
+</pre>
+
+<p>This function was new in Xmlrpc-c 1.23 (June 2010).
+
+
+<h3 id="generateresponse"><b>generateResponse</b> Function</h3>
+
+<p>This function generates XML text for an XML-RPC response.
+
+<p>Example:
+
+<pre>
+<code>
+    xmlrpc_c::rpcOutcome outcome(xmlrpc_c::value_int(7));
+    string responseXml;
+
+    xmlrpc_c::xml::generateResponse(outcome, &amp;responseXml);
+
+    cout &lt;&lt; &quot;The XML is: &quot; &lt;&lt; responseXml &lt;&lt;endl;
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void generateResponse(xmlrpc_c::rpcOutcome <i>outcome</i>,
+                          std::string *        <i>responseXmlP</i>);
+</code>
+</pre>
+
+
+<p>This function was new in Xmlrpc-c 1.23 (June 2010).
+
+
+<h3 id="parseresponse"><b>parseResponse</b> Function</h3>
+
+<p>This function parses XML text for an XML-RPC response.
+
+<p>Example:
+
+<pre>
+<code>
+    string const responseXml(
+        &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\r\n&quot;
+        &quot;&lt;methodResponse&gt;\r\n&quot;
+        &quot;&lt;params&gt;\r\n&quot;
+        &quot;&lt;param&gt;&lt;value&gt;&lt;i4&gt;12&lt;/i4&gt;&lt;/value&gt;&lt;/param&gt;\r\n&quot;
+        &quot;&lt;/params&gt;\r\n&quot;
+        &quot;&lt;/methodResponse&gt;\r\n&quot;
+        );
+
+    xmlrpc_c::value result;
+    xmlrpc_c::fault rpcFault;
+
+    xmlrpc_c::xml::parseResponse(responseXml, &amp;succeeded, &amp;result, &amp;rpcFault);
+
+    if (succeeded)
+        cout &lt;&lt; &quot;The response is: &quot;
+             &lt;&lt; static_cast&lt;int&gt;(value_int(result))
+             &lt;&lt; endl;
+    else
+        // Doesn't happen because our responseXml indicates successful RPC
+        cout &lt;&lt; &quot;The RPC failed!  Reason: &quot;
+             &lt;&lt; rpcFault.getDescription() 
+             &lt;&lt; endl;
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void parseResponse(std::string       <i>responseXml</i>,
+                       bool *            <i>succeededP</i>
+                       xmlrpc_c::value * <i>resultP</i>,
+                       xmlrpc_c::fault * <i>faultP</i>);
+</code>
+</pre>
+
+<p>If the XML text is a success response, the function returns
+*<i>succeededP</i> true and returns the RPC result as *<i>resultP</i>.
+It leaves *<i>faultP</i> undefined.
+
+<p>If the XML text is a failure response, the function returns
+*<i>succeededP</i> false and returns the XML-RPC fault information
+as *<i>faultP</i>.  It leaves *<i>resultP</i> undefined.
+
+<p>If the XML text is not a valid XML-RPC response, the function may
+throw a <b>girerr::error</b> or return arbitrary results consistent
+with similar valid XML text.
+
+<p>Due to an implementation weakness, when the XML text is not valid,
+the function usually behaves as if it indicated some kind of RPC
+failure.  Some day, that will be fixed, but you really can't expect
+much out of a program when you feed it invalid data anyway.
+
+
+<h3 id="parseresponsesucc"><b>parseResponseSuccessful</b> Function</h3>
+
+<p>This is the same as <a href="#parseresponse"><b>parseResponse</b></a>,
+except that it presumes the response being parsed indicates a successful
+RPC and throws an error if it doesn't.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void parseResponseSuccessful(std::string       <i>responseXml</i>,
+                                 xmlrpc_c::value * <i>resultP</i>);
+</code>
+</pre>
+
+
+<h2 id="base64">Base64 Encoding And Decoding</h2>
+
+<p>Base64 is a code for representing an arbitrary byte string as a
+text string.  And that text string is simple enough (uses a basic
+enough character set) that it should be processable without corruption
+by any facility that processes text -- email, for example.
+
+<p>A Base64 code is a text string.  It's not bits or bytes; it's not
+ASCII; it's just text.  Of course, in a computer, text is encoded
+somehow into bits and the code for that is usually ASCII.  But that's
+beyond the scope of Base64.
+
+<p>XML-RPC uses Base64 to represent byte strings, in its
+<b>&lt;base64&gt;</b> XML element type.
+
+
+<h3 id="base64frombytes"><b>base64FromBytes</b> Function</h3>
+
+<p>This function encodes raw bytes (represented by the C type for
+raw bytes: unsigned char) into Base64.
+
+<p>Example:
+
+<pre>
+<code>
+
+    unsigned char const myarray[] = {1, 2, 3, 5, 7};
+
+    vector&lt;unsigned char&gt; const mybytes(&amp;myarray[0],
+                                        &amp;myarray[sizeof(myarray)]);
+
+    string const mybase64(xmlrpc_c::base64FromBytes(mybytes));
+
+    assert(mybase64 == &quot;AQIDBQc=\n&quot;);
+
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    std::string base64FromBytes(std::vector&lt;unsigned char&gt; <i>bytes</i>,
+                                xmlrpc::newlineCtl         <i>newlineCtl</i>);
+</code>
+</pre>
+
+<p><i>newlineCtl</i> tells whether you want the base64 code to contain
+newline characters.  In a base64 code, newline characters can be anywhere
+and don't affect what bytes the code represents.  People put in newlines
+to make large base64 codes easy to handle -- for example, when displayed
+on a screen.  But some processors of base64 codes don't properly handle
+newline characters, so you might not want them.
+
+<p><i>newlineCtl</i> can be either <b>xmlrpc::NEWLINE_YES</b> or
+<b>xmlrpc::NEWLINE_NO</b>.  If <b>xmlrpc::NEWLINE_YES</b>, you get
+newlines such that the code consists of 76 character lines, with the
+possible exception of the last line, and the code always ends in a
+newline.  If <b>xmlrpc::NEWLINE_NO</b>, you get no newlines.
+
+<p>The default is <b>xmlrpc::NEWLINE_YES</b>.
+
+<p>This function was new in Xmlrpc-c 1.04 (November 2005).
+
+<h3 id="bytesfrombase64"><b>bytesFromBase64</b> Function</h3>
+
+<p>This function decodes a Base64 text string into the C type for
+raw byts: unsigned char.
+
+<p>Example:
+
+<pre>
+<code>
+    string const mybase64(&quot;AQIDBQc=\n&quot;);
+
+    assert(mybase64 == );
+
+    vector&lt;unsigned char&gt; const mybytes(
+        xmlrpc_c::bytesFromBase64(mybase64));
+
+    assert(mybytes.size() == 5);
+    assert(mybytes[0] = 1);
+    assert(mybytes[4] = 7);
+</code>
+</pre>
+
+<p>This function was new in Xmlrpc-c 1.04 (November 2005).
+
+
+</body>
+</html>

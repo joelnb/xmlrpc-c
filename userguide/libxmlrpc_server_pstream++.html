@@ -1,0 +1,1006 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<HTML>
+<HEAD>
+<link href="style.css" rel="stylesheet" type="text/css">
+
+<TITLE>User manual for XML-RPC for C/C++</TITLE>
+
+</HEAD>
+
+<BODY>
+<h1>libxmlrpc_server_pstream++</h1>
+
+<p>This chapter describes the functions in the
+<b>libxmlrpc_server_pstream++</b> function library, which is part of
+XML-RPC For C/C++ (Xmlrpc-c).  Also see <a
+href="libgeneral++.html">General Library Information - C++</a>
+
+<p>The <b>libxmlrpc_server_pstream++</b> library provides C++ classes
+for use in a program that is an psuedo-XML-RPC server that uses the
+&quot;packet stream&quot; variation of XML-RPC.
+
+<p>When using <b>libxmlrpc_server_pstream++</b>, you must also use the <a
+href="libxmlrpc++.html"><b>libxmlrpc++</b> library</a>.  It contains
+additional facilities that an XML-RPC server needs but are general to
+XML-RPC and not specific to XML-RPC servers.  Besides, the
+<b>libxmlrpc_server_pstream++</b> classes depend on it.
+
+<p>Similarly, you will need the <a
+href="libxmlrpc_server++.html">libxmlrpc_server++</a> library.  It
+contains C++ classes for XML-RPC servers that are not specific to
+packet stream servers.  And <b>libxmlrpc_server_pstream++</b> classes
+depend on it.
+
+<p>Finally, you will need <b>libxmlrpc_packetsocket</b>, which provides
+the packet stream functions.
+
+<p>Note that Xmlrpc-c does not provide a C version of this facility.
+
+<p>All of the facilities in this chapter were new in Xmlrpc-c 1.11
+(June 2007).
+
+<h2>Chapter Contents</h2>
+
+<ul>
+<li><a href="#linking">Linking The Library</a>
+<li><a href="#example">Example</a>
+<li><a href="#packetstream">Packet Stream</a>
+<li><a href="#facilities">Description Of Facilities</a>
+  <ul>
+  <li><a href="#class_serverPstream">class <b>serverPstream</b></a>
+    <ul>
+    <li><a href="#pstream_example">Example</a>
+    <li><a href="#pstream_constructors">Constructors</a>
+    <li><a href="#pstream_runSerial"><b>runSerial</b> Method</a>
+    </ul>
+  <li><a href="#class_callinfo_serverPstream">
+      class <b>callinfo_serverPstream</b></a>
+    <ul>
+    <li><a href="#callInfoPstream_constructors">Constructors</a>
+    <li><a href="#callInfoPstream_serverP"><b>serverP</b> Member</a>
+    <li><a href="#callInfoPstream_clientAddr"><b>clientAddr</b> Member</a>
+    <li><a href="#callInfoPstream_clientAddrSize">
+        <b>clientAddrSize</b> Member</a>
+    </ul>
+  <li><a href="#class_serverPstreamConn">class <b>serverPstreamConn</b></a>
+    <ul>
+    <li><a href="#pstreamConn_example">Example</a>
+    <li><a href="#pstreamConn_constructors">Constructors</a>
+    <li><a href="#run"><b>run</b> Method</a>
+    <li><a href="#runOnce"><b>runOnce</b> Method</a>
+    <li><a href="#runOnceNoWait"><b>runOnceNoWait</b> Method</a>
+    </ul>
+  </ul>
+<li><a href="#debugging">Debugging</a>
+<li><a href="#psprotocol">Packet Stream Protocol</a>
+<li><a href="#keepalive">TCP Keepalive</a>
+</ul>
+
+<h2 id="linking">Linking The Library</h2>
+
+<p>The classic Unix name for the file containing the
+<b>libxmlrpc_server_pstream++</b> library is
+<b>libxmlrpc_server_pstream++.a</b> or <b>libxmlrpc_server_pstream++.so</b>.
+The classic linker option to cause the library to be linked into your
+program is <tt>-l xmlrpc_server_pstream++</tt>.  These are hints; you'll
+have to modify this according to conventions of your particular
+platform.  You'll also have to figure out where the library resides
+and how to make your linker look there for it.
+
+<p>You can use <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a>, specifying the
+&quot;c++2&quot; and &quot;pstream-server&quot; features, to find out
+what libraries to link.  This is designed to be used in a build
+program such as a make file.  When properly installed, it tells
+exactly how to link on your particular system.
+
+<p>The following libraries are prerequisites of
+<b>libxmlrpc_server_pstream</b>, so you'll need to link them in too:
+
+<ul>
+<li>libxmlrpc_packetsocket
+<li>libxmlrpc_server
+<li>libxmlrpc
+<li>libxmlrpc_parse
+<li>libxmlrpc_xmltok
+<li>libxmlrpc_util
+</ul>
+
+And remember that some static linkers care about the order in which
+you specify the libraries, with the prerequisite libraries having to
+come <em>after</em> the prerequiring library.  <a
+href="xmlrpc-c-config.html"><b>xmlrpc-c-config</b></a> is a good way
+to make sure you link all the prerequisites in the right order.
+
+<h2 id="example">Example</h2>
+
+<p>Here is a complete example of a pseudo-XML-RPC packet stream server
+program.  This program handles exactly one client connection, then
+exits.  It expects to be passed the TCP connection for the client
+connection on a socket as Standard Input.  That means this would be
+appropriate to use with an Inetd superserver.  To turn this program
+into a standalone server that handles a series of client connections,
+you would just add some logic to accept TCP connections, such as Inetd
+has.
+
+<p>This example is for Xmlrpc-c 1.18 and later.
+
+<p>You can find a tested, buildable copy of this program in the
+<b>examples</b> directory of the Xmlrpc-c source tree as
+<b>pstream_inetd_server.cpp</b>.  That's also how to find a version that works
+with older Xmlrpc-c.
+
+<pre>
+<code>
+#include &lt;unistd.h&gt;
+#include &lt;cassert&gt;
+#include &lt;sys/signal.h&gt;
+
+#include &lt;xmlrpc-c/base.hpp&gt;
+#include &lt;xmlrpc-c/registry.hpp&gt;
+#include &lt;xmlrpc-c/server_pstream.hpp&gt;
+
+using namespace std;
+
+
+class sampleAddMethod : public xmlrpc_c::method {
+public:
+    sampleAddMethod() {
+        // signature and help strings are documentation -- the client
+        // can query this information with a system.methodSignature and
+        // system.methodHelp RPC.
+        this-&gt;_signature = "i:ii";  // method's arguments are two integers
+        this-&gt;_help = "This method adds two integers together";
+    }
+    void
+    execute(xmlrpc_c::paramList const&amp; paramList,
+            xmlrpc_c::value *   const  retvalP) {
+        
+        int const addend(paramList.getInt(0));
+        int const adder(paramList.getInt(1));
+        
+        paramList.verifyEnd(2);
+        
+        *retvalP = xmlrpc_c::value_int(addend + adder);
+    }
+};
+
+
+
+int 
+main(int           const, 
+     const char ** const) {
+
+    // It's a good idea to disable SIGPIPE signals; if client closes his end
+    // of the pipe/socket, we'd rather see a failure to send a response than
+    // get killed by the OS.
+    signal(SIGPIPE, SIG_IGN);
+
+    try {
+        xmlrpc_c::registry myRegistry;
+
+        xmlrpc_c::methodPtr const sampleAddMethodP(new sampleAddMethod);
+
+        myRegistry.addMethod("sample.add", sampleAddMethodP);
+
+        xmlrpc_c::serverPstreamConn server(
+            xmlrpc_c::serverPstreamConn::constrOpt()
+            .socketFd(STDIN_FILENO)
+            .registryP(&amp;myRegistry));
+
+        server.run();
+
+    } catch (exception const&amp; e) {
+        cerr &lt;&lt; "Something threw an error: " &lt;&lt; e.what() &lt;&lt; endl;
+    }
+    return 0;
+}
+</code>
+</pre>
+
+
+<h2 id="packetstream">Packet Stream</h2>
+
+<p>A packet stream is a way to communicate XML-RPC messages that is far
+simpler than HTTP.  XML-RPC specifies that messages are communicated
+by HTTP, so when you use a packet stream, you are not using XML-RPC,
+but something similar (We refer to it as &quot;pseudo-XML-RPC&quot;).
+
+<p>XML-RPC For C/C++ defines a pseudo-XML-RPC protocol that is the same
+as XML-RPC except using a packet stream in place of HTTP.  We call it
+&quot;packet stream XML-RPC.&quot;
+
+<p>A packet stream is a form of communication that consists of a
+sequence of packets in each of two directions.  A packet is a series
+of bytes.  The packets of a stream may have varying sizes.  A packet
+stream is best exemplified by a Unix sequential packet socket (type
+<b>SOCK_SEQPACKET</b>) (a little-known type that only some Unix-like
+operating systems offer).
+
+<p>Packet stream XML-RPC doesn't use a sequential packet socket
+because not all systems have them, but it wants to.  Instead, it uses
+its own emulation of that kind of socket built over a traditional
+stream (<B>SOCK_STREAM</B>) socket.  Each packet stream is uniquely
+associated with a stream socket (TCP) connection.  See <a
+href="#psprotocol">Packet Stream Protocol</a> for technical detail on
+this protocol (not visible to a program using the facilities described
+in this chapter).
+
+<p>In packet stream XML-RPC, each XML-RPC message (i.e. XML-RPC call
+or XML-RPC response) is one packet.
+
+<p>An important difference between HTTP and a packet stream is that
+the packets of a stream are connected to each other -- they form a
+session or connection.  In HTTP, each HTTP transaction is independent --
+there is no concept of connection.  This means that unlike in true
+XML-RPC, in packet stream XML-RPC, you can have a multi-RPC session.
+
+<p>That may not sound significant, because even in true XML-RPC you
+can build a connection <em>above</em> XML-RPC by defining login/logout
+RPCs.  But it's better than that in one crucial way: when a program
+dies, the operating system automatically terminates any TCP
+connections to which it is party, which means when a packet stream
+XML-RPC client or server program dies, the OS under it ends the XML-RPC
+connection.  The XML-RPC correspondent finds out immediately that the
+other party is dead.
+
+<p>Furthermore, you can arrange to have the connection end when there
+is network or OS failure (on the other end) as well.  (See the
+<a href="#keepalive">TCP Keepalive</a> section).
+
+<p>Note that packet stream XML-RPC is not a public standard.  Only
+XML-RPC For C/C++ implements it.  So you use it only in applications
+where you supply both client and server software.  You can use
+<a href="libxmlrpc_client++.html">Xmlrpc-c client facilities</a>,
+in particular the <a href="libxmlrpc_client++.html#class_pstream">
+<b>xmlrpc_c::clientXmlTransport_pstream</b> object class</a> to
+build a suitable packet stream XML-RPC client.
+
+
+<h2 id="facilities">Description Of Facilities</h2>
+
+<h3 id="class_serverPstream">class <b>serverPstream</b></h3>
+
+<p>An object of class <b>xmlrpc_c::serverPstream</b> is a
+packet stream XML-RPC server that can serve multiple client connections
+(not at the same time).
+
+<p>You supply, when you construct the object, a listening socket
+in the form of a socket file descriptor.  This socket is already bound
+to a network address and in listen mode.
+
+<p>The object accepts TCP connections as they arrive via the listening
+socket, and for each connection, processes RPC calls as they arrive.  It
+processes the connections and the RPCs serially, in a single thread.
+
+<p>You get much more flexibility with class <a
+href="#class_serverPstreamConn"><b>serverPstreamConn</b></a>, but have to write
+a little more code.  With <b>serverPstreamConn</b>, for example, you can
+entertain multiple clients at once (by coding multiple threads) and you can
+have the server <em>initiate</em> a connection with a client rather than wait
+for a client to come to it.
+
+<p>This class was new in Xmlrpc-c 1.18 (March 2009).  Before that, use <a
+href="#class_serverPstreamConn"><b>serverPstreamConn</b></a>.
+
+
+<h4 id="pstream_constructors">Constructors</h4>
+
+<p>Overview:
+
+<pre>
+<code>
+    serverPstream::serverPstreamConn(constrOpt const&amp; opt);
+</code>
+</pre>
+
+<p>Examples:
+
+<p>Takes a listening socket on Standard Input:
+
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    ...
+    xmlrpc_c::serverPstream server(xmlrpc_c::serverPstream::constrOpt()
+                                   .registryP(&amp;myRegistry)
+                                   .socketFd(STDIN_FILENO)
+                                  );
+</code>
+</pre>
+
+<p>Same, using an automatic pointer to manage registry lifetime and
+an internally accepted client connection:
+
+<pre>
+<code>
+    xmlrpc_c::registryPtr myRegistryP(new xmlrpc_c::registry);
+    ...
+
+    int acceptedFd;
+    acceptedFd = accept(...)
+    ...
+
+    xmlrpc_c::serverPstream server(xmlrpc_c::serverPstream::constrOpt()
+                                   .registryPtr(myRegistryP)
+                                   .socketFd(acceptedFd);
+                                  );
+</code>
+</pre>
+
+<p>This constructor uses the <a
+href="libxmlrpc++.html#constropt"><i>constrOpt</i> paradigm</a> to
+make specifying options easy and flexible, though technically there is
+just one C++ parameter.
+
+<p>The option methods are:
+
+<dl>
+
+<dt>registryPtr(xmlrpc_c::registryPtr)
+
+<dd>This is a pointer to the method registry the server is to use.
+The pointer takes care of managing the existence of the registry;
+you can destroy all your pointers to the registry after the constructor
+returns.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>registryP(const xmlrpc_c::registry *)
+
+<dd>This is a pointer to the method registry the server is to use.
+You must ensure that the registry to which it points continues to exist
+as long as the server (xmlrpc_c::serverPstream object) does.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>socketFd(xmlrpc_socket)
+
+<dd>This identifies a TCP socket that is in the listening state.  Ordinarily,
+that means you have executed a socket(), a bind() and a listen() system call.
+Note that the port number on which this server accepts connections is built
+into this socket.  The server accepts client connections that arrive on this
+socket, then executes RPCs from those conections.
+
+<p>This option is mandatory.
+
+</dl>
+
+<h4 id="pstream_runSerial"><b>runSerial</b> Method</h4>
+
+<p>This method causes the server object to accept TCP connections as they
+arrive over the associated listening socket, then execute RPCs as they arrive
+over those connections, essentially indefinitely.  It does one connection and
+one RPC at a time; i.e. it accepts a connection, executes RPCs from that
+connection until the client closes the connection, then accepts the next
+connection, etc.  For each connection, it receives an RPC call, then
+executes the RPC and sends the RPC response, then receives the next RPC
+call, etc.
+
+<p>Example:
+
+<pre>
+<code>
+    server.runSerial();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    serverPstream::runSerial();
+</code>
+</pre>
+
+<pre>
+<code>
+    void
+    serverPstream::runSerial(const int * interruptP);
+</code>
+</pre>
+
+<p>If you don't want something this serial, use a
+<a href="#class_serverPstreamConn"><b>serverPstreamConn</b></a> object
+instead, and use multiple threads.
+
+<p>If <b>runSerial</b> is between RPCs, it returns immediately when it finds
+the interrupt flag *<i>interruptP</i> nonzero.  It checks it (among other
+times) immediately after any signal handler returns, so you typically have a
+signal handler set it.  Another common usage is to have another thread set the
+flag, then send the <b>runSerial</b> thread a signal, whose handler does
+nothing, to tell it to check the flag.  The interrupt flag <em>cannot</em>
+interrupt an RPC that <b>runSerial</b> is in the middle of executing.  In
+particular, it will not break out of an infinite loop or wait in your method
+object and it will not stop <b>runSerial</b> from taking as long as it takes
+to send the RPC response to the client.  If you set the interrupt flag while
+<b>runSerial</b> is executing an RPC, <b>runSerial</b> will return as soon as
+it finishes that RPC.
+
+<p>If you use the form of <b>runSerial</b> that doesn't have
+<i>interruptP</i>, it does not return early.
+
+<p>After interrupting <b>runSerial</b>, you can invoke it again.
+
+
+<h4 id="terminate"><b>terminate</b> Method</h4>
+
+<p>This method causes the server to stop running (i.e. a <b>runSerial</b>
+method call returns; any future <b>runSerial</b> call returns immediately).
+
+<p>It takes effect the next time a client connection closes.
+
+<p>You can call this from a method function, in which case it takes effect
+as soon as the connection via which the client invoked that RPC method
+closes.
+
+<p>You can call this from a signal handler.  For example, you can make
+SIGTERM terminate the server.
+
+<p>Example:
+
+<pre>
+<code>
+    server.terminate();
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    serverPstream::terminate();
+</code>
+</pre>
+
+
+
+
+<h3 id="class_callinfo_serverPstream">Class <b>callinfo_serverPstream</b></h3>
+
+<p>An object of class <b>callinfo_serverPstream</b> is something that gets
+passed to your XML-RPC method (i.e. to the <b>execute</b> method of a
+<b>xmlrpc_c::method</b> object) to give it information about how the XML-RPC
+call arrived.  It is an instance of <a
+href="libxmlrpc_server++.html#callinfo"><b>xmlrpc_c::callInfo</b></a> specific
+the <b>serverPstream</b> servers.
+
+<p>You can use this, among other things, to find out the IP address of the
+XML-RPC client.
+
+<p>This class was new in Xmlrpc-c Release 1.19 (June 2009).  Before that,
+information about how the XML-RPC call arrived is not available to your
+XML-RPC method.
+
+
+<h4 id="callInfoPstream_constructors">Constructors</h4>
+
+<p>You don't construct or destroy a <b>callInfo_serverPstream</b>.  Methods of
+<b>serverPstream</b> do that &mdash; you just follow a pointer to it and use
+it.
+
+<h4 id="callInfoPstream_serverP"><b>serverP</b> Member</h4>
+
+<p>Member <b>serverP</b> is a pointer to the <b>serverPstream</b>
+object that is the XML-RPC server through which the call arrived.
+
+<p><b>serverPstream</b> per se doesn't contain any members that are useful to
+your XML-RPC method, but derived class members might.  For example, you might
+have defined a derived class of <b>serverPstream</b> called
+<b>serverPstreamXyz</b> and endowed it with information you want your XML-RPC
+method to have.  Your XML-RPC method, then, need only do a dynamic cast of
+<b>serverP *</b> to <b>serverPstreamXyz *</b> and use that pointer to
+access your information.
+
+<h4 id="callInfoPstream_clientAddr"><b>clientAddr</b> Member</h4>
+
+<p>This is the socket address of the client end of the client-server
+connection.  Assuming it's a TCP connection, this gives you the IP address
+and TCP port number of the client.  <b>struct sockaddr</b> is a Unix OS
+type; use it as you would with e.g. the POSIX <b>accept()</b> function.
+
+
+<h4 id="callInfoPstream_clientAddrSize"><b>clientAddrSize</b> Member</h4>
+
+<p>This goes with <a href="#callInfoPstream_clientAddr"><b>clientAddr</b></a>.
+Use it as you would use the corresponding address size value with the
+POSIX <b>accept()</b> function.
+
+
+<h3 id="class_serverPstreamConn">class <b>serverPstreamConn</b></h3>
+
+<p>An object of class <b>xmlrpc_c::serverPstreamConn</b> is a
+single-connection packet stream XML-RPC server.
+
+<p>You supply, when you construct the object, an established TCP
+connection to the client, in the form of a socket file descriptor.
+
+<p>When you destroy the object, it shuts down the TCP connection, if
+the client has not done so already.
+
+<p>The object processes RPC calls as they arrive over the TCP connection.  It
+processes them serially, in a single thread.
+
+
+<h4 id="pstreamConn_constructors">Constructors</h4>
+
+<p>Overview:
+
+<pre>
+<code>
+serverPstreamConn::serverPstreamConn(constrOpt const&amp; opt);
+</code>
+</pre>
+
+<p>Examples:
+
+<p>Takes an established client connection on Standard Input:
+
+<pre>
+<code>
+    xmlrpc_c::registry myRegistry;
+    ...
+    xmlrpc_c::serverPstreamConn conn(xmlrpc_c::serverPstreamConn::constrOpt()
+                                     .registryP(&amp;myRegistry)
+                                     .socketFd(STDIN_FILENO)
+                                     );
+</code>
+</pre>
+
+<p>Same, using an automatic pointer to manage registry lifetime and
+an internally accepted client connection:
+
+<pre>
+<code>
+    xmlrpc_c::registryPtr myRegistryP(new xmlrpc_c::registry);
+    ...
+
+    int acceptedFd;
+    acceptedFd = accept(...)
+    ...
+
+    xmlrpc_c::serverPstreamConn server(
+        xmlrpc_c::serverPstreamConn::constrOpt()
+        .registryPtr(myRegistryP)
+        .socketFd(acceptedFd);
+        );
+</code>
+</pre>
+
+<p>This constructor uses the <a
+href="libxmlrpc++.html#constropt"><i>constrOpt</i> paradigm</a> to
+make specifying options easy and flexible, though technically there is
+just one C++ parameter.
+
+<p>The option methods are:
+
+<dl>
+
+<dt>registryPtr(xmlrpc_c::registryPtr)
+
+<dd>This is a pointer to the method registry the server is to use.
+The pointer takes care of managing the existence of the registry;
+you can destroy all your pointers to the registry after the constructor
+returns.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>registryP(const xmlrpc_c::registry *)
+
+<dd>This is a pointer to the method registry the server is to use.
+You must ensure that the registry to which it points continues to exist
+as long as the server (xmlrpc_c::serverPstreamConn object) does.
+
+<p>You must specify either <b>registryPtr</b> or <b>registry</b>, and
+not both.
+
+<dt>socketFd(xmlrpc_socket)
+
+<dd>This identifies a TCP socket that is in the connected state.
+Ordinarily, that means it is the result of an accept() system call.
+The server performs RPCs that arrive from this socket.
+
+<p>This option is mandatory.
+
+</dl>
+
+<h4 id="run"><b>run</b> Method</h4>
+
+<p>This method causes the server object to execute RPCs as they arrive over
+the associated connection, until the client terminates the connection.
+
+<p>Example:
+
+<pre>
+<code>
+    server.run();
+</code>
+</pre>
+
+<pre>
+<code>
+    extern int interruptFlag;
+
+    class myCallInfo : public xmlrpc_c::callInfo {
+    public:
+        myCallInfo::myCallInfo(string const&amp; myname) :
+            myname(myname) {}
+            
+        string myname;
+    }
+    myCallInfo callInfo(&quot;George&quot;);
+
+    interruptFlag = 0;
+
+    server.run(&amp;callInfo, &amp;interruptFlag);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    serverPstreamConn::run();
+</code>
+</pre>
+
+<pre>
+<code>
+    void
+    serverPstreamConn::run(const int * interruptP);
+</code>
+</pre>
+
+<pre>
+<code>
+    void
+    serverPstreamConn::run(xmrpc_c::callInfo * callInfoP,
+                           const int *         interruptP);
+</code>
+</pre>
+
+<p>For finer control over the processing, use <a
+href="#runOnce"><b>runOnce</b></a> or <a
+href="#runOnceNoWait"><b>runOnce</b></a> instead.
+
+<p>If <b>run</b> is between RPCs, it returns immediately when it finds the
+interrupt flag *<i>interruptP</i> nonzero.  It checks it (among other times)
+immediately after any signal handler returns, so you typically have a signal
+handler set it.  Another common usage is to have another thread set the flag,
+then send the <b>run</b> thread a signal, whose handler does nothing, to tell
+it to check the flag.  The interrupt flag <em>cannot</em> interrupt an RPC
+that <b>run</b> is in the middle of executing.  In particular, it will not
+break out of an infinite loop or wait in your method object and it will not
+stop <b>run</b> from taking as long as it takes to send the RPC response
+to the client.  If you set the interrupt flag while <b>run</b> is executing an
+RPC, <b>run</b> will return as soon as it finishes that RPC.
+
+<p>If you use the form of <b>run</b> that doesn't have
+<i>interruptP</i>, it does not return early.
+
+<p>The <i>callInfoP</i> argument points to an object that <b>run</b> passes to
+your XML-RPC method execute method.  It is opaque to Xmlrpc-c.  Use this
+object to pass information about the context in which the server is running,
+if that should affect what RPCs do.  For example, you might include  the IP
+address of the XML-RPC client.
+
+<p>If you use the form of <b>run</b> that doesn't have <i>callInfoP</i>,
+you have no way to pass context information to your XML-RPC method object.
+<i>callInfoP</i> was new in Xmlrpc-c 1.19 (June 2009).
+
+<p>This method was new in Xmlrpc-c 1.18 (March 2009).  Before that, just
+use <a href="#runOnce"><b>runOnce</b></a> in a loop.
+
+
+<h4 id="runOnce"><b>runOnce</b> Method</h4>
+
+<p>This method causes the server object to process one RPC
+(waiting for one if necessary).  It waits for the next
+packet to arrive from the client, executes the indicated RPC
+(which includes sending a packet as a response), and returns.
+
+<p>If before a call arrives the client terminates the connection,
+the method returns at that time, with an indication that no more
+RPCs will be forthcoming.
+
+<p>Example:
+
+<pre>
+<code>
+    for (bool clientHasDisconnected = false; !clientHasDisconnected;)
+        server.runOnce(&amp;clientHasDisconnected);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    serverPstreamConn::runOnce(bool * eofP);
+</code>
+</pre>
+<pre>
+<code>
+    void
+    serverPstreamConn::runOnce(const int * interruptP,
+                               bool *      eofP);
+</code>
+</pre>
+
+<pre>
+<code>
+    void
+    serverPstreamConn::runOnce(xmlrpc_c::callInfo * callInfoP,
+                               const int *          interruptP,
+                               bool *               eofP);
+</code>
+</pre>
+
+<p><b>runOnce</b> returns *<i>eofP</i> true if the client terminated
+the connection before the method received an RPC call (and therefore
+the method didn't receive an RPC call).  Otherwise, it returns
+*<i>eofP</i> false.
+
+<p>Ordinarily, you invoke this method in a loop until either it
+reports that the client has disconnected or your program decides
+to quit on its own, then you destroy the <b>serverPstreamConn</b>
+object.
+
+<p>When <b>runOnce</b> is waiting for the RPC call to arrive, it returns
+immediately if it finds the interrupt flag *<i>interruptP</i> nonzero.  It
+checks it immediately after any signal handler returns, so you typically have
+a signal handler set it.  Another common usage is to have another thread set
+the flag, then send the <b>runOnce</b> thread a signal, whose handler does
+nothing, to tell it to check the flag.  Another time <b>runOnce</b> checks the
+flag is before it does anything.  The interrupt flag has no effect after
+<b>runOnce</b> has started executing an RPC.
+
+<p>If you use the form of <b>runOnce</b> that doesn't have <i>interruptP</i>,
+it does not return early.
+
+<p><i>interruptP</i> was new in Xmlrpc-c 1.14 (March 2008).
+
+<p><a href="#runOnceNoWait"><b>runOnceNoWait</b></a> is the same thing except
+that it returns immediately if no RPC has been received.
+
+
+<h4 id="runOnceNoWait"><b>runOnceNoWait</b> Method</h4>
+
+<p>This method causes the server object to process one RPC, if a packet is
+immediately available.  If one is, it executes the indicated RPC (which
+includes sending a packet as a response), and returns.  Otherwise, it returns
+immediately.
+
+<p>If the client has terminated the connection, the method returns
+immediately, with an indication that no more RPCs will be forthcoming.
+
+<p>Example:
+
+<pre>
+<code>
+    for (bool clientHasDisconnected = false; !clientHasDisconnected;) {
+        sleep(1);
+        server.runOnceNoWait(&amp;clientHasDisconnected);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    serverPstreamConn::runOnceNoWait(bool * eofP);
+</code>
+</pre>
+<pre>
+<code>
+    void
+    serverPstreamConn::runOnceNoWait(bool * eofP,
+                                     bool * didOneP);
+</code>
+</pre>
+
+<p>What it means for a packet to be immediately available is generally that
+the operating system under the client has received one (and it's sitting in an
+OS socket buffer).  Specifically, it means either that the client has
+previously read a whole packet from the OS socket underlying the packet socket
+on which the client is built, or it can read (or finish reading one) now,
+while telling the OS it doesn't want to wait for data.
+
+<p><b>runOnceNoWait</b> returns *<i>eofP</i> true if the server has not
+received any RPC calls that haven't been executed yet, and the client has
+terminated the connection.  Otherwise, it returns *<i>eofP</i> false.
+
+<p><b>runOnceNoWait</b> returns *<i>didOneP</i> true if the client has
+received an RPC call (which means <b>runOnceNoWait</b> processed it).
+Otherwise, it returns *<i>didOneP</i> false.
+
+<P><B>runOnceNoWait</B> never executes more than one RPC.
+
+<p>Ordinarily, you invoke this method in a loop, which also does other things
+unrelated to XML-RPC until either the method reports that the client has
+disconnected or your program decides to quit on its own, then you destroy the
+<b>serverPstreamConn</b> object.
+
+<p>You may want to use this in conjunction with the POSIX <b>select</b>,
+etc.  Use <b>select</b> to determine when data is available to read on
+the OS socket on which the client is built.  When you find that data is
+available on the socket, call <b>runOnceNoWait</b> to process the
+incoming RPC.  Note that data received on the socket doesn't necessarily
+mean an entire RPC call was received; the only way to know that is to
+run <b>runOnceNoWait</b> and check the *<i>didOneP</i> result.
+
+<p><a href="#runOnce"><b>runOnce</b></a> is the same thing except that
+it waits for an RPC call to arrive.
+
+<p><b>runOnceNoWait</b> was new in Xmlrpc-c 1.18 (March 2009).
+
+
+<h2 id="debugging">Debugging</h2>
+
+<p>You can use the <a
+href="libxmlrpc_server++.html#trace_xml">XMLRPC_TRACE_XML</a>
+environment variable to see the calls and responses from the
+<b>libxmlrpc_server</b> registry's point of view.  With a packet
+stream server, there is a simple relationship between packet traffic
+and registry traffic, so this is essentially the same thing as a
+packet trace.
+
+
+<h2 id="psprotocol">Packet Stream Protocol</h2>
+
+<p>This section describes the protocol that packet stream XML-RPC uses
+to transport XML-RPC messages.  The protocol itself is independent of
+XML-RPC -- it merely transports arbitrary packets.
+
+<p>The goal of the protocol is to emulate a Unix sequential packet
+socket (type <b>SOCK_SEQPACKET</b>), but work on more systems than
+have packet stream socket function.  The idea is a hybrid of two far
+more common socket types: stream (type <b>SOCK_STREAM</b>) and
+datagram (type <B>SOCK_DGRAM</B>).  We want to have connections and
+reliable, in-order delivery like with a stream socket, but identified
+and indivisible packets like a datagram socket.  Note that a stream
+socket handles a stream of bytes, not packets.  A datagram socket
+transfers whole packets, such that when you write to the socket, you
+write exactly one packet (if any), and when you read from a socket,
+you get exactly one packet (if any).
+
+<p>The packet stream protocol is based on a Unix stream socket.  A
+Unix stream socket is usually an interface to a TCP connection.  We
+will refer to the stream of bytes transported by this stream socket
+as &quot;the byte stream.&quot;
+
+<h3 id="psencoding">Encoding of Packet Stream Into Byte Stream</h3>
+
+<p>Example:
+<pre>
+<tt>
+    P a c k e t O n e <i>&lt;esc&gt;</i> P K T 
+    E s c a p e : <i>&lt;esc&gt;</i> E S C . <i>&lt;esc&gt;</i> P K T
+</tt>
+</pre>
+
+(white space and line breaks in the example are for display only).
+
+<p>In the byte stream, the ASCII code for the Escape character
+(<tt><i>&lt;esc&gt;</i></tt>), which is 0x1B, is an escape
+character -- it introduces a 4 byte protocol control word.  We specify
+the 4 bytes of a control word with ASCII characters such that the 4
+bytes are the ASCII encoding of 4 ASCII characters.  The first one is
+of course always <tt><i>&lt;esc&gt;</i></tt>.
+
+<p>The byte stream is partitioned into packet frames.  The first
+packet frame begins with the first byte of the byte stream.  Each
+packet frame ends with a packet delimiter, which is the control word
+<tt><I>&lt;esc&gt;</I> P K T </tt>.  It is a protocol error for the
+byte stream to end anywhere except immediately after a packet
+delimiter or at the very beginning of the byte stream.
+
+<p>Within a packet frame, every byte that is not part of a control
+word represents a byte of the packet with the same value, in the same order.
+
+<p>Within a packet frame, the control word <tt><i>&lt;esc&gt;</i> E S C</tt>
+represents the byte 0x1B (ASCII Escape) in the packet.
+
+<p>It is a protocol error for the byte stream to contain any control
+word other than the two mentioned here.
+
+<p>While ASCII is used to specify some of the protocol, this does not
+imply that the protocol is about ASCII or text or characters.  A packet
+consists of arbitrary bytes.
+
+<p>The <b>libxmlprc_packetsocket</b> library, part of Xmlrpc-c,
+provides facilities for having a packet stream conversation.  This
+library does not involve XML-RPC.
+
+<h2 id="keepalive">TCP Keepalive</h2>
+
+<p>The TCP keepalive function is important to users of Packet Stream
+XML-RPC.  One of the big advantages of Packet Stream XML-RPC over
+regular XML-RPC is that a client or server can know when its peer dies
+(or, equivalently, becomes unreachable over the network).  TCP keepalive
+is part of what makes that possible.
+
+<p>TCP keepalive is not in effect for a default TCP connection.  Such
+a connection ends only when the OS on one side acts to end it.
+Usually, that's because the OS user of the socket closed it, but it
+can also be because the OS forcibly closed the socket because the user
+process terminated.  But what if the OS itself or something below it dies?
+For example, the OS could hang, or the power could fail on the computer
+that's running it, or a network cable could get cut.  In that case, the
+default TCP connection can live indefinitely.  The OS on the surviving
+end will not notice anything wrong until it tries to send data and, after
+retries and waits, fails to get an acknowledgement.
+
+<p>TCP keepalive allows the surviving end to find out more timely that
+the other end is gone.  To activate it, you set the SO_KEEPALIVE
+socket-level option on the socket, using the POSIX setsockopt()
+function.  On many systems (including Linux), you can control the
+specifics of the keepalive function with the TCP-level socket options
+(which you set also with setsockopt()) TCP_KEEPIDLE, TCP_KEEPINTVL,
+and TCP_KEEPCNT.
+
+<p>With the keepalive function, the OS periodically sends empty
+segments to the other side.  If it fails to get an acknowledgement, it
+declares the peer dead and closes the connection.  Assuming the TCP
+socket underlies an Xmlrpc-c packet socket, that packet socket closes
+as well, and any attempt to read from it fails.  If a process is in
+the middle of method that waits for data to arrive, that method
+returns a failure at that time.
+
+<p>In Xmlrpc-c, you create a packet socket out of a fully-formed TCP socket,
+so it is your choice whether to have keepalive active on it, and the specific
+parameters of it.  You nearly always do want it.  If your application doesn't
+need to know that the peer still exists, then it is probably the kind of
+application that would work better with normal connectionless XML-RPC.
+
+<h2 id="nagle">TCP Nagling</h2>
+
+<p>The TCP Nagle function is important to some users of Packet Stream
+XML-RPC.  This is a function whereby the OS delays transmission of TCP
+data.  To reduce utilization of TCP resources such as network link
+time, the OS may hold off on sending data to wait for additional data
+to send.  If the application requests the sending of more data soon
+enough, the OS sends all of the data in a single packet, thus saving
+resources compared to sending multiple packets.  The policy by which
+the OS decides when to wait and how long is called the Nagle
+Algorithm, named after its inventor.  The process of doing the waiting
+is called nagling.
+
+<p>The OS does nagling by default, but you can tell it not to (disable
+nagling) for a particular TCP socket.  When nagling is disabled, the
+OS sends IP packets as soon as it can.  You control nagling with the
+TCP-level socket option (which you set with setsockopt()) TCP_NODELAY.
+
+<p>Nagling is not as valuable as it seems, because it conserves
+resources mainly on systems where resource contention isn't a problem.
+If a network link is actually congested, the OS will not be able to
+send a packet as soon as the application asks it to send some data, so
+it will end up accumulating small send requests into large packets
+anyway.  Nagling causes the OS to refrain from sending only when there
+<em>are</em> resources available to send.  Still, Nagling can be a
+useful hack to allocate resources in some simple systems.
+
+<p>An Xmlrpc-c packet server ordinarly makes three send requests
+(socket writes) per RPC call or response (packet header, packet body,
+packet trailer).  A typical RPC call or result fits in one IP packet.
+So without nagling, on an unloaded network, you would see 6 IP packets
+per RPC, whereas with nagling, you would see 2.
+
+<p>On a system I measured, the Nagle Algorithm slowed a continuous
+serial RPC process down to 12 RPCs per second.
+
+<p>In Xmlrpc-c, you create a packet socket out of a fully-formed TCP
+socket, so it is your choice whether to have the OS perform nagling or
+not.
+
+</body>
+</html>
