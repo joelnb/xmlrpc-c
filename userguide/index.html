@@ -306,24 +306,7 @@ and the integer 5.
 <p><b>xmlrpc</b> prints to Standard Output the result of the call, which
 it gets back from the server.
 
-<p>You can abbreviate the URL; <B>xmlrpc</B> assumes &quot;http://&quot;
-and &quot;/RPC2&quot;:
-
-<pre>
-<kbd>
-$ xmlrpc localhost:8080 sample.add i/3 i/5
-Result:
-  Integer: 8
-</kbd>
-</pre>
-
-<p>The port number defaults to 80, so you can abbreviate even more:
-
-<pre>
-<kbd>
-$ xmlrpc localhost sample.add i/3 i/5
-</kbd>
-</pre>
+<p>For details, see <a href="xmlrpc.html">the manual</a>.
 
 <p>String arguments look like this:
 
@@ -342,68 +325,6 @@ this shortcut, equivalent to the above:
 $ xmlrpc http://www.xmlrpc.com/RPC2 method_that_takes_string hello
 </kbd>
 </pre>
-
-<p>Each argument to <b>xmlrpc</b> describes on XML-RPC parameter.  So
-in a typical command shell, the following would make an XML-RPC call
-with two paramters: &quot;hello&quot; and &quot;see you later&quot;:
-
-<pre>
-<kbd>
-$ xmlrpc http://www.xmlrpc.com/RPC2 mymethod s/hello &quot;s/see you later&quot;
-</kbd>
-</pre>
-
-<p>Compound values for parameters look the following, except that these
-aren't implemented yet.  Only &quot;i/&quot; and &quot;s/&quot; are
-implemented right now.
-
-<p>Note that this is an example of a Bourne shell command, so some of
-the characters (most notably the quotation marks) are part of the shell
-language, not the <b>xmlrpc</b> syntax.
-
-<pre>
-<kbd>
-$ xmlrpc http://www.oreillynet.com/meerkat/xml-rpc/server.php \
-    meerkat.getItems \
-    &quot;struct/{search:linux,descriptions:i/76,time_period:12hour}&quot;
-Result:
-  Array:
-    Struct:
-      title: String: DatabaseJournal: OpenEdge-Based Finance ...
-      link: String: http://linuxtoday.com/news_story.php3?ltsn=...
-      description: String: "Finance application with embedded ...
-    Struct:
-      title: ...
-      link: ...
-      description: ...
-
-</kbd>
-</pre>
-
-<pre>
-<kbd>
-$ xmlrpc localhost:8080 array_processing_method \
-    &quot;array/(i/3,i/49,s/hello,array/(i/-10,i/-9))&quot;
-</kbd>
-</pre>
-
-<p><b>xmlrpc</b> is implemented using the Xmlrpc-c client library, but
-its function is not in any way tied to Xmlrpc-c.  It makes a standard
-XML-RPC call and does not know or care whether the server is
-implemented with Xmlrpc-c or not.
-
-<p>For extra diagnostic information, use the <a
-href="libxmlrpc_client.html#trace_xml"><b>XMLRPC_TRACE_XML</b>
-environment variable</a> so you can see the XML that goes back and
-forth to perform the call.  (This is not specifically <b>xmlrpc</b>
-function -- it's tracing function that's automatically there because
-<b>xmlrpc</b> uses <b>libxmlrpc_client</b>).
-
-<h4>Warning About System Compatibility</h4>
-
-<p><b>xmlrpc</b> from Xmlrpc-c before Release 1.16 doesn't work on some
-platforms &mdash; it crashes due to invalid assumptions it makes about the
-way C variadic functions are implemented.
 
 
 <h2 id="alternatives">Alternatives</h2>

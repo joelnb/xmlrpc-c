@@ -2,18 +2,11 @@
 <title>Xmlrpc User Manual</title>
 <body>
 
-<p><b>xmlrpc</b> makes an XML-RPC remote procedure call (RPC) and displays
-the response.  <b>xmlrpc</b> runs an XML-RPC client.
+<p><b>xmlrpc</b> is a general purpose XML-RPC client program.  It
+performs one XML-RPC call, which you describe in its command line
+arguments.
 
-<p>This program is mainly useful for debugging and learning about
-XML-RPC servers.  XML-RPC is such that the RPCs normally need to be made
-by a program rather than a person to be of use.
-
-<p>A similar tool done as a web form is at <a
-href="http://gggeek.damacom.it/debugger/">
-http://gggeek.damacom.it/debugger/</a>
-
-<h2>Examples</h2>
+<h2 id="examples">Examples</h2>
 
 <pre>
 <tt>
@@ -61,7 +54,88 @@ http://gggeek.damacom.it/debugger/</a>
 </tt>
 </pre>
 
-<h2>Overview</h2>
+
+<h2 id="description">Description</h2>
+
+<p><b>xmlrpc</b> makes an XML-RPC remote procedure call (RPC) and displays
+the response.  <b>xmlrpc</b> runs an XML-RPC client.
+
+<p>This program is mainly useful for debugging and learning about
+XML-RPC servers.  XML-RPC is such that the RPCs normally need to be made
+by a program rather than a person to be of use.
+
+<p>A similar tool done as a web form is at <a
+href="http://gggeek.damacom.it/debugger/">
+http://gggeek.damacom.it/debugger/</a>
+
+<p>You specify the RPC parameters with command line arguments (See
+<i>parameter</i> under <a href="#arguments">Arguments</a>).
+
+<p>Each argument to <b>xmlrpc</b> describes on XML-RPC parameter.  So
+in a typical command shell, the following would make an XML-RPC call
+with two paramters: &quot;hello&quot; and &quot;see you later&quot;:
+
+<pre>
+<kbd>
+$ xmlrpc http://www.xmlrpc.com/RPC2 mymethod s/hello &quot;s/see you later&quot;
+</kbd>
+</pre>
+
+<p>Compound values for parameters look the following, except that these
+aren't implemented yet.  Only &quot;i/&quot; and &quot;s/&quot; are
+implemented right now.
+
+<p>Note that this is an example of a Bourne shell command, so some of
+the characters (most notably the quotation marks) are part of the shell
+language, not the <b>xmlrpc</b> syntax.
+
+<pre>
+<kbd>
+$ xmlrpc http://www.oreillynet.com/meerkat/xml-rpc/server.php \
+    meerkat.getItems \
+    &quot;struct/{search:linux,descriptions:i/76,time_period:12hour}&quot;
+Result:
+  Array:
+    Struct:
+      title: String: DatabaseJournal: OpenEdge-Based Finance ...
+      link: String: http://linuxtoday.com/news_story.php3?ltsn=...
+      description: String: "Finance application with embedded ...
+    Struct:
+      title: ...
+      link: ...
+      description: ...
+
+</kbd>
+</pre>
+
+<pre>
+<kbd>
+$ xmlrpc localhost:8080 array_processing_method \
+    &quot;array/(i/3,i/49,s/hello,array/(i/-10,i/-9))&quot;
+</kbd>
+</pre>
+
+<p><b>xmlrpc</b> is implemented using the Xmlrpc-c client library, but
+its function is not in any way tied to Xmlrpc-c.  It makes a standard
+XML-RPC call and does not know or care whether the server is
+implemented with Xmlrpc-c or not.
+
+<p>For extra diagnostic information, use the <a
+href="libxmlrpc_client.html#trace_xml"><b>XMLRPC_TRACE_XML</b>
+environment variable</a> so you can see the XML that goes back and
+forth to perform the call.  (This is not specifically <b>xmlrpc</b>
+function -- it's tracing function that's automatically there because
+<b>xmlrpc</b> uses <b>libxmlrpc_client</b>).
+
+<h4>Warning About System Compatibility</h4>
+
+<p><b>xmlrpc</b> from Xmlrpc-c before Release 1.16 doesn't work on some
+platforms &mdash; it crashes due to invalid assumptions it makes about the
+way C variadic functions are implemented.
+
+
+
+<h2 id="overview">Overview</h2>
 <p>
 <b>xmlrpc</b>
 <i>url</i>
@@ -90,7 +164,7 @@ hyphens instead of single hyphen to denote options.  You may use white
 space in place of the equals sign to separate an option name from its value.
 
 
-<h2>Arguments</h2>
+<h2 id="arguments">Arguments</h2>
 
 <dl>
 <dt><i>url</i>
@@ -101,6 +175,15 @@ in the URL, <b>xmlrpc</b> assumes an &quot;http://&quot; prefix and a
 &quot;/RPC2&quot; suffix.  <b>RPC2</b> is the conventional file name for
 an XML-RPC responder.
 
+<p>The port number defaults to 80 (the standard <b>http</b> service).
+
+<p>Examples:
+<ul>
+<li>http://localhost:8080/RPC2
+<li>example.com:8080
+<li>example.com
+</ul>
+
 <dt><i>methodName</i>
 
 <dd>The name of the XML-RPC method you want to invoke.
@@ -110,6 +193,13 @@ an XML-RPC responder.
 <dd>The list of parameters for the RPC.  <b>xmlrpc</b> turns each of these
 arguments into an XML-RPC parameter, in the order given.  You may specify
 no parameters if you like.
+
+<p>Examples:
+<ul>
+<li><b>i/5</b>  
+<li><b>s/hello</b>
+<li><b>n/</b>
+</ul>
 
 <p>You specify the data type of the parameter with a prefix ending in
 a slash.  Example: <b>i/5</b>.  Here, the &quot;i&quot; signifies an
@@ -149,7 +239,7 @@ not contain a slash), <b>xmlrpc</b> assumes string data type.
 </dl>
 
 
-<h2>Options</h2>
+<h2 id="options">Options</h2>
 
 <dl>
 <dt><b>-transport=</b><i>transportname</i>
@@ -254,7 +344,7 @@ XML transport.  You may not specify any other transport.
 
 </dl>
 
-<h2>Limitations</h2>
+<h2 id="limitations">Limitations</h2>
 
 <p>If you run <b>xmlrpc</b> in an environment in which programs get 
 their arguments encoded some way other than UTF-8, <b>xmlrpc</b>
