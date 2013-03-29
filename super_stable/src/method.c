@@ -10,6 +10,8 @@
   Contributed to the public domain by its author.
 =========================================================================*/
 
+#define _XOPEN_SOURCE 600  /* Make sure strdup() is in <string.h> */
+
 #include "xmlrpc_config.h"
 
 #include <assert.h>
@@ -58,6 +60,7 @@ translateTypeSpecifierToName(xmlrpc_env *  const envP,
                       "Method registry contains invalid signature "
                       "data.  It contains the type specifier '%c'",
                       typeSpecifier);
+        *typeNameP = NULL;  /* quiet compiler warning */
     }
 }
                 
@@ -176,9 +179,8 @@ parseOneSignature(xmlrpc_env *               const envP,
         }
         if (envP->fault_occurred)
             free(signatureP);
-        else
-            *signaturePP = signatureP;
     }
+    *signaturePP = signatureP;
 }    
 
 
@@ -323,7 +325,7 @@ xmlrpc_methodCreate(xmlrpc_env *           const envP,
         methodP->methodFnType1  = methodFnType1;
         methodP->methodFnType2  = methodFnType2;
         methodP->userData       = userData;
-        xmlrpc_asprintf(&methodP->helpText, "%s", helpText);
+        methodP->helpText       = xmlrpc_strdupsol(helpText);
         methodP->stackSize      = stackSize;
 
         makeSignatureList(envP, signatureString, &methodP->signatureListP);

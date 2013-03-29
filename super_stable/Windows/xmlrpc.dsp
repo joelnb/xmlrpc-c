@@ -91,6 +91,10 @@ SOURCE=..\lib\libutil\asprintf.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\lib\libutil\base64.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\lib\libutil\error.c
 # End Source File
 # Begin Source File
@@ -108,6 +112,10 @@ SOURCE=..\src\method.c
 # Begin Source File
 
 SOURCE=..\lib\util\pthreadx_win32.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\parse_datetime.c
 # End Source File
 # Begin Source File
 
@@ -200,6 +208,10 @@ SOURCE=..\lib\curl_transport\xmlrpc_curl_transport.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\lib\libutil\string_number.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\src\xmlrpc_data.c
 # End Source File
 # Begin Source File
@@ -252,6 +264,10 @@ SOURCE=..\lib\wininet_transport\xmlrpc_wininet_transport.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=..\include\xmlrpc-c\string_number.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\lib\abyss\src\http.h
@@ -359,6 +375,10 @@ SOURCE=..\src\method.h
 # Begin Source File
 
 SOURCE=..\lib\util\include\pthreadx.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\src\parse_datetime.h
 # End Source File
 # Begin Source File
 

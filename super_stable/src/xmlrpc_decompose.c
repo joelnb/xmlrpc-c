@@ -711,7 +711,7 @@ buildArrayDecompBranch(xmlrpc_env *            const envP,
         if (itemCnt >= ARRAY_SIZE(decompNodeP->store.Tarray.itemArray))
             xmlrpc_faultf(envP, "Too many array items in format string.  "
                           "The most items you can have for an array in "
-                          "a format string is %u.",
+                          "a format string is %u.", (unsigned)
                           ARRAY_SIZE(decompNodeP->store.Tarray.itemArray));
         else {
             struct decompTreeNode * itemNodeP;
@@ -849,7 +849,7 @@ buildStructDecompBranch(xmlrpc_env *            const envP,
             xmlrpc_faultf(envP,
                           "Too many structure members in format string.  "
                           "The most members you can specify in "
-                          "a format string is %u.",
+                          "a format string is %u.", (unsigned)
                           ARRAY_SIZE(decompNodeP->store.Tstruct.mbrArray));
         else {
             struct mbrDecomp * const mbrP =
@@ -1058,9 +1058,8 @@ createDecompTree(xmlrpc_env *             const envP,
 
         if (envP->fault_occurred)
             destroyDecompTree(decompRootP);
-        else
-            *decompRootPP = decompRootP;
     }
+    *decompRootPP = decompRootP;
 }
 
 

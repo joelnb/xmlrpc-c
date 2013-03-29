@@ -24,18 +24,35 @@ OMIT_CURL_TRANSPORT_RULE=Y
 
 include $(SRCDIR)/common.mk
 
+# This 'common.mk' dependency makes sure the symlinks get built before
+# this make file is used for anything.
+
+$(SRCDIR)/common.mk: srcdir blddir
+
+CURL_VERSION := $(shell curl-config --vernum)
+
+# Some time at or before Curl 7.12, <curl/types.h> became an empty file
+# (no-op).  Some time after Curl 7.18, <curl/types.h> ceased to exist.
+# curl-config --vernum yields a string of 6 digits; the first two are the
+# major version in hexadecimal; the second two are the minor version number
+# and so on.  So "071000" means 7.16.0.
+
+NEED_CURL_TYPES_H := $(shell if test $(CURL_VERSION) '<' 071000; then echo Y; fi)
+
+ifeq ($(NEED_CURL_TYPES_H),Y)
+  CFLAGS_LOCAL += -DNEED_CURL_TYPES_H
+endif
+
 CURL_INCLUDES := $(shell curl-config --cflags)
 # We expect that curl-config --cflags just gives us -I options, because
 # we need just the -I options for 'make dep'.  Plus, it's scary to think
 # of what any other compiler flag would do to our compile.
 
-CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_PERSONAL) $(CADD)
-
 INCLUDES = \
   -I$(BLDDIR) \
   -I$(BLDDIR)/include \
-  -I$(SRCDIR)/include \
-  -I$(SRCDIR)/lib/util/include \
+  -Isrcdir/include \
+  -Isrcdir/lib/util/include \
   $(CURL_INCLUDES)
 
 .PHONY: clean
