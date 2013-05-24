@@ -358,13 +358,13 @@ use to identify it.
 <pre>
 <code>
 void 
-xmlrpc_client_create(xmlrpc_env *                const envP,
-                     int                         const flags,
-                     char *                      const appname,
-                     char *                      const appversion,
-                     struct xmlrpc_clientparms * const clientparmsP,
-                     unsigned int                const parmSize,
-                     xmlrpc_client **            const clientPP);
+xmlrpc_client_create(xmlrpc_env *                envP,
+                     int                         flags,
+                     char *                      appname,
+                     char *                      appversion,
+                     struct xmlrpc_clientparms * clientparmsP,
+                     unsigned int                parmSize,
+                     xmlrpc_client **            clientPP);
 
 </code>
 </pre>
@@ -604,7 +604,7 @@ Xmlrpc-c maintainter).
 <pre>
 <code>
 void 
-xmlrpc_client_destroy(xmlrpc_client * const clientP);
+xmlrpc_client_destroy(xmlrpc_client * clientP);
 </code>
 </pre>
 
@@ -658,12 +658,12 @@ program exits.
 <pre>
 <code>
 void 
-xmlrpc_client_init2(xmlrpc_env *                const envP,
-                    int                         const flags,
-                    char *                      const appname,
-                    char *                      const appversion,
-                    struct xmlrpc_clientparms * const clientparmsP,
-                    unsigned int                const parmSize);
+xmlrpc_client_init2(xmlrpc_env *                envP,
+                    int                         flags,
+                    char *                      appname,
+                    char *                      appversion,
+                    struct xmlrpc_clientparms * clientparmsP,
+                    unsigned int                parmSize);
 
 
 </code>
@@ -766,12 +766,12 @@ Prototype:
 <pre>
 <code>
     void
-    xmlrpc_client_call2f(xmlrpc_env *    const envP,
-                         xmlrpc_client * const clientP,
-                         const char *    const serverUrl,
-                         const char *    const methodName,
-                         xmlrpc_value ** const resultPP,
-                         const char *    const format,
+    xmlrpc_client_call2f(xmlrpc_env *    envP,
+                         xmlrpc_client * clientP,
+                         const char *    serverUrl,
+                         const char *    methodName,
+                         xmlrpc_value ** resultPP,
+                         const char *    format,
                          ...);
 </code>
 </pre>
@@ -829,12 +829,12 @@ your ability to specify the XML-RPC parameters and the server information.
 <pre>
 <code>
 void
-xmlrpc_client_call2(xmlrpc_env *               const envP,
-                    struct xmlrpc_client *     const clientP,
-                    const xmlrpc_server_info * const serverInfoP,
-                    const char *               const methodName,
-                    xmlrpc_value *             const paramArrayP,
-                    xmlrpc_value **            const resultPP);
+xmlrpc_client_call2(xmlrpc_env *               envP,
+                    struct xmlrpc_client *     clientP,
+                    const xmlrpc_server_info * serverInfoP,
+                    const char *               methodName,
+                    xmlrpc_value *             paramArrayP,
+                    xmlrpc_value **            resultPP);
 </code>
 </pre>
 
@@ -910,10 +910,10 @@ information.
 <pre>
 <code>
     xmlrpc_value * 
-    xmlrpc_client_call(xmlrpc_env *    const envP,
-                       const char *    const serverUrl,
-                       const char *    const methodName,
-                       const char *    const format,
+    xmlrpc_client_call(xmlrpc_env * envP,
+                       const char * serverUrl,
+                       const char * methodName,
+                       const char * format,
                        ...);
 </code>
 </pre>
@@ -930,10 +930,10 @@ the XML-RPC method parameters like you do for
 <pre>
 <code>
     xmlrpc_value * 
-    xmlrpc_client_call_params(xmlrpc_env *   const envP,
-                              const char *   const serverUrl,
-                              const char *   const methodName,
-                              xmlrpc_value * const paramArrayP);
+    xmlrpc_client_call_params(xmlrpc_env *   envP,
+                              const char *   serverUrl,
+                              const char *   methodName,
+                              xmlrpc_value * paramArrayP);
                               
 </code>
 </pre>
@@ -949,10 +949,10 @@ which is more expressive.
 <pre>
 <code>
     xmlrpc_value * 
-    xmlrpc_client_call_server(xmlrpc_env *         const envP,
-                              xmlrpc_server_info * const serverInfoP,
-                              const char *         const methodName,
-                              const char *         const format,
+    xmlrpc_client_call_server(xmlrpc_env *         envP,
+                              xmlrpc_server_info * serverInfoP,
+                              const char *         methodName,
+                              const char *         format,
                               ...);
 </code>
 </pre>
@@ -971,10 +971,10 @@ the XML-RPC parameters and server information like you do for
 <code>
     xmlrpc_value * 
     xmlrpc_client_call_server_params(
-        xmlrpc_env *         const envP,
-        xmlrpc_server_info * const serverInfoP,
-        const char *         const methodName,
-        xmlrpc_value *       const paramArrayP);
+        xmlrpc_env *         envP,
+        xmlrpc_server_info * serverInfoP,
+        const char *         methodName,
+        xmlrpc_value *       paramArrayP);
 </code>
 </pre>
 
@@ -1134,13 +1134,13 @@ order.  The calling of the collating function is a callback.
 <pre>
 <code>
 void
-    xmlrpc_client_start_rpc(xmlrpc_env *               const envP,
-                            struct xmlrpc_client *     const clientP,
-                            const xmlrpc_server_info * const serverInfoP,
-                            const char *               const methodName,
-                            xmlrpc_value *             const paramArrayP,
-                            xmlrpc_response_handler          responseHandler,
-                            void *                     const userData);
+    xmlrpc_client_start_rpc(xmlrpc_env *               envP,
+                            struct xmlrpc_client *     clientP,
+                            const xmlrpc_server_info * serverInfoP,
+                            const char *               methodName,
+                            xmlrpc_value *             paramArrayP,
+                            xmlrpc_response_handler    responseHandler,
+                            void *                     userData);
 </code>
 </pre>
 
@@ -1161,13 +1161,13 @@ to <b>libxmlrpc_client</b>, that gets passed to that function.
 <pre>
 <code>
     void
-    xmlrpc_client_start_rpcf(xmlrpc_env *    const envP,
-                             xmlrpc_client * const clientP,
-                             const char *    const serverUrl,
-                             const char *    const methodName,
+    xmlrpc_client_start_rpcf(xmlrpc_env *            envP,
+                             xmlrpc_client *         clientP,
+                             const char *            serverUrl,
+                             const char *            methodName,
                              xmlrpc_response_handler responseHandler,
-                             void *          const userData,
-                             const char *    const format,
+                             void *                  userData,
+                             const char *            format,
                              ...) {
 </code>
 </pre>
@@ -1187,14 +1187,14 @@ and <i>userData</i>, the same as for <b>xmlrpc_client_start_rpc()</b>.
 <pre>
 <code>
   void
-  xmlrpc_client_start_rpcf_va(xmlrpc_env *    const envP,
-                              xmlrpc_client * const clientP,
-                              const char *    const serverUrl,
-                              const char *    const methodName,
+  xmlrpc_client_start_rpcf_va(xmlrpc_env *            envP,
+                              xmlrpc_client *         clientP,
+                              const char *            serverUrl,
+                              const char *            methodName,
                               xmlrpc_response_handler responseHandler,
-                              void *          const userData,
-                              const char *    const format,
-                              va_list               args) {
+                              void *                  userData,
+                              const char *            format,
+                              va_list                 args) {
 </code>
 </pre>
 
@@ -1334,8 +1334,8 @@ Overview:
 <pre>
 <code>
 xmlrpc_server_info *
-xmlrpc_server_info_new(xmlrpc_env * const envP,
-                       const char * const serverUrl);
+xmlrpc_server_info_new(xmlrpc_env * envP,
+                       const char * serverUrl);
 </code>
 </pre>
 
@@ -1369,7 +1369,7 @@ Overview:
 <pre>
 <code>
 void
-xmlrpc_server_info_free(xmlrpc_server_info * const serverP);
+xmlrpc_server_info_free(xmlrpc_server_info * serverP);
 </code>
 </pre>
 
@@ -1383,8 +1383,8 @@ Overview:
 <pre>
 <code>
 xmlrpc_server_info * 
-xmlrpc_server_info_copy(xmlrpc_env *         const envP,
-                        xmlrpc_server_info * const serverP);
+xmlrpc_server_info_copy(xmlrpc_env *         envP,
+                        xmlrpc_server_info * serverP);
 </code>
 </pre>
 
@@ -1422,10 +1422,10 @@ Overview:
 <pre>
 <code>
 void 
-xmlrpc_server_info_set_user(xmlrpc_env *         const envP,
-                            xmlrpc_server_info * const serverInfoP,
-                            const char *         const username,
-                            const char *         const password);
+xmlrpc_server_info_set_user(xmlrpc_env *         envP,
+                            xmlrpc_server_info * serverInfoP,
+                            const char *         username,
+                            const char *         password);
 </code>
 </pre>
 
@@ -1457,8 +1457,8 @@ object unchanged.
 <code>
 void 
 void 
-xmlrpc_server_info_allow_auth_basic(xmlrpc_env *         const envP,
-                                    xmlrpc_server_info * const serverInfoP);
+xmlrpc_server_info_allow_auth_basic(xmlrpc_env *         envP,
+                                    xmlrpc_server_info * serverInfoP);
 </code>
 </pre>
 
@@ -1488,8 +1488,8 @@ Overview:
 <code>
 void 
 void 
-xmlrpc_server_info_disallow_auth_basic(xmlrpc_env *         const envP,
-                                       xmlrpc_server_info * const serverInfoP);
+xmlrpc_server_info_disallow_auth_basic(xmlrpc_env *         envP,
+                                       xmlrpc_server_info * serverInfoP);
 </code>
 </pre>
 
@@ -1545,11 +1545,10 @@ except for HTTP NTLM authentication.
 <pre>
 <code>
 void 
-xmlrpc_server_info_set_basic_auth(
-    xmlrpc_env *         const envP,
-    xmlrpc_server_info * const serverP,
-    const char *         const username,
-    const char *         const password);
+xmlrpc_server_info_set_basic_auth(xmlrpc_env *         envP,
+                                  xmlrpc_server_info * serverP,
+                                  const char *         username,
+                                  const char *         password);
 
 </code>
 </pre>
@@ -1688,8 +1687,8 @@ Example:
 <pre>
 <code>
     void
-    xmlrpc_client_set_interrupt(xmlrpc_client * const clientP,
-                                int *           const interruptP);
+    xmlrpc_client_set_interrupt(xmlrpc_client * clientP,
+                                int *           interruptP);
 </code>
 </pre>
 
@@ -2471,7 +2470,7 @@ a particular XML transport when you create the Xmlrpc-c client object.
 <pre>
 <code>
 const char * 
-xmlrpc_client_get_default_transport(xmlrpc_env * const envP);
+xmlrpc_client_get_default_transport(xmlrpc_env * envP);
 </code>
 </pre>
 
@@ -2733,9 +2732,9 @@ Xmlrpc-c servers.
 <pre>
 <code>
     void
-    xmlrpc_client_version(unsigned int * const majorP,
-                          unsigned int * const minorP,
-                          unsigned int * const pointP);
+    xmlrpc_client_version(unsigned int * majorP,
+                          unsigned int * minorP,
+                          unsigned int * pointP);
 </code>
 </pre>
 
