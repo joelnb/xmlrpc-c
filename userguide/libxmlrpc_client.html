@@ -78,6 +78,13 @@ XML-RPC and not specific to XML-RPC clients.  Besides, the
     <li><a href="#xmlrpc_client_start_rpcf_va">
         xmlrpc_client_start_rpcf_va()</a>
     <li><a href="#responsehandler">Response Handler</a>
+    <li><a href="#xmlrpc_client_finish">xmlrpc_client_event_loop_finish()</a>
+    <li><a href="#xmlrpc_client_finish_timeout">
+        xmlrpc_client_event_loop_finish_timeout()</a>
+    <li><a href="#xmlrpc_client_finish_asynch">
+        xmlrpc_client_event_loop_finish_asynch()</a>
+    <li><a href="#xmlrpc_client_finish_asynch_timeout">
+        xmlrpc_client_event_loop_finish_asynch_timeout()</a>
     </ul>
   <li><a href="#ryorpc">Roll Your Own RPC</a>
   <li><a href="#server_info">Server Information Object</a>
@@ -1055,7 +1062,7 @@ an I/O interrupt.  But that's not what it is.
 <p>When you start an RPC (e.g. by calling
 <b>xmlrpc_client_start_rpc()</b>), you must eventually call an RPC
 finishing function such as <b>xmlrpc_client_event_loop_finish()</b>.
-What that does is complete all RPC requests that have been started.
+What that does is finish all RPC requests that have been started.
 This includes waiting for RPCs to complete if they haven't already.
 For each of these RPC requests (when the RPC has completed), the RPC
 finishing function calls the response handler.  It also does other
@@ -1263,6 +1270,102 @@ run for any RPC of that same client, whether the RPC is related to the
 call or not.  Keep that in mind in ordering your resources to avoid
 deadlock.  In particular, you <em>cannot call any client function</em>
 against the same client <em>within</em> your response handler.
+
+
+<h4 id="xmlrpc_client_finish">xmlrpc_client_event_loop_finish()</h4>
+
+<p>This function finishes all outstanding RPCs.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_event_loop_finish(xmlrpc_client * clientP);
+</code>
+</pre>
+
+<p>
+<i>clientP</i> is the handle of the client whose RPCs are to be finished.
+
+<p>The function finishes all RPCs that were outstanding when the function
+was called, and may finish additional ones that were started while it was
+running.  To be sure all RPCs are finished, you must stop starting RPCs,
+then call <b>xmlrpc_client_event_loop_finish()</b>.
+
+
+<h4 id="xmlrpc_client_finish_timeout">
+xmlrpc_client_event_loop_finish_timeout()</h4>
+
+<p>This function finishes all outstanding RPCs, except that the time it runs
+is bounded.  Whatever RPCs in cannot finish within that time constraint, it
+leaves unfinished.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_event_loop_finish_timeout(xmlrpc_client * clientP,
+                                            unsigned long   milliseconds);
+</code>
+</pre>
+
+<p>
+<i>clientP</i> is the handle of the client whose RPCs are to be finished.
+
+<p>This function is the same as <b>xmlrpc_client_event_loop_finish()</b>
+except that the time it runs is bounded.  It will not run longer
+than <i>milliseconds</i> milliseconds.  In actuality, some parts of finishing
+an RPC are not interruptible, so it may run longer than that, but at least it
+won't wait for a server to respond to an RPC after this period has passed.
+
+<p>You cannot tell directly whether the function returned because all the RPCs
+are finished or because it timed out.  If you need to know whether all the
+RPCs have finished, you can either keep track with your RPC response handlers
+(see <a href="#responseHandler">Response Handler</a>) of what RPCs are
+outstanding or call <b>xmlrpc_client_event_loop_finish()</b> instead.
+
+<p><em>Warning:</em> some people come away with the idea that the timeout on
+this function is a timeout on the asynchronous RPCs - that somehow it forces
+slow RPCs to finish.  In fact, all it does is cut short the <em>wait</em> for
+the RPCs to finish, giving the calling thread the opportunity to do other work
+before coming back to finishing the RPCs.
+
+
+<h4 id="xmlrpc_client_finish_asynch">
+xmlrpc_client_event_loop_finish_asynch()</h4>
+
+<p>This is the same as <b>xmlrpc_client_event_loop_finish()</b> except
+that it works on the <a href="#globalclient">global client</a>.  Hence,
+it has no <i>clientP</i> argument.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_event_loop_finish_asynch(void);
+</code>
+</pre>
+
+
+<h4 id="xmlrpc_client_finish_asynch_timeout">
+xmlrpc_client_event_loop_finish_asynch_timeout()</h4>
+
+<p>This is the same as <b>xmlrpc_client_event_loop_finish_timeout()</b> except
+that it works on the <a href="#globalclient">global client</a>.  Hence,
+it has no <i>clientP</i> argument.
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_event_loop_finish_asynch(unsigned long milliseconds);
+</code>
+</pre>
+
 
 <h3 id="ryorpc">Roll Your Own RPC</h3>
 
