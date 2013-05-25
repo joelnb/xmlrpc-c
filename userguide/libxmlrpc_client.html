@@ -1323,7 +1323,7 @@ won't wait for a server to respond to an RPC after this period has passed.
 <p>You cannot tell directly whether the function returned because all the RPCs
 are finished or because it timed out.  If you need to know whether all the
 RPCs have finished, you can either keep track with your RPC response handlers
-(see <a href="#responseHandler">Response Handler</a>) of what RPCs are
+(see <a href="#responsehandler">Response Handler</a>) of what RPCs are
 outstanding or call <b>xmlrpc_client_event_loop_finish()</b> instead.
 
 <p><em>Warning:</em> some people come away with the idea that the timeout on
@@ -1694,7 +1694,7 @@ section <a href="#curlssl">Curl XML Transport - SSL</a>.
 
 <h2 id="interrupting">Interrupting</h2>
 
-<p>There is a facility for interrupting long-running client functions
+<p>There is a facility for interrupting long-running client functions and RPCs
 with a signal.  Two examples of how this is useful:
 
 <ul>
@@ -1721,7 +1721,7 @@ immediately as a result of that SIGALRM signal.
 href="#curlparm_timeout"><b>timeout</b></a> parameter of the Curl
 transport.
 
-<h3 id="interrupthow">How To Interrupt A Function</h3>
+<h3 id="interrupthow">How To Interrupt A Function or RPC</h3>
 
 <p>The program <a href="http://xmlrpc-c.svn.sourceforge.net/viewvc/xmlrpc-c/trunk/examples/interrupted_client.c?view=markup">
 <b>interrupted_client</b></a> in the examples directory of the Xmlrpc-c source
@@ -1736,13 +1736,13 @@ is, with <b>xmlrpc_client_set_interrupt()</b>.  Before you call an
 Xmlrpc-c function, set the interrupt flag to 0.  Set up a
 signal handler that sets the interrupt flag to 1 and returns.
 
-<p>Xmlrpc-c library functions check that flag at certain times and,
-seeing it set, abort what they are doing and return a failure.  So the
-only thing left to consider is just when the library function checks
-the interrupt flag.  Ideally, it checks it before doing anything that
-could take a while, and shortly after every signal is handled.  But it
-doesn't always meet that ideal; see <a
-href="#interruptlimit">Limitations</a>.
+<p>Xmlrpc-c library functions such as <b>xmlrpc_client_call2()</b>check that
+flag at certain times and, seeing it set, abort what they are doing and return
+a failure.  So the only thing left to consider is just when the library
+function checks the interrupt flag.  Ideally, it checks it before doing
+anything that could take a while, and shortly after every signal is handled.
+But it doesn't always meet that ideal;
+see <a href="#interruptlimit">Limitations</a>.
 
 <p>There is no way to interrupt a function of the <a
 href="#globalclient">global client</a>.
@@ -1758,6 +1758,12 @@ means in addition to a <b>libxmlrpc_client</b> function returning
 soon, the server also may see an unfinished RPC.  XML-RPC has no
 concept of aborting an RPC, so what the server sees may just be an
 abruptly truncated conversation.
+
+<p>Note that in the asynchronous RPC interface, the interrupt flag interrupts
+the RPCs and does not interrupt finishing functions per se.  A finishing
+function such as <b>xmlrpc_client_event_loop_finish()</b> proceeds to finish
+RPCs in spite of the interrupt flag, but if the interrupt flag is set, those
+RPCs should finish quickly.
 
 <p>This is different from the timeout in the asynchronous RPC interface.
 That timeout simply makes <b>xmlrpc_client_event_loop_finish_timeout()</b>
