@@ -284,6 +284,7 @@ clean-local:
 	$(MAKE) -C test clean
 
 distclean: clean-common clean-local distclean-common $(SUBDIRS:%=%/distclean)
+	$(MAKE) -C test distclean
 
 .PHONY: dep
 dep: $(SUBDIRS:%=%/dep) $(BLDDIR)/transport_config.h dep-common
