@@ -1803,6 +1803,16 @@ back as the HTTP response document.
 Xmlrpc-c (<b>libxmlrpc_server_abyss</b>) installs the necessary HTTP
 request handlers to make the server an XML-RPC server.
 
+<p>You register with Abyss any number of HTTP request handlers.  Each handler
+is responsible for examining the HTTP request and deciding whether it is the
+appropriate handler for it.  For each HTTP request, Abyss calls every handler
+until one returns an indication that it is an appropriate handler for it, and
+therefore handled it.
+
+<p>If none of your handlers claims the HTTP request, Abyss uses a
+default handler.  By default, the default handler is a builtin one,
+but you can replace it with one of your own.
+
 <p>Abyss passes to your HTTP request handler a handle for the Abyss
 session for the HTTP request you are supposed to handle.  Abyss
 provides various services to give you the information about that
@@ -1810,16 +1820,6 @@ session that you need to handle the request.  For example, you can
 find out the contents of various HTTP headers and get the body of the
 request.  Other services let your handler tell Abyss how to complete
 the request.  For example, you can supply the HTTP response body.
-
-<p>You register with Abyss any number of HTTP request handlers.  Each
-handler is responsible for examining the HTTP request and deciding
-whether it is the appropriate handler for it.  If it is not, the
-handler returns with an indication of that fact and Abyss tries a
-different handler.
-
-<p>If none of your handlers claims the HTTP request, Abyss uses a
-default handler.  By default, the default handler is a builtin one,
-but you can replace it with one of your own.
 
 <p>When an Abyss server terminates, it calls the termination function
 of every HTTP request handler that has one.

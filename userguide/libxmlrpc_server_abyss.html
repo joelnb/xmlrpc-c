@@ -375,9 +375,10 @@ instead if possible.
 <pre>
 <code>
 void
-xmlrpc_server_abyss_set_handler(TServer *         const srvP,
+xmlrpc_server_abyss_set_handler(xmlrpc_env *      const envP,
+                                TServer *         const srvP,
+                                const char *      const uriPath,
                                 xmlrpc_registry * const registryP);
-
 </code>
 </pre>
 
@@ -419,14 +420,6 @@ could be different to use <b>xmlrpc_server_abyss_set_handler()</b>.
 
 <pre>
 <code>
-typedef void
-xmlrpc_call_processor(xmlrpc_env *        envP,
-                      void *              processorArg,
-                      const char *        callXml,
-                      size_t              callXmlLen,
-                      TSession *          abyssSessionP,
-                      xmlrpc_mem_block ** responseXmlPP);
-
 void
 xmlrpc_server_abyss_set_handler3(
     xmlrpc_env *                              envP,
@@ -437,9 +430,9 @@ xmlrpc_server_abyss_set_handler3(
 </pre>
 
 <p>This is like <b>xmlrpc_server_abyss_set_handler()</b> above, except that
-it gives you more options.
+it gives you more options via lower level control.
 
-<p>Rather than the handler executing and XML-RPC call as it sees fit, you
+<p>Rather than the handler executing an XML-RPC call as it sees fit, you
 supply the a subroutine to execute the call.  Xmlrpc-c takes care of all the
 HTTP stuff and passes the XML-RPC call (XML) to your subroutine.  You parse
 the XML, interpret the XML-RPC, do the requested computation, and generate the
@@ -491,6 +484,18 @@ have your own code do the things it does.
 parameters of a <b>xmlrpc_server_abyss_set_handler3()</b> call.
 
 <p>Synopsis:
+<pre>
+<code>
+typedef void
+xmlrpc_call_processor(xmlrpc_env *        envP,
+                      void *              processorArg,
+                      const char *        callXml,
+                      size_t              callXmlLen,
+                      TSession *          abyssSessionP,
+                      xmlrpc_mem_block ** responseXmlPP);
+</code>
+</pre>
+
 <pre>
 <code>
 typedef struct {
