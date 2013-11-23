@@ -600,7 +600,7 @@ daemonizing should really be done by an entirely separate program.
 href="#daemonizing">Daemonizing</a> for discussion of how you should
 get your program daemonized, and use plain <b>ServerRun()</b>.  Or
 check out the easier <a href="#undercovers">Abyss under the covers</a>
-alternative) and remove all the Abyss calls from your program.
+alternative and remove all the Abyss calls from your program.
 
 <H3 id="methodfunctionservices">Method Function Services</H3>
 
@@ -1052,11 +1052,11 @@ the server is running, the server will terminate
 handler returns.  If the server is processing an RPC when the process receives
 the signal, it will not terminate until it is done with that RPC.
 
-<p>You can also call this from an XML-RPC method function, as long as
-that function is running in the same process that waits for and
-accepts new connections.  If, on the other hand, you are running Abyss
-in a mode in which it processes connections in the background and you
-have a system in which it does that by way of a Unix fork, a
+<p>You can also call this from an XML-RPC method function, as long as that
+function is running in the same process that waits for and accepts new
+connections.  If, on the other hand, you are running Abyss in a mode in which
+it processes connections in the background and you have a system in which it
+does that by way of a Unix fork (which is unusual in modern times), a
 <b>xmlrpc_server_abyss_terminate()</b> from inside an XML-RPC method
 function has no effect.
 
