@@ -462,7 +462,7 @@ href="libxmlrpc_server_abyss.html#server_abyss_parameters">
 <b>xmlrpc_server_abyss()</b> C interface</a>.
 
 <p>The <i>registry</i> argument is somewhat unconventional and tricky
-to use, due to a design mistake.  While you don't pass a pointer, the
+to use, because of a design mistake.  While you don't pass a pointer, the
 <b>serverAbyss</b> object remembers its address and refers to it
 throughout its life.  So you must ensure that your registry continues
 to exist as long as the <b>serverAbyss</b> object does.  You should
@@ -756,12 +756,13 @@ server terminates after the next RPC.
 <p>This class is for enabling the <b>system.shutdown</b>
 <a href="libxmlrpc_server++.html#systemmethod">system method</a>.
 
-<p>It is a derived class of <b>xmlrpc_c::registry::shutdown</b>,
-so you can pass it to the <a href="libxmlrpc_server++.html#setshutdown">
-<b>xmlrpc_c::registry::setShutdown</b></a> of your method registry
-before running the Abyss server.  Then, when the server executes
-the <b>system.shutdown</b> methods, it has the effect of calling
-the server's <a href="#terminate"><b>terminate</b></a> method.
+<p>It is a derived class of <b>xmlrpc_c::registry::shutdown</b>, so you can
+pass an object of this class to
+the <a href="libxmlrpc_server++.html#setshutdown">
+<b>xmlrpc_c::registry::setShutdown</b></a> of your method registry before
+running the Abyss server.  If you do, when the server executes
+the <b>system.shutdown</b> method, it has the effect of calling the
+server's <a href="#terminate"><b>terminate</b></a> method.
 
 
 <p>Example:

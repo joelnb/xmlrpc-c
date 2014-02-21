@@ -78,6 +78,7 @@ files, and source code are the best you can do.
   <li><a href="#ServerCreateSocket2"><b>ServerCreateSocket2()</b></a>
   <li><a href="#ServerCreateSocket"><b>ServerCreateSocket()</b></a>
   <li><a href="#ServerCreateNoAccept"><b>ServerCreateNoAccept()</b></a>
+  <li><a href="#ServerFree"><b>ServerFree()</b></a>
   <li><a href="#ServerSetName"><b>ServerSetName()</b></a>
   <li><a href="#ServerSetFilesPath"><b>ServerSetFilesPath()</b></a>
   <li><a href="#ServerSetLogFileName"><b>ServerSetLogFileName()</b></a>
@@ -89,6 +90,7 @@ files, and source code are the best you can do.
   <li><a href="#ServerSetAdvertise"><b>ServerSetAdvertise()</b></a>
   <li><a href="#ServerSetMaxConn"><b>ServerSetMaxConn()</b></a>
   <li><a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog()</b></a>
+  <li><a href="#ServerInit"><b>ServerInit()</b></a>
   <li><a href="#ServerRun"><b>ServerRun()</b></a>
   <li><a href="#ServerRunOnce"><b>ServerRunOnce()</b></a>
   <li><a href="#ServerRunOnce2"><b>ServerRunOnce2()</b></a>
@@ -903,9 +905,12 @@ requests all by itself.  See e.g. <b>ServerRun()</b>.
 <b>ServerCreate()</b> initializes the whole handle; its value on entry
 is meaningless.
 
-<p><i>name</i> is a textual name for human consumption.  I don't know
-exactly where this name shows up, but in general you can make up
-anything you like.
+<p><i>name</i> is a textual name for human consumption.  I don't know exactly
+where this name shows up, but in general you can make up anything you like.  A
+null pointer means to use the default, which is &quot;unnamed&quot;.  You can
+override whatever you set here with a subsequent call to
+<b>ServerSetName()</b> (this argument is a historical artifact -- it predates
+<b>ServerSetName()</b>).
 
 <p><i>port</i> is the TCP port number on which the server is to listen
 for HTTP connections from clients.
@@ -914,12 +919,19 @@ for HTTP connections from clients.
 files live.  This is irrelevant for a pure XML-RPC server, but an
 Abyss server for an Abyss server that can also do basic web page
 serving, this is where the documents live.  For example, if
-<i>filespath</i> is &quot;/home/http&quot; and a client does an HTTP
-GET of &quot;http://myserver.com/dir1/mypage.html&quot;, the file that
-the Abyss server will send him is <b>/home/http/dir1/mypage.html</b>.
+<i>filespath</i> is &quot;/home/http&quot; and a client does an HTTP GET of
+&quot;http://myserver.com/dir1/mypage.html&quot;, the file that the Abyss
+server will send him is <b>/home/http/dir1/mypage.html</b>.  A null pointer
+means to use the default, which is &quot;/htdocs&quot;.  You can override
+whatever you set here with a subsequent call to <b>ServerSetFilesPath()</b>
+(this argument is a historical artifact -- it predates
+<b>ServerSetFilesPath()</b>).
 
-<P><i>logfilename</i> is the filename of the file to which the Abyss
-server logs.
+<P><i>logfilename</i> is the filename of the file to which the Abyss server
+logs.  A null pointer means to use not to keep a log file.  You can override
+whatever you set here with a subsequent call to
+<b>ServerSetLogFileName()</b> (this argument is a historical artifact -- it
+predates <b>ServerSetLogFileName()</b>).
 
 
 <h3 id="ServerCreateSwitch"><b>ServerCreateSwitch()</b></h3>
@@ -944,6 +956,10 @@ server logs.
             ServerSetName(&amp;abyssServer, &quot;XmlRpcServer&quot;);
             ServerSetFilesPath(&amp;abyssServer, &quot;/home/http/docs&quot;,
             ServerSetLogFileName(&amp;abyssServer, &quot;/var/log/abyss&quot;);
+
+            ...
+
+            ServerFree(abyssServer);
         }
         chanSwitchDestroy(chanSwitchP);
     }
@@ -956,7 +972,7 @@ server logs.
 <code>
     void
     ServerCreateSwitch(TServer *     serverP,
-                       TChanSwitch * socketP,
+                       TChanSwitch * chanSwitchP,
                        const char ** errorP);
 </code>
 </pre>
@@ -1107,11 +1123,19 @@ that supply as input an existing client connection.
 <a href="#channels">channel</a> to a client, which you created somehow.
 
 
+<h3 id="ServerFree">ServerFree</h3>
+
+<p>This destroys the object created by <b>ServerCreate</b>, etc.
+
+<p>The server must not be running when you do this.  See
+<a href="#termnating">Terminating an Abyss Server</a>.
+
+
 <h3 id="ServerSetName">ServerSetName</h3>
 
 <p>This function changes the name of a server.
 
-<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+<p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
 <h3 id="ServerSetFilesPath">ServerSetFilesPath</h3>
@@ -1119,7 +1143,7 @@ more information.
 <p>This function sets the root directory for HTTP documents a server
 will serve.
 
-<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+<p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
 <h3 id="ServerSetLogFileName">ServerSetLogFileName</h3>
@@ -1127,7 +1151,7 @@ more information.
 <p>This function changes the name of the file that the server will use
 as a log file.
 
-<p>See <a href="#ServerCreateSwitch">serverCreateSwitch()</a> for
+<p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
 <h3 id="ServerSetKeepaliveTimeout">ServerSetKeepaliveTimeout</h3>
@@ -1313,6 +1337,37 @@ operating system.  It must be greater than 0.
 <p>This was new in Xmlrpc-c 1.32 (September 2012).
 
 
+<h3 id="ServerInit"><b>ServerInit()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+...
+ServerInit(&amp;abyssServer);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerInit(TServer * serverP);
+</code>
+</pre>
+
+<p>This function initializes an Abyss server to accept connections.
+Before you call this, the OS refuses any attempt to make a TCP connection
+to the TCP port that belongs to the server.  You must call this before
+<i>running</i> the server (i.e. before calling <b>ServerRun()</b> or
+<b>ServerRunOnce()</b>.
+
+<p><b>ServerRun()</b> is usable only on a server object that was
+created to accept connections on its own, i.e. one created with
+<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  
+
+
 <h3 id="ServerRun"><b>ServerRun()</b></h3>
 
 <p>Example:
@@ -1346,10 +1401,10 @@ terminate the server</a>.
 
 <p><b>ServerRun()</b> is usable only on a server object that was
 created to accept connections on its own, i.e. one created with
-<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  Furthermore,
-the server must have been initialized to accept connections, which
-means you called <b>ServerInit()</b>.  <b>ServerRun()</b> fails if
-you give it a server object that doesn't meet these requirements.
+<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  Furthermore, the server
+must have been initialized to accept connections, which means you
+called <a href="#serverInit"><b>ServerInit()</b></a>.  <b>ServerRun()</b>
+fails if you give it a server object that doesn't meet these requirements.
 
 <p>While running, Abyss spawns threads to handle multiple HTTP
 requests at once.  There is generally a new thread for each client
@@ -1393,8 +1448,8 @@ ServerRunOnce(TServer * serverP);
 
 <p>This function causes an Abyss server to process one HTTP connection
 (waiting for one if necessary).  It waits for the next connection on
-the server's listening socket, reads the HTTP POST request, executes
-the indicated RPC, and closes the connection.  Note that because the
+the server's listening socket, reads the HTTP request, executes it,
+sends the response, and closes the connection.  Note that because the
 listening socket is perpetually listening, the operating system will
 accept and queue connections on its own.  <b>ServerRunOnce()</b>
 processes a connection that the operating previously accepted.
@@ -1664,7 +1719,13 @@ in the operating system in question.  I.e. it is <b>int</b> on Unix
 and <b>SOCKET</b> on Windows.  You should use <b>int</b> or
 <b>SOCKET</b> instead of <b>TOsSocket</b> in your program.
 
+
 <h2 id="terminating">Terminating an Abyss Server</h2>
+
+<p>Terminating an Abyss server means making it stop running, so it won't
+serve any more requests.  It is separate from <em>dstroying</em> the
+server, which you do with <a href="#ServerFree"><b>ServerFree()</b></a>.
+
 
 <h3 id="ServerTerminate"><b>ServerTerminate()</b></h3>
 
@@ -2246,7 +2307,7 @@ is executing.
 
 <p><i>credential</i> names the user identity domain in which you expect the
 username the user supplied to exist.  The only effect of this argument is that
-when <b>RequestAuth()</b> prepares a failure response due to lack of
+when <b>RequestAuth()</b> prepares a failure response because of lack of
 authentication, that response tells the user to supply a username in this
 domain.
 
