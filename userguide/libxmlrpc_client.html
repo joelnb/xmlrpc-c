@@ -2280,15 +2280,16 @@ documentation.
 
 <h5 id="curlparm_timeout">timeout</h5>
 
-<p><i>timeout</i> is the maximum time <strong>in milliseconds</strong>
-that the transport will allow for network communications.  If it takes
-longer than that, the transaction fails without waiting any more.
-This is just a limit on certain aspects of network communication; it
-does not include time that the server takes between receiving a call
-and sending the response.  Exactly which parts of network
-communication (name server lookup, ARP, TCP connection, data transfer,
-etc.) are subject to this time limit varies from one system to another
-and I can't say any more specifically what is covered.
+<p><i>timeout</i> is the maximum time <strong>in milliseconds</strong> that
+the transport will allow for network communications.  If it takes longer than
+that, the transaction fails without waiting any more.  This is just a limit on
+certain aspects of network communication; it does not include time that the
+server takes between receiving a call and sending the response.  Exactly which
+parts of network communication (name server lookup, ARP, TCP connection, data
+transfer, etc.) are subject to this time limit varies from one system to
+another and I can't say any more specifically what is covered.  But note that
+is is not specific to Xmlrpc-c in any way; the function of this parameter is
+determined by the Curl library and the platform below it.
 
 <p>The actual timeout is what you requested rounded up to the next
 second.  In future Xmlrpc-c, it may have better resolution.

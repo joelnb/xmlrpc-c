@@ -90,6 +90,7 @@ files, and source code are the best you can do.
   <li><a href="#ServerSetAdvertise"><b>ServerSetAdvertise()</b></a>
   <li><a href="#ServerSetMaxConn"><b>ServerSetMaxConn()</b></a>
   <li><a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog()</b></a>
+  <li><a href="#ServerInit2"><b>ServerInit2()</b></a>
   <li><a href="#ServerInit"><b>ServerInit()</b></a>
   <li><a href="#ServerRun"><b>ServerRun()</b></a>
   <li><a href="#ServerRunOnce"><b>ServerRunOnce()</b></a>
@@ -424,7 +425,7 @@ or you do the switching your own way and pass ready-made channels to
 Abyss.
 
 
-<h4 id="ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></h4>
+<h4 id="ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate()</b></h4>
 
 <p>Example:
 
@@ -470,7 +471,7 @@ newer <a href="#ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></a>.
 
 
 <h4 id="ChanSwitchUnixCreateIpV6Port">
-  <b>ChanSwitchUnixCreateIpV6Port</b></h4>
+  <b>ChanSwitchUnixCreateIpV6Port()</b></h4>
 
 <p>This is the same
 as <a href="#ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></a> except that
@@ -479,7 +480,7 @@ it listens for IP Version 6 connections.
 <p>This was new in Xmlrpc-c 1.29 (December 2011).
 
 
-<h4 id="ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2</b></h4>
+<h4 id="ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></h4>
 
 <p>Example:
 
@@ -550,7 +551,7 @@ or <a href="#ChanSwitchUnixCreateIpV6Port">
 <p>This function was new in Xmlrpc-c 1.30 (March 2012).
 
 
-<h4 id="ChanSwitchUnixCreateFd"><b>ChanSwitchUnixCreateFd</b></h4>
+<h4 id="ChanSwitchUnixCreateFd"><b>ChanSwitchUnixCreateFd()</b></h4>
 
 <p>Example:
 
@@ -783,7 +784,7 @@ invidual components of the library and many of the functions don't
 actually use any global constants.
 
 
-<h3 id="abyssinit">AbyssInit</h3>
+<h3 id="abyssinit">AbyssInit()</h3>
 
 <p>Example:
 
@@ -811,7 +812,7 @@ actually use any global constants.
 <a href="libgeneral.html#globalconst">global initialization function</a>.
 
 
-<h3 id="abyssterm">AbyssTerm</h3>
+<h3 id="abyssterm">AbyssTerm()</h3>
 
 <p>Example:
 
@@ -1123,22 +1124,22 @@ that supply as input an existing client connection.
 <a href="#channels">channel</a> to a client, which you created somehow.
 
 
-<h3 id="ServerFree">ServerFree</h3>
+<h3 id="ServerFree">ServerFree()</h3>
 
-<p>This destroys the object created by <b>ServerCreate</b>, etc.
+<p>This destroys the object created by <b>ServerCreate()</b>, etc.
 
 <p>The server must not be running when you do this.  See
 <a href="#termnating">Terminating an Abyss Server</a>.
 
 
-<h3 id="ServerSetName">ServerSetName</h3>
+<h3 id="ServerSetName">ServerSetName()</h3>
 
 <p>This function changes the name of a server.
 
 <p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
-<h3 id="ServerSetFilesPath">ServerSetFilesPath</h3>
+<h3 id="ServerSetFilesPath">ServerSetFilesPath()</h3>
 
 <p>This function sets the root directory for HTTP documents a server
 will serve.
@@ -1146,7 +1147,7 @@ will serve.
 <p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
-<h3 id="ServerSetLogFileName">ServerSetLogFileName</h3>
+<h3 id="ServerSetLogFileName">ServerSetLogFileName()</h3>
 
 <p>This function changes the name of the file that the server will use
 as a log file.
@@ -1154,7 +1155,7 @@ as a log file.
 <p>See <a href="#ServerCreateSwitch">ServerCreateSwitch()</a> for
 more information.
 
-<h3 id="ServerSetKeepaliveTimeout">ServerSetKeepaliveTimeout</h3>
+<h3 id="ServerSetKeepaliveTimeout">ServerSetKeepaliveTimeout()</h3>
 
 <p>This function sets the amount of time the server will keep a TCP connection
 with a client open after completing an HTTP transaction, waiting for the next
@@ -1182,7 +1183,7 @@ existing connections.
 <p>The default period (in effect if you have never called this function) is 15
 seconds.
 
-<h3 id="ServerSetKeepaliveMaxConn">ServerSetKeepaliveMaxConn</h3>
+<h3 id="ServerSetKeepaliveMaxConn">ServerSetKeepaliveMaxConn()</h3>
 
 <p>This function sets the maximum number of requests Abyss will accept on a
 single TCP connection.  See <a href="#persistent">Persistent Connections</a>.
@@ -1207,7 +1208,7 @@ single TCP connection.  See <a href="#persistent">Persistent Connections</a>.
 requests.
 
 
-<h3 id="ServerSetTimeout">ServerSetTimeout</h3>
+<h3 id="ServerSetTimeout">ServerSetTimeout()</h3>
 
 <p>This function sets how long the server will wait for a client to send its
 request once the client has connected to the server.  If the client does not
@@ -1234,7 +1235,7 @@ seconds.
 <p>This was new in Xmlrpc-c 1.04 (November 2005).
 
 
-<h3 id="ServerSetAdvertise">ServerSetAdvertise</h3>
+<h3 id="ServerSetAdvertise">ServerSetAdvertise()</h3>
 
 <p>This function tells the server whether or not to indicated, via an
 HTTP &quot;Server&quot; header, in its responses, that the server is
@@ -1260,7 +1261,7 @@ about itself to clients; false not to.
 <p>This was new in Xmlrpc-c 1.04 (November 2005).
 
 
-<h3 id="ServerSetMaxConn">ServerSetMaxConn</h3>
+<h3 id="ServerSetMaxConn">ServerSetMaxConn()</h3>
 
 <p>This function sets the maximum number of connections (HTTP transactions)
 the server will allow simultaneously.   When there are this many, the server
@@ -1273,7 +1274,7 @@ e.g. <a href="#ServerRun">ServerRun</a>.
 <p>While the server is not accepting connections because of this limit, the
 operating system still accepts TCP connections on the server's behalf and
 queues them.
-See <a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog</b></a>.
+See <a href="#ServerSetMaxConnBacklog"><b>ServerSetMaxConnBacklog()</b></a>.
 
 <p>Prototype:
 
@@ -1295,7 +1296,7 @@ It must be greater than 0.
 <p>This was new in Xmlrpc-c 1.32 (September 2012).
 
 
-<h3 id="ServerSetMaxConnBacklog">ServerSetMaxConnBacklog</h3>
+<h3 id="ServerSetMaxConnBacklog">ServerSetMaxConnBacklog()</h3>
 
 <p>This function sets the maximum number of TCP connections the operating
 system will accept on the server's behalf without the server accepting them
@@ -1337,6 +1338,51 @@ operating system.  It must be greater than 0.
 <p>This was new in Xmlrpc-c 1.32 (September 2012).
 
 
+<h3 id="ServerInit2"><b>ServerInit2()</b></h3>
+
+<p>Example:
+<pre>
+<code>
+TServer abyssServer;
+...
+const char * error;
+ServerInit2(&amp;abyssServer, &amp;error);
+if (error) {
+  fprintf(stderr, &quot;Failed to initialize.  %s&quot;, error);
+  free(error);
+}
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+void
+ServerInit2(TServer *     serverP,
+            const char ** errorP);
+</code>
+</pre>
+
+<p>This function initializes an Abyss server to accept connections.
+Before you call this, the OS refuses any attempt to make a TCP connection
+to the TCP port that belongs to the server.  You must call this before
+<i>running</i> the server (i.e. before calling <b>ServerRun()</b> or
+<b>ServerRunOnce()</b>.
+
+<p><b>ServerRun()</b> is usable only on a server object that was
+created to accept connections on its own, i.e. one created with
+<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  
+
+<p>If the function fails, it returns a text explanation of the failure
+as an ASCIIZ string in newly malloced storage and returns the address 
+of that string as *<i>errorP</i>.  If the function succeeds, it returns a
+null string as *<i>errorP</i>
+
+<p>This function was new in Xmlrpc-c 1.31 (June 2012).  Before that, use
+<b>ServerInit()</b> instead.
+
+
 <h3 id="ServerInit"><b>ServerInit()</b></h3>
 
 <p>Example:
@@ -1357,15 +1403,9 @@ ServerInit(TServer * serverP);
 </code>
 </pre>
 
-<p>This function initializes an Abyss server to accept connections.
-Before you call this, the OS refuses any attempt to make a TCP connection
-to the TCP port that belongs to the server.  You must call this before
-<i>running</i> the server (i.e. before calling <b>ServerRun()</b> or
-<b>ServerRunOnce()</b>.
-
-<p><b>ServerRun()</b> is usable only on a server object that was
-created to accept connections on its own, i.e. one created with
-<b>ServerCreate()</b> or <b>ServerCreateSwitch()</b>.  
+<p>This is the same as <a href="#ServerInit2"><b>ServerInit2()</b></a>
+except that when it fails, it writes an error message to Standard Error and
+aborts the program.
 
 
 <h3 id="ServerRun"><b>ServerRun()</b></h3>
