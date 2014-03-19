@@ -1743,7 +1743,8 @@ parameters are in it).
 <h4 id="subscript"><b>Subscript Operator</b></h4>
 
 <p>The subscript operator does the obvious thing: it returns the parameter
-(as an <b>xmlrpc_c::value</b>) whose position is the subscript.
+(as an <b>xmlrpc_c::value</b>) whose position is the subscript.  The first
+parameter is position 0.
 
 <p>If you specify a subscript that is not a position that exists in the
 parameter list (e.g. there are 3 parameters and you specify position 9),
@@ -1841,9 +1842,18 @@ parameter is not the nil value or just for logical completeness.
 
 <h4 id="verifyend"><b>verifyEnd</b> Method</h4>
 
-<p>The <b>verifyEnd</b> method verifies that a specified position is the
-end of the parameter list (e.g. if there are 3 parameters, position 4 is
-the end of the list).
+<p>Prototypes:
+
+<pre>
+<code>
+    void
+    verifyEnd(unsigned int paramNumber) const;
+</code>
+</pre>
+
+<p>The <b>verifyEnd</b> method verifies that a specified position is the end
+of the parameter list (e.g. if there are 3 parameters, there are parameters in
+positions 0, 1, and 2, and position 3 is the end of the list).
 
 <p>If the specified position <em>is</em> the end of the parameter list,
 the method does nothing at all.  If it is <em>not</em>, the method throws
