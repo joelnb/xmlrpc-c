@@ -1496,7 +1496,7 @@ server is keeping alive the connection.
 <p>This option is part of HTTP access control, which is a feature that helps
 with the security exposure of cross-site scripting.  This is the problem where
 a user on network node C browses a web site on server S and S sends a script
-for C to execute.  The script says to perform as RPC on Xmlrpc-c server X.
+for C to execute.  The script says to perform an RPC on Xmlrpc-c server X.
 The Xmlrpc-c server may accord that request special privilege because it comes
 from C, without knowing that the user at C doesn't really know he's making the
 request.  To solve this problem, the browser on C may just refuse to honor any
@@ -1518,10 +1518,18 @@ HTTP specifications for details.  Briefly, it is a list of third party servers
 whose scripts the client should trust to perform RPCs on this server.  The
 most useful value is &quot;*&quot;, which means all third party servers.
 
-<p>This parameter was new in Xmlrpc-c 1.25 (December 2010).  Before that,
-the server fails any attempt to get option information, responding with
-a 405 Method Not Allowed error to any Options request and never includes
-HTTP access control header fields in any other response.
+<p>When the server includes an Access-Control-Allow-Origin field in its
+response, it also includes an Access-Control-Allow-Methods header saying the
+client should allow the POST method (all XML-RPC calls use the POST method),
+and Access-Control-Allow-Headers headers that tell the client to allow
+Content-Type and Content-Length headers, two headers that are essential to any
+XML-RPC call.
+
+<p>This parameter was new in Xmlrpc-c 1.25 (December 2010).  Before that, the
+server fails any attempt to get option information, responding with a 405
+Method Not Allowed error to any Options request and never includes HTTP access
+control header fields in any other response.  Before Xmlrpc-c 1.39 (September
+2014), the server does not send the Access-Control-Allow-Headers headers.
 
 <h5 id="access_control_expires">access_control_expires</h5>
 
