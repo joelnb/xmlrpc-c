@@ -432,7 +432,7 @@ RequestAuth(TSession *   const sessionP,
             const char * const user,
             const char * const pass);
 
-XMLRPC_ABYSS_EXPORTED
+XMLRPC_DLLEXPORT
 abyss_bool
 ResponseAddField(TSession *   const sessionP,
                  const char * const name,
