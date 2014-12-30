@@ -854,6 +854,11 @@ stream server, there is a simple relationship between packet traffic
 and registry traffic, so this is essentially the same thing as a
 packet trace.
 
+<p>The <b>XMLRPC_TRACE_PACKETSOCKET</b> environment variable traces at a lower
+level, showing you packets sent and received on the packet socket as well as
+raw bytes (including packet socket escape sequences) read.  This feature was
+new in Xmlrpc-c 1.41 (March 2015).
+
 
 <h2 id="psprotocol">Packet Stream Protocol</h2>
 
