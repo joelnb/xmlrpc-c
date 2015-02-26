@@ -128,6 +128,7 @@ XML-RPC and not specific to XML-RPC clients.  Besides, the
     <li><a href="#curlsession">Curl Sessions</a>
     <li><a href="#cookies_curl">Cookies</a>
     <li><a href="#curlssl">SSL</a>
+    <li><a href="#curltimeout">Timeout</a>
     <li><a href="#useragent">User Agent</a>
     <li><a href="#referer">Referer</a>
     <li><a href="#expectcontinue">Expect/Continue</a>
@@ -2030,6 +2031,84 @@ control the details of the SSL verification.
 
 
 
+<h4 id="curltimeout">Timeout</h4>
+
+<p>You can limit the amount of time the RPC can take with
+the <a href="#curlparm_timeout"><i>timeout</i></a> transport parameter.
+
+<p>You can further restrict the amount of time Xmlrpc-c can take just to
+establish the TCP connection with the
+<a href="#curlparm_connecttimeout"><i>connect_timeout</i></a> transport
+parameter.  One significant source of delay in making the TCP connection is
+looking up the server name in DNS.
+
+<p>With some Curl libraries, Xmlrpc-c is not capable of controlling the time
+allowed for a DNS lookup.  With such a Curl library, an RPC waits until the
+underlying networking system gives up, which might be never.  In particular,
+if the Curl library is configured to use the ARES name-lookup library,
+Xmlrpc-c can control the DNS lookup timeout, whereas with any other Curl
+library, it cannot.
+
+
+<h5>Older Curl</h5>
+
+If your Curl library is older than 7.10, you cannot limit the time an RPC
+takes.  If you specify either <i>timeout</i> or <i>connect_timeout</i>, the
+RPC fails immediately.
+
+
+<h5>Using SIGALRM Instead</h5>
+
+<p>Note that as a matter of good design, it is often better to use an
+alarm signal (SIGALRM) to <a href="#interrupting">interrupt</a> a
+transport operation instead of the <i>timeout</i> parameter.  An alarm
+signal sets a master timeout on a whole sequence of operations without
+all the layers having to be aware of it.  I.e. you don't have to have
+&quot;timeout&quot; arguments on all your functions and have them all
+watch the clock.
+
+<p>If you are writing code that doesn't own the whole environment
+(e.g. a general purpose library), you <em>can't</em> generally set up
+an alarm, but in that case you probably don't want to establish an
+arbitrary time limit either, because the appropriate limit depends
+upon context.  It's often better to have the <em>top level</em> code,
+which does own the whole environment, set up an alarm and just have
+your code be interruptible by signals (as libxmlrpc_client is).
+
+<p>On the other hand, a hardcoded <i>timeout</i> value is by far the easiest
+to code solution to the annoying problem of unresponsive servers.
+
+
+<h5>Older Xmlrpc-c</h5>
+
+<p>In Xmlrpc-c before 1.41 (March 2015), the situation is much more
+complicated when DNS lookup takes a long time.  What happens depends upon
+your <i>timeout</i> value, whether your Curl library is the kind that uses the
+ARES name-lookup library, and whether your program is multi-threaded.
+
+<p>The simplest case is where the Curl library uses ARES.  In that case, the
+DNS lookup is simply limited to 5 minutes, in addition to the overall limit
+for the RPC requested by your <i>timeout</i> parameter.
+
+<p>For the non-ARES case, it depends upon whether you specify <i>timeout</i>:
+
+<p>If you specify <i>timeout</i>, then regardless of the value you specify,
+there will no be no limit on the time the DNS lookup can take, other than
+limits imposed by the underlying networking system.
+
+<p>If you do <em>not</em> specify <i>timeout</i>, the DNS lookup is limited to
+5 minutes, and if your program is multithreaded, it will probably crash if the
+lookup needs more time than that.
+
+<p>It is hard to explain why it is this way, but it has to do with the fact
+that there are only two ways Curl can limit the duration of the DNS lookup:
+using a SIGALRM signal under the covers and using the ARES library.  Using a
+signal under the covers has a number of architectural problems, one of which
+is that it typically doesn't work in a multithreaded program.  Xmlrpc-c
+sometimes uses Curl's <b>CURLOPT_NOSIGNAL</b> option to keep Curl from using
+the signal.  (Current Xmlrpc-c <em>always</em> uses <b>CURLOPT_NOSIGNAL</b>).
+
+
 <h4 id="useragent">User Agent</h4>
 
 <p>In HTTP, the &quot;user agent&quot; is the program through which the user
@@ -2099,6 +2178,7 @@ is that it takes 3 seconds longer than it should.  (I'm being coy about
 what version of libcurl and what size of body because I don't know).
 
 
+
 <h4 id="curlparm">Curl Transport-specific Parameters</h4>
 
 <pre>
@@ -2130,6 +2210,7 @@ struct xmlrpc_curl_xportparms {
     const char * proxy_userpwd;
     xmlrpc_bool  gssapi_delegation;
     const char * referer;
+    unsigned int connect_timeout;
 };
 </code>
 </pre>
@@ -2280,6 +2361,8 @@ documentation.
 
 <h5 id="curlparm_timeout">timeout</h5>
 
+<p>See <a href="#curltimeout">Timeout</a>.
+
 <p><i>timeout</i> is the maximum time <strong>in milliseconds</strong> that
 the transport will allow for network communications.  If it takes longer than
 that, the transaction fails without waiting any more.  This is just a limit on
@@ -2306,24 +2389,25 @@ specify <i>timeout</i>, creation of the transport fails.
 
 <p>This parameter was new in Xmlrpc-c 1.13 (December 2007).
 
-<p>Note that as a matter of good design, it is often better to use an
-alarm signal (SIGALRM) to <a href="#interrupting">interrupt</a> a
-transport operation instead of the <i>timeout</i> parameter.  An alarm
-signal sets a master timeout on a whole sequence of operations without
-all the layers having to be aware of it.  I.e. you don't have to have
-&quot;timeout&quot; arguments on all your functions and have them all
-watch the clock.
 
-<p>If you are writing code that doesn't own the whole environment
-(e.g. a general purpose library), you <em>can't</em> generally set up
-an alarm, but in that case you probably don't want to establish an
-arbitrary time limit either, because the appropriate limit depends
-upon context.  It's often better to have the <em>top level</em> code,
-which does own the whole environment, set up an alarm and just have
-your code be interruptible by signals (as libxmlrpc_client is).
+<h5 id="curlparm_connecttimeout">connect_timeout</h5>
 
-<p>On the other hand, a hardcoded <i>timeout</i> value is by far the easiest
-to code solution to the annoying problem of unresponsive servers.
+<p>See <a href="#curltimeout">Timeout</a>.
+
+<p>This parameter is very similar
+to <a href="#curlparm_timeout"><i>timeout</i></a>, but limits only the time
+Curl will take to make the initial connection, including querying DNS servers.
+
+<p>If <i>connect_timeout</i> is 0 or not present, the time allowed for
+connection is controlled by <i>timeout</i>.  If both <i>connect_timeout</i>
+and <i>timeout</i> are present and nonzero, Xmlrpc-c enforces both time
+restrictions.
+
+<p>This parameter was new in Xmlrpc-c 1.41 (March 2015).
+
+<p>In Xmlrpc-c before 1.41 (March 2015), the situation is much more
+complicated when DNS lookup takes a long time.  See
+<a href="#curltimeout">Timeouts</a>
 
 
 <h5 id="httpproxy">HTTP Proxy Control</h5>
