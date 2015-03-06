@@ -2685,11 +2685,13 @@ operates on a client object or RPC object while another thread is also
 calling a function that operates on the same client or RPC.  But with
 the other transports, you can't.
 
-<p>If you are using a thread-unsafe XML transport, you can still do
-RPCs from multiple threads; you just have to give each thread its own
-client so that a particular client is accessed by only one thread.  And
-you can't share RPCs between threads either (though it probably would
-never occur to you to do that anyway).
+<p>If you are using a thread-unsafe XML transport, you can still do RPCs from
+multiple threads; you just have to give each thread its own client so that a
+particular client is accessed by only one thread.  And you cannot have
+multiple threads creating clients.  You must have one thread create all the
+client objects and give them to the threads that will use them.  And you can't
+share RPCs between threads either (though it probably would never occur to you
+to do that anyway).
 
 <p>You can get multiple RPCs running concurrently without using
 multiple operating system threads.  <b>libxmlrpc_client</b>'s <a
