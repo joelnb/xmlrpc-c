@@ -497,7 +497,9 @@ you always cast between that and a type specific to a transport, named like
 &quot;xmlrpc_TRANSPORT_xportparms&quot;.  Transports typically take variable
 length parameter structures such that the members at the end of the structure
 are optional, so <i>transportparmSize</i> tells how much parameter data you
-are specifying.
+are specifying.  You normally use a special macro instead of <b>sizeof</b> to
+generate the value for <i>transportparmSize</i> (for example,
+<b>XMLRPC_CXPSIZE</b> for the Curl transport).
 
 <p>The transport parameters are described in <a
 href="#transports">Client XML Transports</a>.
@@ -2339,7 +2341,14 @@ name, so rather than document them here, we refer you to the Curl
 documentation.
 
 <ul>
-<li><b>sslversion</b>
+<li><b>sslversion</b> (possible values are:
+  <ul>
+  <li><b>XMLRPC_SSLVERSION_DEFAULT</b>  
+  <li><b>XMLRPC_SSLVERSION_TLSv1</b>  
+  <li><b>XMLRPC_SSLVERSION_SSLv2</b>  
+  <li><b>XMLRPC_SSLVERSION_SSLv3</b>  
+  </ul>
+)  
 <li><b>ssl_cert</b>
 <li><b>sslcerttype</b>
 <li><b>sslcertpasswd</b>
@@ -2372,7 +2381,7 @@ server takes between receiving a call and sending the response.
 <p>Exactly which parts of network communication (name server lookup, ARP, TCP
 connection, data transfer, etc.) are subject to this time limit varies from
 one system to another and I can't say any more specifically what is covered.
-But note that is is not specific to Xmlrpc-c in any way; the function of this
+But note that it is not specific to Xmlrpc-c in any way; the function of this
 parameter is determined by the Curl library and the platform below it.  There
 is evidence that on Windows, much of the network activity is not subject to
 the timeout; for example, your client will try for 90 seconds to make contact
