@@ -117,6 +117,7 @@ files, and source code are the best you can do.
     <ul>
       <li><a href="#SessionGetRequestInfo"><b>SessionGetRequestInfo()</b></a>
       <li><a href="#SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></a>
+      <li><a href="#RequestHeaderValue"><b>RequestHeaderValue()</b></a>
       <li><a href="#RequestAuth"><b>RequestAuth()</b></a>
     </ul>
   </ul>
@@ -1914,13 +1915,13 @@ therefore handled it.
 default handler.  By default, the default handler is a builtin one,
 but you can replace it with one of your own.
 
-<p>Abyss passes to your HTTP request handler a handle for the Abyss
-session for the HTTP request you are supposed to handle.  Abyss
-provides various services to give you the information about that
-session that you need to handle the request.  For example, you can
-find out the contents of various HTTP headers and get the body of the
-request.  Other services let your handler tell Abyss how to complete
-the request.  For example, you can supply the HTTP response body.
+<p>Abyss passes to your HTTP request handler a handle for the Abyss session
+for the HTTP request you are supposed to handle.  Abyss provides various
+services to give you the information about that session that you need to
+handle the request.  For example, you can find out the values of HTTP header
+fields, and get the body of the request.  Other services let your handler tell
+Abyss how to complete the request.  For example, you can supply the HTTP
+response body.
 
 <p>When an Abyss server terminates, it calls the termination function
 of every HTTP request handler that has one.
@@ -2215,7 +2216,7 @@ handler as an argument.
 <h4 id="SessionGetRequestInfo"><b>SessionGetRequestInfo()</b></h4>
 
 <p>This function gets a variety of information about the HTTP request,
-mainly from the HTTP headers.
+mainly from the HTTP header.
 
 <p>Example:
 
@@ -2242,6 +2243,10 @@ void
     
 </code>
 </pre>
+
+<p>To get the value of any HTTP header field for the request, use
+<a href="RequestHeaderValue"><b>RequestHeaderValue</b></a>.  Note that some
+of this information is also available from <b>SessionGetRequestInfo</b>.
 
 
 <h4 id="SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></h4>
@@ -2293,6 +2298,43 @@ explicitly release it or free the memory.
 <p><b>SessionGetChannelInfo()</b> was new in Xmlrpc-c 1.07 (October
 2006).  Before that, there is no way for an HTTP request handler to
 find out information such as the IP address of the client.
+
+
+<h4 id="RequestHeaderValue"><b>RequestHeaderValue()</b></h4>
+
+<p>This function gets the value of a specified field in the HTTP request
+header for a session.
+
+<p>Example:
+
+<pre>
+<code>
+    const char * const contentType =
+      RequestHeaderValue(abyssSessionP, &quot;content-type&quot;);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    const char *
+    RequestHeaderValue(TSession *   sessionP,
+                       const char * name);
+</code>
+</pre>
+
+<p><i>sessionP</i> identifies the HTTP session whose request header is being
+queried.
+
+<p><i>name</i> is the name of the HTTP header field, in lower case.  For
+example, &quot;content-type&quot;.
+
+<p>The return value is the value of the HTTP header field.  For example,
+&quot;application/octet-stream&quot;.
+
+<p>The the HTTP request header does not contain a field named <i>name</i>,
+the return value is a null pointer.
 
 
 <h4 id="RequestAuth"><b>RequestAuth()</b></h4>
@@ -2376,7 +2418,7 @@ code provides).
 <p>If you set the <b>ABYSS_TRACE_CONN</b> environment variable to
 <b>1</b>, the Abyss server will print messages to Standard Error showing
 you the activity on each HTTP connection.  In particular, it shows you
-the HTTP data flow: headers and body of both request and response.
+the HTTP data flow: header and body of both request and response.
 
 <p>If your server is an XML-RPC server based on
 <b>libxmlrpc_server_abyss</b> and you don't have any reason to
