@@ -81,6 +81,7 @@ href="http://www.xmlrpc.com">here</a>.
       <li><a href="#constructors_valuestring">Constructors</a>
       <li><a href="#cast_valuestring">Cast Operators</a>
       <li><a href="#crlfvalue"><b>crlfvalue</b> method</a>
+      <li><a href="#valuestring_validate"><b>validate</b> method</a>
       <li><a href="#cvalue_string"><b>cvalue</b> method</a>
     </ul>
     <li><a href="#class_valuedouble">Class <b>xmlrpc_c::value_double</b></a>
@@ -962,6 +963,22 @@ Example:
     crlfValue() const;
 </code>
 </pre>
+
+
+<h4 id="valuestring_validate"><b>validate</b> Method</h4>
+
+<p>Use <b>validate</b> to be sure the string value you created doesn't result
+in invalid XML when you use it in an XML-RPC call or response, as described in
+the explanation of the <a href="libxmlrpc.html#stringtype">String</a> data
+type.  If the string is OK, it does nothing; otherwise, it throws an error.
+What makes a string fail this test is that you supplied non-XML characters
+when you constructed the object.  If you are sure you didn't supply any
+control characters other than newline, carriage return, and tab, you don't
+need <b>validate()</b>.  Also, if you know that whatever interprets the
+XML-RPC call or response you generate with this string value is OK with
+non-XML characters, you don't need it.
+
+<p><b>validate()</b> was new in Xmlrpc-c 1.42 (June 2015).
 
 
 <h4 id="cvalue_string"><b>cvalue</b> Method</h4>
