@@ -415,7 +415,8 @@ message containing a string that contains, for example, a NUL (0x00)
 character, your XML-RPC message will not be a legal XML document and
 as a result, your XML-RPC partner may choke on it.  If you have a choice,
 stick to the pure definition of string and just don't ever create a
-string with the extended characters in it.
+string with the extended characters in it.  The
+<b>xmlrpc_string_validate</b> function can help with that.
 
 <p>Now that we've covered what type of information can be represented
 by an XML-RPC string (and therefore a string <b>xmlrpc_value</b>), the
@@ -838,6 +839,8 @@ In versions of Xmlrpc-c new enough to have this function, the macro
     myStringP = xmlrpc_string_new_cr(&amp;env, &quot;hello world\r&quot;);
 
     myStringP = xmlrpc_string_new_lp(&amp;env, &quot;\0\r\n&quot;, 3);
+
+    xmlrpc_string_validate(&amp;env, myStringP);
 </code>
 </pre>
 
@@ -892,6 +895,9 @@ In versions of Xmlrpc-c new enough to have this function, the macro
                               size_t          const length,
                               const wchar_t * const stringValue);
 
+    void
+    xmlrpc_string_validate(xmlrpc_env *   const envP,
+                           xmlrpc_value * const valueP);
 </code>
 </pre>
 
@@ -945,6 +951,17 @@ UTF-8.
 <p><b>xmlrpc_string_w_new_lp()</b>, <b>xmlrpc_string_w_new_cr()</b>,
 and <b>xmlrpc_string_w_new_lp_cr()</b> are similarly related to their
 non-w counterparts.
+
+<p>Use <b>xmlrpc_string_validate()</b> to be sure the string value you
+created doesn't result in invalid XML when you use it in an XML-RPC
+call or response, as described in the <a href="#stringtype">String</a>
+section.  If the string is OK, it succeeds; otherwise, it fails.  What makes
+a string fail this test is that you supplied non-XML characters when you
+constructed it.  If you are sure you didn't supply any control characters
+other than newline, carriage return, and tab, you don't need
+<b>xmlrpc_string_validate()</b>.  Also, if you know that whatever interprets
+the XML-RPC call or response you generate with this string value is OK with
+non-XML characters, you don't need it.
 
 
 <h5 id="datetime">Date/Time</h5>
