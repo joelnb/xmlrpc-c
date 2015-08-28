@@ -77,6 +77,7 @@ clients and servers.
             <b>xmlrpc_struct_set_value()</b></a>
       </ul>
       <li><a href="#buildvalue"><b>xmlrpc_build_value()</b></a>
+      <li><a href="#xmlrpc_value_new"><b>xmlrpc_value_new()</b></a>
     </ul>
     <li><a href="#interpreting">Interpreting An Xmlrpc_value</a>
       <ul>
@@ -1483,6 +1484,60 @@ href="#creatingstructure">Creating A Structure</a>.
 
 <p>Eric Kidd says this translation scheme between XML-RPC and C is
 borrowed from Python's external C API.
+
+<h4 id="xmlrpc_value_new">xmlrpc_value_new()</h4>
+
+<b>xmlrpc_value_new()</b> does a deep copy of an <b>xmlrpc_value</b>.
+
+<p>Examples:
+
+<pre>
+<code>
+    xmlrpc_value * value1P;
+    xmlrpc_value * value2P;
+
+    value1P = xmlrpc_int_new(&amp;env, 7);
+
+    value2P = xmlrpc_value_new(value1P);
+</code>
+</pre>
+
+
+<pre>
+<code>
+    xmlrpc_value * temperaturesP;
+    xmlrpc_value * temperatures2P;
+
+    xmlrpc_decompose_value(&amp;env, 
+                           temperaturesP,
+                           &quot;({s:d,s:d,*}{s:d,s:d,*}{s:d,s:d,*})&quot;, 
+                           &quot;min&quot;, &amp;temp[0].min,
+                           &quot;max&quot;, &amp;temp[0].max,
+                           &quot;min&quot;, &amp;temp[1].min,
+                           &quot;max&quot;, &amp;temp[1].max,
+                           &quot;min&quot;, &amp;temp[2].min,
+                           &quot;max&quot;, &amp;temp[2].max
+                      );
+
+    temperatures2P = xmlrpc_value_new(&amp;env, temperaturesP);
+</code>
+</pre>
+
+<p><b>xmlrpc_value</b> objects are normally passed around by reference rather
+than by copying (that's what <b>xmlrpc_INCREF</b> and <b>xmlrpc_DECREF</b>
+are for), but sometimes you need to make a complete copy, and that is what
+<b>xmlrpc_value_new()</b> is for.  One reason to make a copy would be that you
+want to modify the two copies independently.
+
+<p><b>xmlrpc_value_new()</b> creates an <b>xmlrpc_value</b> in all new memory
+- it does not refer to any pre-existing object.  If the value is compound (an
+array or struct), <b>xmlrpc_value_new()</b> copies all the way down.  e.g. for
+an array, <b>xmlrpc_value_new</b> makes a new <b>xmlrpc_value</b> for the
+struct, and new <b>xmlrpc_value</b>s for each element of the array.
+
+<p><b>xmlrpc_value_new()</b> was new in Xmlrpc-c 1.43 (September 2015).
+With older Xmlrpc-c, you can implement the same function yourself using other
+Xmlrpc-c library facilities if you need it.
 
 
 <h3 id="interpreting">Interpreting An Xmlrpc_value</h3>
