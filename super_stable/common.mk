@@ -56,6 +56,13 @@ ifeq ($(CXX_COMPILER_GNU),yes)
   CXXFLAGS_COMMON += $(GCC_CXX_WARNINGS) -g
 endif
 
+# -qrtti tell the IBM compilers to allow dynamic type casting.  Without it,
+# code that has a dynamic type cast fails at run time.
+
+ifeq ($(CXX_COMPILER_IBM),yes)
+  CXXFLAGS_COMMON += -qrtti
+endif
+
 DISTDIR = $(BLDDIR)/$(PACKAGE)-$(VERSION)/$(SUBDIR)
 
 # MIN is the minor version number for shared libraries.
@@ -174,6 +181,14 @@ LIBXMLRPC_UTIL           = \
 LIBXMLRPC_UTIL_A         = $(LIBXMLRPC_UTIL_DIR)/libxmlrpc_util.a
 endif
 
+LIBXMLRPC_UTILPP_DIR = $(BLDDIR)/lib/libutil++
+
+ifneq ($(OMIT_LIBXMLRPC_UTILPP_RULE),Y)
+LIBXMLRPC_UTILPP         = \
+  $(call shliblefn, $(LIBXMLRPC_UTILPP_DIR)/libxmlrpc_util++)
+LIBXMLRPC_UTILPP_A       = $(LIBXMLRPC_UTILPP_DIR)/libxmlrpc_util++.a
+endif
+
 ifneq ($(OMIT_XMLRPC_LIB_RULE),Y)
 
 LIBXMLRPC              = \
@@ -217,6 +232,14 @@ ifneq ($(OMIT_ABYSS_LIB_RULE),Y)
 LIBXMLRPC_ABYSS          = \
   $(call shliblefn, $(LIBXMLRPC_ABYSS_DIR)/libxmlrpc_abyss)
 LIBXMLRPC_ABYSS_A        = $(LIBXMLRPC_ABYSS_DIR)/libxmlrpc_abyss.a
+endif
+
+LIBXMLRPC_ABYSSPP_DIR = $(BLDDIR)/lib/abyss++
+
+ifneq ($(OMIT_ABYSSPP_LIB_RULE),Y)
+LIBXMLRPC_ABYSSPP        = \
+  $(call shliblefn, $(LIBXMLRPC_ABYSSPP_DIR)/libxmlrpc_abyss++)
+LIBXMLRPC_ABYSSPP_A      = $(LIBXMLRPC_ABYSSPP_DIR)/libxmlrpc_abyss++.a
 endif
 
 LIBXMLRPC_CPP              = \
@@ -263,7 +286,7 @@ endif
 # libxmlrpc_util itself, but we have found (2012.12) that in a Mingw build
 # it does not.
 
-LIBXMLRPC_UTIL_LIBDEP = -L$(LIBXMLRPC_UTIL_DIR) -lxmlrpc_util -lpthread
+LIBXMLRPC_UTIL_LIBDEP = -L$(LIBXMLRPC_UTIL_DIR) -lxmlrpc_util $(THREAD_LIBS)
 
 ##############################################################################
 #            RULES TO BUILD OBJECT FILES TO LINK INTO LIBRARIES              #
@@ -431,6 +454,10 @@ $(LIBXMLRPC_UTIL) $(LIBXMLRPC_UTIL_A) : FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/libutil/Makefile \
 	    $(notdir $@)
 
+$(LIBXMLRPC_UTILPP) $(LIBXMLRPC_UTILPP_A) : FORCE
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/libutil++/Makefile \
+	    $(notdir $@)
+
 $(LIBXMLRPC_XMLPARSE) $(LIBXMLRPC_XMLPARSE_A) : FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/expat/xmlparse/Makefile \
 	    $(notdir $@)
@@ -441,6 +468,10 @@ $(LIBXMLRPC_XMLTOK) $(LIBXMLRPC_XMLTOK_A) : FORCE
 
 $(LIBXMLRPC_ABYSS) $(LIBXMLRPC_ABYSS_A): FORCE
 	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/abyss/src/Makefile \
+	    $(notdir $@)
+
+$(LIBXMLRPC_ABYSSPP) $(LIBXMLRPC_ABYSSPP_A): FORCE
+	$(MAKE) -C $(dir $@) -f $(SRCDIR)/lib/abyss++/Makefile \
 	    $(notdir $@)
 
 ifneq ($(OMIT_CPP_LIB_RULES),Y)
