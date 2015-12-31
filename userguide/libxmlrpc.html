@@ -2863,13 +2863,14 @@ an XML-RPC value, which you supply as an <b>xmlrpc_value</b> object.
 
 <pre>
 <code>
-    xmlrpc_mem_block json;
+    xmlrpc_mem_block * jsonP;
     xmlrpc_value * valP;
-    XMLRPC_MEMBLOCK_INIT(char, &amp;env, &amp;json, 0);
 
-    xmlrpc_serialize_json(&amp;env, valP, &amp;json);
+    jsonP = XMLRPC_MEMBLOCK_NEW(char, &amp;env, 0);
 
-    printf(&quot;JSON: %s\n&quot;, XMLRPC_MEMBLOCK_CONTENTS(char, &amp;out));
+    xmlrpc_serialize_json(&amp;env, valP, jsonP);
+
+    printf(&quot;JSON: %s\n&quot;, XMLRPC_MEMBLOCK_CONTENTS(char, jsonP));
 
 </code>
 </pre>

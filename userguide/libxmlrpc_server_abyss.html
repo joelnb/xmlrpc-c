@@ -100,6 +100,7 @@ routines depend on it.
     <li><a href="#uri_path">uri_path</a>
     <li><a href="#max_conn">max_conn</a>
     <li><a href="#max_conn_backlog">max_conn_backlog</a>
+    <li><a href="#max_rpc_mem">max_rpc_mem</a>
     <li><a href="#keepalive_timeout">keepalive_timeout</a>
     <li><a href="#keepalive_max_conn">keepalive_max_conn</a>
     <li><a href="#timeout">timeout</a>
@@ -1199,6 +1200,7 @@ typedef struct {
     socklen_t               sockaddrlen
     unsigned int            max_conn;
     unsigned int            max_conn_backlog;
+    size_t                  max_rpc_mem;
 } xmlrpc_server_abyss_parms;
 
 </code>
@@ -1367,6 +1369,24 @@ sustained rate higher than the server can handle, a larger queue only hurts.
 <p>The default is 15.
 
 <p>This option was new in Xmlrpc-c 1.32 (September 2012).
+
+
+<h5 id="max_rpc_mem">max_rpc_mem</h5>
+
+<p>This is the maximum amount of memory, in bytes, the server can use to
+process an RPC.  But it counts only certain uses of memory: those that are
+unpredictable, especially those under control of the client.  The purpose of
+this limit is to prevent a client from using more than its share of the
+server's memory and thereby deny service to other clients.
+
+<p>There are lots of other uses of memory that are not controlled by this
+limit, but they are all insignificant.
+
+<p>A value of zero requests the default.
+
+<p>The default is no limit.
+
+<p>This option was new in Xmlrpc-c 1.44 (December 2015).
 
 
 <h5 id="keepalive_timeout">keepalive_timeout</h5>
