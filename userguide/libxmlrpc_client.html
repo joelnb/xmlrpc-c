@@ -152,6 +152,9 @@ XML-RPC and not specific to XML-RPC clients.  Besides, the
 <li><a href="#concurrency">Concurrency</a>
   <ul>
   <li><a href="#threadsafe"><b>libxmlrpc_client</b> Thread Safety</a>  
+    <ul>
+    <li><a href="#openssl_thread_safety">OpenSSL Thread Safety</a>
+    </ul>
   <li><a href="#practicalconcurrency">Practical Concurrency</a>  
   </ul>
 <li><a href="#brokenserver">Dealing With Broken Servers</a>
@@ -2707,6 +2710,59 @@ multiple operating system threads.  <b>libxmlrpc_client</b>'s <a
 href="#asyncrpc">Asynchronous RPC</a> facility allows a single
 operating system thread, using a single client, to have multiple RPCs
 in progress at once.  (It is, in fact, a threading facility).
+
+<h4 id="openssl_thread_safety">OpenSSL Thread Safety</h4>
+
+<p>If you use the Curl XML transport and you use an https URL for an XML-RPC
+server and your Curl library is built to use OpenSSL to perform its SSL and
+TLS functions, then <b>libxmlrpc_client</b> is <em>not</em> thread-safe unless
+your program makes certain calls to the OpenSSL library to configure threading
+facilities.  This is explained in
+<a href="http://www.openssl.org/docs/manmaster/crypto/threads.html"> the
+OpenSSL manual</a>.
+
+<p>This is because of a flaw in the design of the OpenSSL library.  The
+library is designed to be used within an arbitrary threading system (i.e. not
+necessarily POSIX threads), so its user must supply thread synchronization
+(locking) facilities.  But the only means OpenSSL has for supplying those
+facilities is for the user to call library functions, and those functions
+record the information as process-global state.  That means the Curl library
+cannot supply the synchronization facilities - there might be parties in the
+program other than the Curl objects using the OpenSSL library so any call to
+these functions would interfere with them.  For the same reason, Xmlrpc-c
+libraries cannot make the necessary OpenSSL calls either.
+
+<p>Only the highest level code in the program can properly call the necessary
+OpenSSL functions to make the OpenSSL library, and by extension the libraries
+that use OpenSSL, thread-safe.
+
+<p>Though OpenSSL is designed to be used within an arbitrary threading system,
+the only system with which you as an Xmlrpc-c user will use it is POSIX
+threads on Unix, or Windows threads on Windows, because Xmlrpc-c itself
+doesn't work with any other threading system.  Therefore, there is no election
+the Xmlrpc-c user has to make.  A program that uses Xmlrpc-c must call the
+OpenSSL functions to set up OpenSSL to work with POSIX or Windows threads.
+
+<p>To help you with this on Unix, Xmlrpc-c provides the library
+<b>libxmlrpc_openssl</b>.  All you have to do is call function
+<b>xmlrpc_openssl_thread_setup</b> from that library befor it calls any
+Xmlrpc-c library functions, while the program is still one thread.  It should
+also call <b>xmlrpc_openssl_thread_cleanup</b> after the last Xmlrpc-c call,
+when the program is again one thread.
+
+<p>Use the package name <b>xmlrpc_openssl</b> with <b>pkg-config</b> to get
+the necessary build information to use <b>libxmlrpc_openssl</b>.  Or add
+the feature name <b>openssl</b> to a <b>xmlrpc-c-config</b> call.
+
+<p>These functions are not specific to XML-RPC or to the rest of Xmlrpc-c;
+they are merely conveniences since users of Xmlrpc-c often need to make these
+calls (the functions might just as well have been distibuted as part of
+OpenSSL).
+
+<p><b>xmlrpc_openssl_thread_safety</b> was new in Xmlrpc-c 1.45 (March 2016).
+If you are using Xmlrpc-c older than that, you must code the necessary OpenSSL
+calls in your own code.  (One easy way to do this is to get the source code
+out of a current version of Xmlrpc-c).
 
 
 <h3 id="practicalconcurrency">Practical Concurrency</h3>
