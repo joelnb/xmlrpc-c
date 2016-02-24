@@ -2427,16 +2427,23 @@ href="libxmlrpc_server.html#debugging"> facilities of
 <b>libxmlrpc_server</b></a> to print just the XML-RPC XML (i.e. the
 HTTP request and response bodies).
 
+<p>This facility was new in Xmlrpc-c 1.03, June 2005, for requests only;
+responses were added in Xmlrpc-c 1.05 (March 2006).
+
+
 <h3 id="abyss_trace_channel">ABYSS_TRACE_CHANNEL environment variable</h3>
 
 <p>If you set the <b>ABYSS_TRACE_CHANNEL</b> environment variable to
 <b>1</b>, the Abyss server will print messages to Standard Error
-showing <a href="#channels">channel</a>-level operation.  You will see
-where channels get created and destroyed.  You will see each read and
-write of the channel, but you won't see the contents (To see the data,
-use the higher level
-<b>ABYSS_TRACE_CONN</b> trace).  This is mainly useful if you suspect
+showing <a href="#channels">channel</a>-level operation.  You will see where
+channels get created and destroyed.  You will see each read and write of the
+channel, but you won't see the contents (To see the data, use the higher
+level <b>ABYSS_TRACE_CONN</b> trace).  This is mainly useful if you suspect
 something funny with the network.
+
+<p>This facility was new in Xmlrpc-c 1.07 (October 2006).  Before that,
+there was <b>ABYSS_TRACE_SOCKET</b>.
+
 
 <h3 id="abyss_trace_switch">ABYSS_TRACE_SWITCH environment variable</h3>
 
@@ -2444,6 +2451,9 @@ something funny with the network.
 <b>1</b>, the Abyss server will print messages to Standard Error
 showing the operation of <a href="#channels">channel switches</a>.
 This is mainly useful if you suspect something funny with the network.
+
+<p>This facility was new in Xmlrpc-c 1.07 (October 2006).  Before that,
+there was <b>ABYSS_TRACE_SOCKET</b>.
 
 </body>
 </html>

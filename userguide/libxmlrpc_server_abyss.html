@@ -1230,6 +1230,13 @@ build a method registry appropriate for your server.  This is a
 mandatory option (<i>parmSize</i> must be large enough to include
 it).
 
+<p>Any registration of a shutdown function in this registry has no effect.
+This oddity is an artifact of the evolution of Xmlrpc-c.  The only thing that
+controls shutdown is the <a href="#enable_shutdown"><b>enable_shutdown</b></a>
+parameter.  If you want to effectively register a shutdown function, use a
+lower level interface (not <b>xmlrpc_server_abyss</b>) in which you supply
+your own Abyss server.
+
 <p>On a Unix system, where <b>xmlrpc_server_abyss()</b> starts the 
 server in a new process, the server gets a copy of the registry, so
 nothing you do to it after <b>xmlrpc_server_abyss()</b> returns affects
@@ -1445,14 +1452,16 @@ this server.
 server can shut it down.
 
 <p>Note that if you use a lower level interface (not
-<b>xmlrpc_server_abyss()</b>), in which you supply your own Abyss
-server, your program can decide whether to comply with a
+<b>xmlrpc_server_abyss()</b>), in which you supply your own Abyss server, you
+can set your own shutdown handler in the XML-RPC method registry (this is a
+special setting, not the registration of the <b>system.shutdown</b> method -
+see <a href="libxmlrpc_server#set_shutdown"><b>xmlrpc_set_shutdown</b></a>)
+and your shutdown handler can decide whether to comply with a
 <a href="libxmlrpc_server.html#system.shutdown">
-<b>system.shutdown</b></a> request.  It might do it based on the IP
-address of the client, for example.  But with
-<b>xmlrpc_server_abyss()</b>, your only choices are
-<b>system.shutdown</b> for everybody or
-<b>system.shutdown</b> for nobody.
+<b>system.shutdown</b></a> request.  It might do it based on the IP address of
+the client, for example.  But with <b>xmlrpc_server_abyss()</b>, your only
+choices are <b>system.shutdown</b> for everybody or <b>system.shutdown</b> for
+nobody.
 
 <p>If you create a <b>xmlrpc_server_abyss_t</b> with a registry in which
 you have set a shutdown function, that setting has no effect.  The
@@ -1909,16 +1918,8 @@ href="libxmlrpc_server.html#trace_xml">XMLRPC_TRACE_XML</a>
 environment variable to trace the handler's calls to the
 <b>libxmlrpc_server</b> registry.
 
-<p>Set Abyss' <b>ABYSS_TRACE_CONN</b> environment variable to 1 to
-cause Abyss to print to Standard Error the raw HTTP requests 
-and responses.
-(New in Xmlrpc-c 1.03, June 2005, for requests only; responses added
-in Xmlrpc-c 1.05 (March 2006)).
-
-<p>If you need even lower level tracing, Abyss'
-<b>ABYSS_TRACE_SOCKET</b> environment variable traces the individual
-socket service calls (e.g.  shows you the data returned by a call to
-the Unix C library'es recv() function).
+<p>You can <A href="">libxmlrpc_abyss.html#debuggingtrace inside the Abyss
+server</A> using environment variables that control <b>libxmlrpc_abyss</b>.
 
 </body>
 </html>
