@@ -2313,11 +2313,60 @@ not match its URL.
 
 <p>The default value is false.
 
+<p>These options interact poorly
+with <a href="ssl_cipher_list"><i>ssl_cipher_list</i></a>.  See the
+explanation of that option for details.
+
 <p>These parameters were new in Xmlrpc-c 1.03 (June 2005).  Before
 that, the Curl transport did whatever is the default for the Curl
 library involved.  In reasonably modern Curl, that's the same as the
 parameters being false, but in really old Curl, the default was
 different.
+
+
+<h5 id="ssl_cipher_list">ssl_cipher_list</h5>
+
+<p>This option lists the ciphers (or cipher suites) the transport is allowed
+to use in its SSL connection.  Ciphers are means of encrypting the data and
+authenticating the parties, and there are lots from which to choose.  The
+syntax of this value, which is a text string, is the same as that for
+the <i>cipherlist</i> command line argument for the <b>openssl</b>
+program's <a href="http://www.openssl.org/docs/manmaster/apps/ciphers.html"><b>cipher</b>
+subprogram</a>.
+
+<p>For example, you could specify <tt>ADH-AES256-SHA</tt> to indicate you will
+accept only a connection that does anonymous Diffie-Hellman key exchange,
+256-bit AES encryption, and a message authentication code that uses a SHA1
+hash.  Or you could specify <tt>AECDH:ADH</tt> to indicate you will accept
+any connection that does anonymous Elliptical Curve Diffie Hellman or 
+anonymous Diffie Hellman key exchange.
+
+<p>A null string requests the default.
+
+<p>The default is whatever the Curl library's default is, which happens to be
+whatever the OpenSSL library's default is, which can vary but is typically
+almost all ciphers that are not anonymous.
+
+<p>Curl does not properly hide the OpenSSL library, though, which means the
+Xmlrpc-c Curl transport does not either, so you must be cognizant of the
+effect this option value has on the Curl transport's
+<b>ssl_no_verify_host</b> and <b>ssl_no_verify_peer</b> options.  If you set
+either of those to false, meaning the Curl transport will direct the Curl
+library to inspect the certificate sent by the server.  But if your
+<b>ssl_cipher_list</b> lists ciphers that don't require a certificate, the
+server may choose such a cipher for the connection and therefor not send a
+certificate.  Curl is oblivious to the fact that it allowed the server to
+choose a cipher that doesn't involve a certificate, so will try to get the
+server's certificate from OpenSSL in order to inspect it.  That attempt will
+fail, since the server did not send a certificate, and that makes Curl declare
+the connection failed.  You'll see &quot;SSL: couldn't get peer
+certificate!&quot; in the error messages from Xmlrpc-c telling why it could
+not connect to the server.
+
+<p>So if you specify false for either <b>ssl_no_verify_host</b> or
+<b>ssl_no_verify_peer</b>, be sure to set <b>ssl_cipher_list</b> to something
+that insists on a certificate-using cipher, such as <b>!aNULL</b>.  (This is
+usually the default).
 
 
 <h5>user_agent</h5>

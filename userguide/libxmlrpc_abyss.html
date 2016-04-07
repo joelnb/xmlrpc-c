@@ -20,13 +20,11 @@ server, this library in particular has nothing to do with XML-RPC.
 You could use it to create an ordinary web server, like a small
 Apache.
 
-<p>The functions of <b>libxmlrpc_abyss</b> are collectively knows
+<p>The functions of <b>libxmlrpc_abyss</b> are collectively known
 as Abyss.  See <a href="#history">History Of Abyss</a> for an explanation
 of why Abyss has a name.
 
-<p>Abyss cannot handle an SSL connection (https).  It would be relatively
-easy to modify Abyss to do so; if you're interested, see
-<a href="#channels">Channels</a>.
+<p>Abyss can handle an SSL or TLS connection (https).
 
 <p>If you use it for an XML-RPC server, you'll want to use
 <a href="libxmlrpc_server_abyss.html"><b>libxmlrpc_server_abyss</b></a>
@@ -43,6 +41,7 @@ files, and source code are the best you can do.
 <li><a href="#headerfile">Interface Header File</a>
 <li><a href="#linking">Linking</a>
 <li><a href="#persistent">Persistent Connections</a>
+<li><a href="#https">HTTPS</a>
 <li><a href="#channels">Channels</a>
 <ul>
   <li><a href="#TChannel">TChannel</a>
@@ -225,6 +224,55 @@ The default is 15 seconds, but you can control it with <a
 href="#ServerSetKeepaliveTimeout"><b>ServerSetKeepaliveTimeout</b></a>.
 
 
+<h2 id="https">HTTPS</h2>
+
+<p>To create a server that does HTTPS, you use an
+OpenSSL <a href="#TChanSwitch"> channel switch</a>.
+
+<p>Example:
+
+<pre>
+<code>
+  TChanSwitch * chanSwitchP;
+  const char * error;
+  SSL_CTX 8 sslCtxP;
+  TServer abyssServer;
+
+  sslCtxP = ...
+
+  ChanSwitchOpenSslCreateIpV4Port(8443, sslCtxP, &amp;chanSwitchP, &amp;error);
+
+  ServerCreateSwitch(&amp;abyssServer, chanSwitchP, &amp;error);
+    
+</code>
+</pre>
+
+<p>The line <code>sslCtxP = ... </code> glosses over a tremendous amount of
+work, but it is work that is not specific to Xmlrpc-c, so it beyond the scope
+of this manual.  To provide a very simple interface for the very complex world
+of secure sockets, Abyss exposes to you the OpenSSL library.  You are
+responsible for knowing how OpenSSL works and supplying an SSL_CTX object
+that includes the copious SSL and TLS options for the server.  SSL_CTX is a
+type defined by OpenSSL, and you use OpenSSL functions such as 
+<b>SSL_CTX_new</b> and <b>SSL_CTX_use_certificate_chain_file</b> to create it.
+An example of the options you choose via SSL_CTX is the certificate the server
+will use to prove its identity to clients.
+
+<p>There is a complete working example of a simple HTTPS server in the
+<b>examples</b> directory of the Xmlrpc-c source tree, named
+<b>ssl_server.c</b>.  There is another more complex one that actually provides
+secure communication named <b>ssl_secure_server.c</b>.
+
+<p>You cannot have the same Abyss server take both HTTP and HTTPS requests,
+but you can have two Abyss servers in the same program, one for HTTP and one
+for HTTPS.
+
+<p>The OpenSSL type of abyss channel was introduced in Xmlrpc-c 1.45 (March
+2016).  In Xmlrpc-c before that, there is no way for Abyss to server HTTPS.
+But you can combine Stunnel with Abyss to create an HTTPS server in which Abyss
+sees HTTP.
+
+
 <h2 id="channels">Channels</h2>
 
 <p>A channel is what Abyss uses to communicate with a client.  A
@@ -236,15 +284,8 @@ Abyss uses channels, the stream is HTTP.
 implemented any number of ways using any of various network protocols,
 or OS inter-process communication facilities, or carrier pigeons.  But
 in practice, the only kinds of channel Abyss implements are built upon
-a TCP connection so Abyss can implement true HTTP.
-
-<p>People often express interest in an XML-RPC server based on
-Xmlrpc-c Abyss that can do SSL.  Abyss today cannot do that because
-the only type of channel implemented is straight TCP.  But the channel
-abstraction makes it easy to extend Abyss with an alternative type of
-channel that speaks SSL (perhaps using the OpenSSL library).  If you
-need SSL capability, you should consider doing that and contributing the
-code to the project.
+a TCP connection so Abyss can implement true HTTP or on an SSL or TLS
+connection so Abyss can implement HTTPS.
 
 <p>A channel switch is an entity that sets up a channel between two
 parties that want to talk to each other.  Somehow one party identifies
@@ -282,7 +323,7 @@ communication control.  In Xmlrpc-c 1.06, there are <a
 href="#sockets"><i>sockets</i></a>, and before that you use native
 Operating system entities such as POSIX socket file descriptors.  The
 channel abstraction allows us to expand Abyss to fit more
-applications.  For example, it makes is easy to add SSL capability.
+applications.  For example, it made it easy to add SSL capability.
 
 <p>The macro <B>HAVE_CHANSWITCH</B> tells a C program that the
 <b>libxmlrpc_abyss</b> is new enough to have channels and channel
@@ -291,13 +332,11 @@ switches.
 
 <h3 id="TChannel">TChannel</h3>
 
-<p><b>TChannel</b> is the C type for an Abyss channel.  There are
-various types of TChannels; they all look the same from the outside
-but are implemented differently.  For example, one type (the only one
-implemented today) uses Unix stream sockets and TCP to send and
-receive its byte streams, while another might use Winsock.  Another
-type will use an Openssl socket in order to permit SSL (https)
-communications with clients.
+<p><b>TChannel</b> is the C type for an Abyss channel.  There are various
+types of TChannels; they all look the same from the outside but are
+implemented differently.  For example, three kinds exist today: one uses Unix
+stream sockets and TCP to send and receive its byte streams.  Another uses an
+Openssl connection object.  A third uses Winsock.
 
 <p>You create a TChannel by calling a constructor function for the
 particular type of TChannel you want.  The constructor function has
@@ -390,6 +429,97 @@ storage when you are done with it.  When the function fails, no other
 return values are valid and nothing else is allocated or created.
 
 
+<h4 id="ChannelOpenSslCreateSsl"><b>ChannelOpenSslCreateSsl()</b></h4>
+
+<p>Example:
+
+<pre>
+<code>
+  TChannel channelP;
+  struct abyss_openSsl_chaninfo * channelInfoP;
+  const char * error;
+  SSL * sslP;
+
+  sslP = SSL_new(...);
+
+  ChannelOpenSslCreateSsl(fd, &amp;channelP, &amp;channelInfoP, &amp;error);
+
+  ...
+
+  ChannelDestroy(channelP);
+  free(channelInfoP);
+
+</code>
+</pre>
+
+<p>Prototype:
+<pre>
+<code>
+    void
+    ChannelOpenSslCreateSsl(SSL *                        sslP,
+                        TChannel **                      channelPP,
+                        struct abyss_openSsl_chaninfo ** channelInfoPP,
+                        const char **                    errorP);
+</code>
+</pre>
+
+<p>This function creates a channel that uses an OpenSSL connection object to
+transmit its byte streams back and forth.  Thus, it can carry on an SSL or TLS
+conversation over TCP.  You supply the functioning OpenSSL connection object
+for the channel to use.
+
+<p><i>sslP</i> is a pointer to the OpenSSL (libssl) connection object.
+
+<p>The function returns the handle of the channel it creates as
+*<i>channelPP</i>.
+
+<p>The function returns as *<i>channelInfoPP</i> a pointer to a structure that
+identifies what's at the other end of channel (to wit, the peer's IP address
+and TCP port number, as well as the SSL identification information, along with
+authentication information) and various information about the encryption.
+This structure is in malloc'ed memory; you must free it when you are done with
+it.  A typical use of this structure is to pass it to
+<b>ServerRunChannel()</b> and then have an HTTP request handler get
+and use it with <b>SessionGetChannelInfo()</b>.  The type of
+information is specific to an OpenSSL type channel and has this format:
+
+<pre>
+<code>
+    struct abyss_openSsl_chaninfo {
+        size_t peerAddrLen;
+        struct sockaddr peerAddr;
+        SSL * sslP;
+    };
+</code>
+</pre>
+
+<p>A type like the above is defined in
+<b>&lt;xmlrpc-c/abyss_openssl.h&gt;</b>.
+
+<p><i>peerAddr</i> is the network address (on an IP network, an IP address) of
+the client.  <i>peerAddrLen</i> is the size of <i>peerAddr</i>.  This address
+is just what is supplied by the network layer.  To the extent the network is
+untrustworthy, this is too.  For a better authenticated identity, you can use
+SSL information you get via <i>sslP</i>.
+
+<p><i>sslP</i> is the handle of the OpenSSL connection object underlying the
+Abyss channel.  You can use this to get all sort of neat information about the
+connection, such as the verified certification the client presented, using the
+OpenSSL library.  (For example, to find out the authenticated name of the
+client, use SSL_get_peer_certificate(), and use X509_get_subject name() with
+the result of that).
+
+<p>This is kind of a modularity violation, which we don't mind because it is
+so easy and flexible.  But note that it is the Abyss design intent that you
+use the SSL object <em>only</em> to get information about the channel.
+
+<p>If the function succeeds, it returns a null pointer as *<i>errorP</i>.
+If it fails, it generates a text string explaining why, in malloc'ed storage,
+and returns the pointer to it as *<i>errorP</i>.  You must free this
+storage when you are done with it.  When the function fails, no other
+return values are valid and nothing else is allocated or created.
+
+
 <h4 id="ChannelDestroy"><b>ChannelDestroy()</b></h4>
 
 <p>Prototype:
@@ -405,14 +535,12 @@ return values are valid and nothing else is allocated or created.
 
 <h3 id="TChanSwitch">TChanSwitch</h3>
 
-<p><b>TChanSwitch</b> is the C type for an Abyss channel switch.
-There are various types of TChanSwitches; they all look the same from
-the outside but are implemented differently.  For example, one type
-(the only one implemented today) switches Unix socket-based channels,
-using a POSIX stream listen socket to hook up with clients.  Another
-type could switch Winsock-based channels; another type could use an
-Openssl socket in order to permit SSL (https) communications with
-clients.
+<p><b>TChanSwitch</b> is the C type for an Abyss channel switch.  There are
+various types of TChanSwitches; they all look the same from the outside but
+are implemented differently.  For example, three kinds exist today: one
+switches Unix socket-based channels, using a POSIX stream listen socket to
+hook up with clients.  Another uses the same kind of socket to switch
+OpenSSL-based channels.  A third type switches Winsock-based channels.
 
 <p>You create a TChanSwitch by calling a constructor function for the
 particular type of TChanSwitch you want.  The constructor function has
@@ -426,7 +554,14 @@ or you do the switching your own way and pass ready-made channels to
 Abyss.
 
 
-<h4 id="ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate()</b></h4>
+<h4 id="TChanSwitch_unix">Plain POSIX Stream Socket</h4>
+
+<p>The functions in this section create a channel switch for channels that use
+a Unix (POSIX) stream socket and thereby TCP connection to transmit its byte
+streams back and forth.  They also use a POSIX stream socket to listen for and
+accept new TCP connections.
+
+<h5 id="ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate()</b></h5>
 
 <p>Example:
 
@@ -471,8 +606,8 @@ an IP Version 6 one, use the
 newer <a href="#ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></a>.
 
 
-<h4 id="ChanSwitchUnixCreateIpV6Port">
-  <b>ChanSwitchUnixCreateIpV6Port()</b></h4>
+<h5 id="ChanSwitchUnixCreateIpV6Port">
+  <b>ChanSwitchUnixCreateIpV6Port()</b></h5>
 
 <p>This is the same
 as <a href="#ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></a> except that
@@ -481,7 +616,7 @@ it listens for IP Version 6 connections.
 <p>This was new in Xmlrpc-c 1.29 (December 2011).
 
 
-<h4 id="ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></h4>
+<h5 id="ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2()</b></h5>
 
 <p>Example:
 
@@ -552,7 +687,7 @@ or <a href="#ChanSwitchUnixCreateIpV6Port">
 <p>This function was new in Xmlrpc-c 1.30 (March 2012).
 
 
-<h4 id="ChanSwitchUnixCreateFd"><b>ChanSwitchUnixCreateFd()</b></h4>
+<h5 id="ChanSwitchUnixCreateFd"><b>ChanSwitchUnixCreateFd()</b></h5>
 
 <p>Example:
 
@@ -609,7 +744,23 @@ switch), but must be idle -- not in connected or listening state.
 descriptor stays open) as long as the channel switch exists.  You must
 not access the socket in any way while the channel switch exists.
 
-<h4 id="ChanSwitchDestroy"><b>ChanSwitchDestroy()</b></h4>
+
+<h4 id="TChanSwitch_openssl">OpenSSL</h4>
+
+<h5 id="ChanSwitchOpenSslCreate"><b>ChanSwitchOpenSslCreate()</b></h5>
+
+<h5 id="ChanSwitchOpenSslCreateIpV4Port">
+  <b>ChanSwitchOpenSslCreateIpV4Port()</b></h5>
+
+<h5 id="ChanSwitchOpenSslCreateIpV6Port">
+  <b>ChanSwitchOpenSslCreateIpV6Port()</b></h5>
+
+<h5 id="ChanSwitchOpenSslCreateFd"><b>ChanSwitchOpenSslCreateFd()</b></h5>
+
+
+<h4 id="TChanSwitch_general">General</h4>
+
+<h5 id="ChanSwitchDestroy"><b>ChanSwitchDestroy()</b></h5>
 
 <p>Prototype:
 <pre>
@@ -680,15 +831,12 @@ pointer (<tt>TSocket *</tt>).
 
 <p>The TSocket type is designed to be an abstract type, with various
 implementations.  I.e. all TSockets do the same basic job of managing
-connections and transmitting data back and forth, but different
-TSockets may do it different ways.  Today, there are only two
-implementations: one uses TCP via a POSIX (Unix) socket and the other uses
-TCP via a Winsock socket.  In the future, there will probably be a
-TSocket implementation that uses SSL.  Note that while a true HTTP
-server must use TCP (and a true HTTPS server must use SSL), there
-could theoretically be a TSocket that uses an entirely different
-client/server communication method and you could use it to make an
-Abyss server that serves some variation on HTTP.
+connections and transmitting data back and forth, but different TSockets may
+do it different ways.  There are only two implementations: one uses TCP via a
+POSIX (Unix) socket and the other uses TCP via a Winsock socket.  Note that
+while a true HTTP server must use TCP, there could theoretically be a TSocket
+that uses an entirely different client/server communication method and you
+could use it to make an Abyss server that serves some variation on HTTP.
 
 <p>There are separate constructor functions for the individual
 Abyss socket implementations.
@@ -984,7 +1132,8 @@ predates <b>ServerSetLogFileName()</b>).
 number on which to listen, you provide a <a href="#channels">channel
 switch</a>.  While <b>ServerCreate()</b> is limited to accepting
 connections in a very specific way, the channel switch could be much
-more flexible.
+more flexible.  For example, it is the only way you can create an
+HTTPS server.
 
 <p>The server created has name &quot;unnamed&quot;, document root
 directory &quot;/htdocs&quot;, and no log file.  You can modify these
