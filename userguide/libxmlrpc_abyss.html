@@ -47,16 +47,33 @@ files, and source code are the best you can do.
   <li><a href="#TChannel">TChannel</a>
   <ul>
     <li><a href="#ChannelUnixCreateFd">ChannelUnixCreateFd()</a>
+    <li><a href="#ChannelOpensslCreateSsl">ChannelOpensslCreateSsl()</a>
     <li><a href="#ChannelDestroy">ChannelDestroy()</a>
     </ul>
   <li><a href="#TChanSwitch">TChanSwitch</a>
   <ul>
-    <li><a href="#ChanSwitchUnixCreate">ChanSwitchUnixCreate()</a>
-    <li><a href="#ChanSwitchUnixCreateIpV6Port">
-        ChanSwitchUnixCreateIpV6Port()</a>
-    <li><a href="#ChanSwitchUnixCreate2">ChanSwitchUnixCreate2()</a>
-    <li><a href="#ChanSwitchUnixCreateFd">ChanSwitchUnixCreateFd()</a>
-    <li><a href="#ChanSwitchDestroy">ChanSwitchDestroy()</a>
+    <li><a href="#TChanSwitch_unix">Plain POSIX Stream Socket</a>
+    <ul>
+      <li><a href="#ChanSwitchUnixCreate">ChanSwitchUnixCreate()</a>
+      <li><a href="#ChanSwitchUnixCreateIpV6Port">
+          ChanSwitchUnixCreateIpV6Port()</a>
+      <li><a href="#ChanSwitchUnixCreate2">ChanSwitchUnixCreate2()</a>
+      <li><a href="#ChanSwitchUnixCreateFd">ChanSwitchUnixCreateFd()</a>
+    </ul>
+    <li><a href="#TChanSwitch_openssl">OpenSSL</a>
+    <ul>
+      <li><a href="#ChanSwitchOpenSslCreate">ChanSwitchOpenSslCreate</a>
+      <li><a href="#ChanSwitchOpenSslCreateIpV4Port">
+          ChanSwitchOpenSslCreateIpV4Port</a>
+      <li><a href="#ChanSwitchOpenSslCreateIpV6Port">
+          ChanSwitchOpenSslCreateIpV6Port</a>
+      <li><a href="#ChanSwitchOpenSslCreateFd">
+          ChanSwitchOpenSslCreateIpFd</a>
+    </ul>
+    <li><a href="#TChanSwitch_general">General</a>
+    <ul>
+      <li><a href="#ChanSwitchDestroy">ChanSwitchDestroy()</a>
+    </ul>
     </ul>
   </ul>
 <li><a href="#sockets">Sockets</a>
@@ -226,8 +243,8 @@ href="#ServerSetKeepaliveTimeout"><b>ServerSetKeepaliveTimeout</b></a>.
 
 <h2 id="https">HTTPS</h2>
 
-<p>To create a server that does HTTPS, you use an
-OpenSSL <a href="#TChanSwitch"> channel switch</a>.
+<p>To create a server that does HTTPS, you use an OpenSSL
+<a href="#TChanSwitch"> channel switch</a>.
 
 <p>Example:
 
@@ -235,7 +252,7 @@ OpenSSL <a href="#TChanSwitch"> channel switch</a>.
 <code>
   TChanSwitch * chanSwitchP;
   const char * error;
-  SSL_CTX 8 sslCtxP;
+  SSL_CTX * sslCtxP;
   TServer abyssServer;
 
   sslCtxP = ...
@@ -519,6 +536,7 @@ and returns the pointer to it as *<i>errorP</i>.  You must free this
 storage when you are done with it.  When the function fails, no other
 return values are valid and nothing else is allocated or created.
 
+<p>This function was new in Xmlrpc-c 1.45 (March 2016).
 
 <h4 id="ChannelDestroy"><b>ChannelDestroy()</b></h4>
 
@@ -651,7 +669,7 @@ it listens for IP Version 6 connections.
 
 <pre>
 <code>
-void
+    void
     ChanSwitchUnixCreate2(int                     protocolFamily,
                           const struct sockaddr * sockAddrP,
                           socklen_t               sockAddrLen,
@@ -749,13 +767,229 @@ not access the socket in any way while the channel switch exists.
 
 <h5 id="ChanSwitchOpenSslCreate"><b>ChanSwitchOpenSslCreate()</b></h5>
 
+<p>Example:
+
+<pre>
+<code>
+    SSL_CTX * sslCtxP;
+    struct sockaddr_in sockaddr;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    sslCtxP = SSL_CTX_new(SSLv23_server_method());
+
+    sockaddr.sin_family      = AF_INET;
+    sockaddr.sin_addr.s_addr = htonl(localhostIpAddr);
+    sockaddr.sin_port        = htons(8080);
+
+    ChanSwitchOpenSslCreate(PF_INET, (const struct sockaddr *)&amp;sockaddr,
+                            sizeof(sockaddr), sslCtxP,
+                            &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ChanSwitchOpensslCreate(int                     protocolFamily,
+                            const struct sockaddr * sockAddrP,
+                            socklen_t               sockAddrLen,
+                            SSL_CTX *               sslCtxP,
+                            TChanSwitch **          chanSwitchPP,
+                            const char **           errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections
+that clients request and generates an OpenSSL-type channel based on each.
+
+<p>It is analogous
+to <a href="#ChanSwitchUnixCreate2"><b>ChanSwitchUnixCreate2</b></a> except
+that it adds the SSL/TLS authentication and encryption to the channel.
+
+<p><i>sslCtxP</i> is a handle for an OpenSSL context object, as defined by
+the OpenSSL library.
+
+<p>See section <a href="#https">HTTPS</a> for more information.
+
+<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+
+
 <h5 id="ChanSwitchOpenSslCreateIpV4Port">
   <b>ChanSwitchOpenSslCreateIpV4Port()</b></h5>
+
+<p>Example:
+
+<pre>
+<code>
+    SSL_CTX * sslCtxP;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    sslCtxP = SSL_CTX_new(SSLv23_server_method());
+
+    ChanSwitchOpenSslCreateIpV4Port(8080, sslCtxP,
+                                    &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ChanSwitchOpensslCreateIpV4Port(unsigned short portNumber,
+                                    SSL_CTX *      sslCtxP,
+                                    TChanSwitch ** chanSwitchPP,
+                                    const char **  errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections
+that clients request and generates an OpenSSL-type channel based on each.
+
+<p>It is analogous to
+<a href="#ChanSwitchUnixCreate"><b>ChanSwitchUnixCreate</b></a> except
+that it adds the SSL/TLS authentication and encryption to the channel.
+
+<p><i>sslCtxP</i> is a handle for an OpenSSL context object, as defined by the
+OpenSSL library.
+
+<p>See section <a href="#https">HTTPS</a> for more information.
+
+<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+
 
 <h5 id="ChanSwitchOpenSslCreateIpV6Port">
   <b>ChanSwitchOpenSslCreateIpV6Port()</b></h5>
 
+<p>Example:
+
+<pre>
+<code>
+    SSL_CTX * sslCtxP;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    sslCtxP = SSL_CTX_new(SSLv23_server_method());
+
+    ChanSwitchOpenSslCreateIpV6Port(8080, sslCtxP,
+                                    &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ChanSwitchOpensslCreateIpV6Port(unsigned short portNumber,
+                                    SSL_CTX *      sslCtxP,
+                                    TChanSwitch ** chanSwitchPP,
+                                    const char **  errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections that
+clients request and generates an OpenSSL-type channel based on each.
+
+<p>It is analogous to
+<a href="#ChanSwitchUnixCreateIpV6Port">
+<b>ChanSwitchUnixCreateIpV6Port</b></a> except that it adds the SSL/TLS
+authentication and encryption to the channel.
+
+<p><i>sslCtxP</i> is a handle for an OpenSSL context object, as defined by the
+OpenSSL library.
+
+<p>See section <a href="#https">HTTPS</a> for more information.
+
+<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+
+
 <h5 id="ChanSwitchOpenSslCreateFd"><b>ChanSwitchOpenSslCreateFd()</b></h5>
+
+<p>Example:
+
+<pre>
+<code>
+    int fd;
+    SSL_CTX * sslCtxP;
+    TChanSwitch * chanSwitchP;
+    const char * error;
+
+    fd = socket(...);
+    bind(fd, ...);
+
+    sslCtxP = SSL_CTX_new(SSLv23_server_method());
+
+    ChanSwitchOpenSslCreateFd(fd, sslCtxP, &amp;chanSwitchP, &amp;error);
+
+    if (error) {
+        fprintf(stderr, &quot;Couldn't create.  %s&quot;, error);
+        free(error);
+    } else {
+        ...
+
+        ChanSwitchDestroy(chanSwitchP);
+    }
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    ChanSwitchOpensslCreateFd(int            fd,
+                              SSL_CTX *      sslCtxP,
+                              TChanSwitch ** chanSwitchPP,
+                              const char **  errorP);
+</code>
+</pre>
+
+<p>This function creates a channel switch that accepts TCP connections that
+clients request and generates an OpenSSL-type channel based on each.
+
+<p>It is analogous to
+<a href="#ChanSwitchUnixCreateFd">
+<b>ChanSwitchUnixCreateFd</b></a> except that it adds the SSL/TLS
+authentication and encryption to the channel.
+
+<p><i>sslCtxP</i> is a handle for an OpenSSL context object, as defined by the
+OpenSSL library.
+
+<p>See section <a href="#https">HTTPS</a> for more information.
+
+<p>This function was new in Xmlrpc-c 1.45 (March 2016).
 
 
 <h4 id="TChanSwitch_general">General</h4>
