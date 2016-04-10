@@ -47,7 +47,7 @@ files, and source code are the best you can do.
   <li><a href="#TChannel">TChannel</a>
   <ul>
     <li><a href="#ChannelUnixCreateFd">ChannelUnixCreateFd()</a>
-    <li><a href="#ChannelOpensslCreateSsl">ChannelOpensslCreateSsl()</a>
+    <li><a href="#ChannelOpenSslCreateSsl">ChannelOpenSslCreateSsl()</a>
     <li><a href="#ChannelDestroy">ChannelDestroy()</a>
     </ul>
   <li><a href="#TChanSwitch">TChanSwitch</a>
@@ -60,15 +60,15 @@ files, and source code are the best you can do.
       <li><a href="#ChanSwitchUnixCreate2">ChanSwitchUnixCreate2()</a>
       <li><a href="#ChanSwitchUnixCreateFd">ChanSwitchUnixCreateFd()</a>
     </ul>
-    <li><a href="#TChanSwitch_openssl">OpenSSL</a>
+    <li><a href="#TChanSwitch_openSsl">OpenSSL</a>
     <ul>
-      <li><a href="#ChanSwitchOpenSslCreate">ChanSwitchOpenSslCreate</a>
+      <li><a href="#ChanSwitchOpenSslCreate">ChanSwitchOpenSslCreate()</a>
       <li><a href="#ChanSwitchOpenSslCreateIpV4Port">
-          ChanSwitchOpenSslCreateIpV4Port</a>
+          ChanSwitchOpenSslCreateIpV4Port()</a>
       <li><a href="#ChanSwitchOpenSslCreateIpV6Port">
-          ChanSwitchOpenSslCreateIpV6Port</a>
+          ChanSwitchOpenSslCreateIpV6Port()</a>
       <li><a href="#ChanSwitchOpenSslCreateFd">
-          ChanSwitchOpenSslCreateIpFd</a>
+          ChanSwitchOpenSslCreateIpFd()</a>
     </ul>
     <li><a href="#TChanSwitch_general">General</a>
     <ul>
@@ -353,7 +353,7 @@ switches.
 types of TChannels; they all look the same from the outside but are
 implemented differently.  For example, three kinds exist today: one uses Unix
 stream sockets and TCP to send and receive its byte streams.  Another uses an
-Openssl connection object.  A third uses Winsock.
+OpenSSL connection object.  A third uses Winsock.
 
 <p>You create a TChannel by calling a constructor function for the
 particular type of TChannel you want.  The constructor function has
@@ -763,7 +763,7 @@ descriptor stays open) as long as the channel switch exists.  You must
 not access the socket in any way while the channel switch exists.
 
 
-<h4 id="TChanSwitch_openssl">OpenSSL</h4>
+<h4 id="TChanSwitch_openSsl">OpenSSL</h4>
 
 <h5 id="ChanSwitchOpenSslCreate"><b>ChanSwitchOpenSslCreate()</b></h5>
 
@@ -802,7 +802,7 @@ not access the socket in any way while the channel switch exists.
 <pre>
 <code>
     void
-    ChanSwitchOpensslCreate(int                     protocolFamily,
+    ChanSwitchOpenSslCreate(int                     protocolFamily,
                             const struct sockaddr * sockAddrP,
                             socklen_t               sockAddrLen,
                             SSL_CTX *               sslCtxP,
@@ -858,7 +858,7 @@ the OpenSSL library.
 <pre>
 <code>
     void
-    ChanSwitchOpensslCreateIpV4Port(unsigned short portNumber,
+    ChanSwitchOpenSslCreateIpV4Port(unsigned short portNumber,
                                     SSL_CTX *      sslCtxP,
                                     TChanSwitch ** chanSwitchPP,
                                     const char **  errorP);
@@ -912,7 +912,7 @@ OpenSSL library.
 <pre>
 <code>
     void
-    ChanSwitchOpensslCreateIpV6Port(unsigned short portNumber,
+    ChanSwitchOpenSslCreateIpV6Port(unsigned short portNumber,
                                     SSL_CTX *      sslCtxP,
                                     TChanSwitch ** chanSwitchPP,
                                     const char **  errorP);
@@ -969,7 +969,7 @@ OpenSSL library.
 <pre>
 <code>
     void
-    ChanSwitchOpensslCreateFd(int            fd,
+    ChanSwitchOpenSslCreateFd(int            fd,
                               SSL_CTX *      sslCtxP,
                               TChanSwitch ** chanSwitchPP,
                               const char **  errorP);
