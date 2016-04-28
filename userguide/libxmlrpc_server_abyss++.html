@@ -54,6 +54,7 @@ is no C++ version of Abyss.  <B>libxmlrpc_abyss</B> is straight C.
     <li><a href="#sigchld"><b>sigchld</b> Method</a>
     <li><a href="#terminate"><b>terminate</b> Method</a>
     <li><a href="#shutdown"><b>shutdown</b> Subclass</a>
+    <li><a href="#getListenName"><b>getListenName</b> Method</a>
     </ul>
   <li><a href="#class_callinfo_serverAbyss">
       class <b>callinfo_serverAbyss</b></a>
@@ -815,6 +816,41 @@ single-thread manner, you don't have this problem because the server will
 notice the termination after the <b>system.shutdown</b> completes and before
 it waits for the next RPC.
 
+<h4 id="getListenName"><b>getListenName</b> Method</h4>
+
+<p>This method queries the socket address on which the server is listening.
+The socket address is an IP address and TCP port number, except that it can
+instead of IP address, it can indicate &quot;any address to which this
+computer answers&quot;).
+
+<p>This isn't normally useful because when you created the server, you told it
+to listen on a particular port.  But it is also possible to tell the server to
+choose a free port on its own, and if you did that, you could use this method
+to find out what port it chose so you could tell clients.
+
+<p>Example:
+
+<pre>
+<code>
+    struct sockaddr * listenNameP;
+    sockaddr_len listenNameLen;
+
+    getListenName(&amp;listenNameP, &amp;listenNameLen);
+</code>
+</pre>
+
+<p>Prototype:
+
+<pre>
+<code>
+    void
+    getListenName(struct sockaddr ** sockaddrPP,
+                  size_t *           sockaddrLenP);
+</code>
+</pre>
+
+
+<p>This method was new in Xmlrpc-c 1.46 (March 2016).
 
 <h3 id="class_callinfo_serverAbyss">Class <b>callinfo_serverAbyss</b></h3>
 

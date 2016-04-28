@@ -1791,7 +1791,7 @@ just one C++ parameter.
 
 <dt>fd
 
-<dd>File descriptor of a stream socket that is connected to a packet
+<dd>(integer) File descriptor of a stream socket that is connected to a packet
 stream XML-RPC server.  (It just has to be connected at the stream socket
 level, such as one would do with the <b>connect()</b> standard C library
 function -- no prior packet stream negotiation is implied).
@@ -1800,6 +1800,26 @@ function -- no prior packet stream negotiation is implied).
 choice of socket parameters (which you make before you pass it to the
 <b>clientXmlTransport_pstream</b> constructor).  However, you are not
 allowed to access the socket in any way while the object exists.
+
+<dt>useBrokenConnEx
+
+<dd>(boolean) When a method is unable to perform its normal (e.g. sending a
+call to the server) because the TCP connection broke (because the server hung
+up or the network failed), the method throws an
+<b>xmlrpc_c::clientXmlTransport_pstream::BrokenConnectionEx</b> object if this
+option is true.  Otherwise, the method just throws a <b>girerr::error</b> like
+any other error.
+
+<p>Note that the OS may not know the connection is broken when you try to use
+it, so instead of throwing the object immediately, the method may run for a
+long time before the OS realizes the connection is broken.  It can even run
+indefinitely.  Use the TCP keepalive feature to help the OS determine when the
+connection is broken.
+
+<p><b>BrokenConnectionEx</b> has no members.
+
+<p>This option method, and the <b>BrokenConnectionEx</b> class, were new in
+Xmlrpc-c 1.46 (June 2016).
 
 </dl>
 

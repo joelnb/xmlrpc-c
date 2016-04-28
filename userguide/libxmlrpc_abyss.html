@@ -284,7 +284,7 @@ secure communication named <b>ssl_secure_server.c</b>.
 but you can have two Abyss servers in the same program, one for HTTP and one
 for HTTPS.
 
-<p>The OpenSSL type of abyss channel was introduced in Xmlrpc-c 1.45 (March
+<p>The OpenSSL type of abyss channel was introduced in Xmlrpc-c 1.46 (March
 2016).  In Xmlrpc-c before that, there is no way for Abyss to server HTTPS.
 But you can combine Stunnel with Abyss to create an HTTPS server in which Abyss
 sees HTTP.
@@ -474,9 +474,9 @@ return values are valid and nothing else is allocated or created.
 <code>
     void
     ChannelOpenSslCreateSsl(SSL *                        sslP,
-                        TChannel **                      channelPP,
-                        struct abyss_openSsl_chaninfo ** channelInfoPP,
-                        const char **                    errorP);
+                            TChannel **                      channelPP,
+                            struct abyss_openSsl_chaninfo ** channelInfoPP,
+                            const char **                    errorP);
 </code>
 </pre>
 
@@ -520,11 +520,11 @@ untrustworthy, this is too.  For a better authenticated identity, you can use
 SSL information you get via <i>sslP</i>.
 
 <p><i>sslP</i> is the handle of the OpenSSL connection object underlying the
-Abyss channel.  You can use this to get all sort of neat information about the
-connection, such as the verified certification the client presented, using the
-OpenSSL library.  (For example, to find out the authenticated name of the
-client, use SSL_get_peer_certificate(), and use X509_get_subject name() with
-the result of that).
+Abyss channel.  You can use this to get all sorts of neat information about
+the connection, such as the verified certificate the client presented, using
+the OpenSSL library.  (For example, to find out the authenticated name of the
+client, use <b>SSL_get_peer_certificate()</b>, and use <b>X509_get_subject
+name()</b> with the result of that).
 
 <p>This is kind of a modularity violation, which we don't mind because it is
 so easy and flexible.  But note that it is the Abyss design intent that you
@@ -536,7 +536,7 @@ and returns the pointer to it as *<i>errorP</i>.  You must free this
 storage when you are done with it.  When the function fails, no other
 return values are valid and nothing else is allocated or created.
 
-<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+<p>This function was new in Xmlrpc-c 1.46 (March 2016).
 
 <h4 id="ChannelDestroy"><b>ChannelDestroy()</b></h4>
 
@@ -823,7 +823,7 @@ the OpenSSL library.
 
 <p>See section <a href="#https">HTTPS</a> for more information.
 
-<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+<p>This function was new in Xmlrpc-c 1.46 (March 2016).
 
 
 <h5 id="ChanSwitchOpenSslCreateIpV4Port">
@@ -877,7 +877,7 @@ OpenSSL library.
 
 <p>See section <a href="#https">HTTPS</a> for more information.
 
-<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+<p>This function was new in Xmlrpc-c 1.46 (March 2016).
 
 
 <h5 id="ChanSwitchOpenSslCreateIpV6Port">
@@ -932,7 +932,7 @@ OpenSSL library.
 
 <p>See section <a href="#https">HTTPS</a> for more information.
 
-<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+<p>This function was new in Xmlrpc-c 1.46 (March 2016).
 
 
 <h5 id="ChanSwitchOpenSslCreateFd"><b>ChanSwitchOpenSslCreateFd()</b></h5>
@@ -989,7 +989,7 @@ OpenSSL library.
 
 <p>See section <a href="#https">HTTPS</a> for more information.
 
-<p>This function was new in Xmlrpc-c 1.45 (March 2016).
+<p>This function was new in Xmlrpc-c 1.46 (March 2016).
 
 
 <h4 id="TChanSwitch_general">General</h4>
