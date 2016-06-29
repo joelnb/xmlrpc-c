@@ -1803,9 +1803,9 @@ allowed to access the socket in any way while the object exists.
 
 <dt>useBrokenConnEx
 
-<dd>(boolean) When a method is unable to perform its normal (e.g. sending a
-call to the server) because the TCP connection broke (because the server hung
-up or the network failed), the method throws an
+<dd>(boolean) When a method is unable to perform its normal function
+(e.g. sending a call to the server) because the TCP connection broke (because
+the server hung up or the network failed), the method throws an
 <b>xmlrpc_c::clientXmlTransport_pstream::BrokenConnectionEx</b> object if this
 option is true.  Otherwise, the method just throws a <b>girerr::error</b> like
 any other error.
@@ -1815,6 +1815,18 @@ it, so instead of throwing the object immediately, the method may run for a
 long time before the OS realizes the connection is broken.  It can even run
 indefinitely.  Use the TCP keepalive feature to help the OS determine when the
 connection is broken.
+
+<p>On a POSIX system, Xmlrpc-c considers a function to have failed because of
+a broken connection when a system call to communicate with the server fails
+with one of these errnos:
+
+<ul>
+<li>EPIPE
+<LI>ETIMEDOUT
+<LI>ECONNRESET
+<LI>ENOTCONN
+<LI>ESHUTDOWN  
+</ul>
 
 <p><b>BrokenConnectionEx</b> has no members.
 
