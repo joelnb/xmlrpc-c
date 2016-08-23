@@ -32,7 +32,7 @@ DISTFILES =
 
 distdir: distdir-common
 
-install: $(SUBDIRS:%=%/install)
+install: install-common $(SUBDIRS:%=%/install)
 
 check:
 
