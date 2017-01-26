@@ -338,15 +338,16 @@ a client program.
 <p>For details, see <a href="xmlrpc_dumpserver.html">the manual</a>.
 
 <p>Here is an example of the output, which is the result of performing an
-RPC on the server with the following command:
+RPC on the server with the following commands.
 
 <pre>
 <kbd>
+    $ xmlrpc_dumpserver -port=8080 &amp;
     $ xmlrpc localhost:8080 mymethod i/7 s/secondparameter
 </kbd>
 </pre>
 
-<p>
+<p>Output from server:
 <pre>
 <kbd>
     Running XML-RPC server on TCP Port 8080...
