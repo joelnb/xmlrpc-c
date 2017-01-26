@@ -1,0 +1,70 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2//EN">
+<title>Xmlrpc_dumpserver User Manual</title>
+<body>
+
+<p><b>xmlrpc_dumpserver</b> is a diagnostic XML-RPC server program.  It
+executes any RPC it receives by printing to Standard Output its parameters.
+
+
+<h2 id="examples">Examples</h2>
+
+<pre>
+<tt>
+     $ xmlrpc_dumpserver -port=8080
+</tt>
+</pre>
+
+
+<h2 id="description">Description</h2>
+
+<p><b>xmlrpc_dumpserver</b> runs an XML-RPC server that executes any RPC
+it receives by printing to Standard Output the fact that the call was made
+and its parameters.
+
+<p>The server executes any method (i.e. a call with any method name) the
+same as any other.
+
+<p>The RPC always fails, with a message explaining that it is a test server.
+
+<p>You can use this to test an XML-RPC client -- to see what it is really
+sending as a call and give it a valid response to process.
+
+<p>To get more detail about the call, use the
+<a href="libxmlrpc_server.html#trace_xml"> <b>XMLRPC_TRACE_XML</b>
+environment variable</a>.
+
+<p>The server executes the built-in (&quot;system.*&quot;) methods
+normally.  <b>system.shutdown</b> works.
+
+<p>If you direct Standard Output to a file, you'll need to shut down the
+server cleanly in order to flush the operating system output buffer to the
+file.  You can do that by performing a <b>system.shutdown</b> RPC.
+
+<h2 id="overview">Overview</h2>
+<p>
+<b>xmlrpc_dumpserver</b>
+<b>-port=</b><i>tcpPortNumber</i>
+
+<P>Minimum unique abbreviation of option is acceptable.  You may use double
+hyphens instead of single hyphen to denote options.  You may use white
+space in place of the equals sign to separate an option name from its value.
+
+
+<h2 id="arguments">Arguments</h2>
+
+<p>None.
+
+
+<h2 id="options">Options</h2>
+
+<dl>
+<dt><b>-port=</b><i>tcpPortNumber</i>
+
+<dd>This is the TCP port number on which the server listens for XML-RPC
+client connections.
+
+<h2 id="history">History</h2>
+
+<p><b>xmlrpc_dumpserver</b> was new in Xmlrpc-c 1.49 (March 2017).
+
+</body>

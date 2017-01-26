@@ -30,6 +30,7 @@
 <li><a href="#utilities">Utility Programs</a>
   <ul>
   <li><a href="#xmlrpc"><b>xmlrpc</b></a>
+  <li><a href="#xmlrpc_dumpserver"><b>xmlrpc_dumpserver</b></a>
   </ul>
 <li><a href="#alternatives">Alternatives</a>
   <ul>
@@ -307,7 +308,7 @@ and the integer 5.
 it gets back from the server.
 
 <p>For details, see <a href="xmlrpc.html">the manual</a>.
-
+ 
 <p>String arguments look like this:
 
 <pre>
@@ -326,6 +327,44 @@ $ xmlrpc http://www.xmlrpc.com/RPC2 method_that_takes_string hello
 </kbd>
 </pre>
 
+
+<h3 id="xmlrpc_dumpserver">xmlrpc_dumpserver</h3>
+
+<p><b>xmlrpc_dumpserver</b> is a server program for analyzing XML-RPC issues.
+The server it runs executes any RPC by printing to Standard Output the fact
+that it is executing it and what its parameters.  You can use this to analyze
+a client program.
+
+<p>For details, see <a href="xmlrpc_dumpserver.html">the manual</a>.
+
+<p>Here is an example of the output, which is the result of performing an
+RPC on the server with the following command:
+
+<pre>
+<kbd>
+    $ xmlrpc localhost:8080 mymethod i/7 s/secondparameter
+</kbd>
+</pre>
+
+<p>
+<pre>
+<kbd>
+    Running XML-RPC server on TCP Port 8080...
+    Server has received a call of method 'mymethd'
+    
+    Number of parameters: 2
+    
+    Parameter 0:
+    
+      Integer: 7
+    
+    Parameter 1:
+    
+      String: 'secondparameter'
+</kbd>
+</pre>
+
+<p><b>xmlrpc_dumpserver</b> was new in Xmlrpc-c 1.49 (March 2017).
 
 <h2 id="alternatives">Alternatives</h2>
 
