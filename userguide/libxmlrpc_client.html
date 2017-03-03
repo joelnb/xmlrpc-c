@@ -769,7 +769,7 @@ Example:
 <pre>
 <code>
     xmlrpc_value * resultP;
-    xmlrpc_client_call2f(&amp;env, clientP, url, methodName, &amp;resultP,
+    xmlrpc_client_call2f(&amp;env, clientP, &quot;http://example.com/RPC2&quot;, &quot;sample.add&quot;, &amp;resultP,
                 &quot;(ii)&quot;, (xmlrpc_int32) 5, (xmlrpc_int32) 7);
 </code>
 </pre>
