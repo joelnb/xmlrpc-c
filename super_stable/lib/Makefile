@@ -42,7 +42,7 @@ all: $(SUBDIRS:%=%/all)
 # (See top level make file for details)
 abyss/all curl_transport/all: $(BLDDIR)/version.h
 abyss++/all: abyss/all
-abyss/all expat/all: libutil/all
+abyss/all expat/all libutil++/all: libutil/all
 
 clean: $(SUBDIRS:%=%/clean) clean-common
 
