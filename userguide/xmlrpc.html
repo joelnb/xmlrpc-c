@@ -370,7 +370,17 @@ authenticating its identity.
 <p>This option causes <b>xmlrpc</b> to default to using the Curl
 XML transport.  You may not specify any other transport.
 
+<dt><b>-xmlsizelimit=</b><i>n</i>[<b>K</b>|<b>M</b>|<b>G</b>]
+<dd>This gives the maximum size in characters of an RPC response that the
+program will accept.
 
+<p>The Xmlrpc-c libraries place a <a href="libxmlrpc.html#limit">limit</a> on
+the size of a response they will accept from the server to protect the rest of
+the program that uses the libraries from running out of memory.  This option
+overrides the library default limit, which is 512K.
+
+<p>This option was new in Xmlrpc-c 1.55 (June 2019).
+  
 </dl>
 
 <h2 id="limitations">Limitations</h2>
