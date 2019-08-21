@@ -64,6 +64,7 @@ XML-RPC and not specific to XML-RPC clients.  Besides, the
   <li><a href="#syncrpc">Synchronous RPCs</a>
     <ul>
     <li><a href="#xmlrpc_client_call2f">xmlrpc_client_call2f()</a>
+    <li><a href="#xmlrpc_client_call2f_va">xmlrpc_client_call2f_va()</a>
     <li><a href="#xmlrpc_client_call2">xmlrpc_client_call2()</a>
     <li><a href="#xmlrpc_client_call">xmlrpc_client_call()</a>
     <li><a href="#xmlrpc_client_call_params">xmlrpc_client_call_params()</a>
@@ -832,6 +833,53 @@ in its fault response.
 Before that, you must use the <a href="#globalclient">global client</a>.
 
 
+<h4 id="xmlrpc_client_call2f_va">Function: xmlrpc_client_call2f_va()</h4>
+
+<p>
+Example:
+
+<pre>
+<code>
+     void my_varargs_function(xmlrpc_client * clientP,
+                              const char *    format,
+                              ...) {
+
+        xmlrpc_env env;
+    
+        va_list args;
+
+        va_start(args, format);
+  
+        xmlrpc_value * resultP;
+    
+        xmlrpc_client_call2f_va(&amp;env, clientP, &quot;http://example.com/RPC2&quot;, &quot;sample.add&quot;, &amp;resultP, args);
+
+        ...
+        }
+</code>
+</pre>
+
+Prototype:
+
+<pre>
+<code>
+    void
+    xmlrpc_client_call2f_va(xmlrpc_env *    envP,
+                            xmlrpc_client * clientP,
+                            const char *    serverUrl,
+                            const char *    methodName,
+                            xmlrpc_value ** resultPP,
+                            const char *    format,
+                            va_list         args);
+</code>
+</pre>
+
+<p>This is the same as
+  <a href="#xmlrpc_client_call2f"><b>xmlrpc_client_call2f()</b></a>, except
+  it takes the RPC arguments as a va_list instead of C variable arguments
+  so you can call it from another function that has C variable arguments.
+
+  
 <h4 id="xmlrpc_client_call2">Function: xmlrpc_client_call2()</h4>
 
 <p>This is like <b>xmlrpc_client_call2f()</b>, but is more flexible in
@@ -1035,7 +1083,7 @@ is done is a &quot;no-wait&quot; call.
 above.  For private clients, the functions are
 <b>xmlrpc_client_start_rpc()</b> and <b>xmlrpc_client_start_rpcf()</b>
 (analogous to <b>xmlrpc_client_call2()</b> and
-<b>xmlrpc_client_call_2f()</b>).  For the global client, the functions
+<b>xmlrpc_client_call2f()</b>).  For the global client, the functions
 are <b>xmlrpc_client_call_asynch()</b>,
 <b>xmlrpc_client_call_server_async()</b>, and
 <b>xmlrpc_client_call_asynch_params()</b> (note the inconsistency in
@@ -1213,7 +1261,7 @@ and <i>userData</i>, the same as for <b>xmlrpc_client_start_rpc()</b>.
 
 <p>
 The arguments are the same as for <b>xmlrpc_client_call2f_va()</b> except
-that intead of <i>resultP</i> argument, there is <i>responseHandler</i>
+that instead of <i>resultP</i> argument, there is <i>responseHandler</i>
 and <i>userData</i>, the same as for <b>xmlrpc_client__start_rpc()</b>.
 
 
