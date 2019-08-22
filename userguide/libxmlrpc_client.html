@@ -822,7 +822,7 @@ language, rather than just an entity for XML-RPC use).  Do not let it
 fool you into thinking that you're specifying an array as the single
 parameter of the RPC.  In XML-RPC, an RPC takes any number of
 parameters, and the <em>elements</em> of this array are those
-parameters.
+parameters.  If the RPC has no parameters, this is an empty array.
 
 <p>If the RPC fails at the server (i.e. the server's response is an
 XML-RPC fault), <b>xmlrpc_client_call2f()</b> fails.  The error code

@@ -1431,7 +1431,6 @@ sprintf().
 <p>See <a href="#formatstring">Format Strings</a> to understand
 how this function works.
 
-
 <p>Examples:
 
 <pre>
@@ -2296,11 +2295,11 @@ by strings.  The value of the first is a string; the value of the second is
 a floating point number.
 </table>
 
-<P>A format string describes the type of one XML-RPC value.  But some
+<P>A format string describes the type of <em>one</em> XML-RPC value.  But some
 types (array and structure) are compound types -- they are composed
 recursively of other XML-RPC values.  So a single format string might
 involve multiple XML-RPC values.
-
+  
 <p>But first, lets look at the simple (not compound) format types.
 These are easy.  The format string consists of one of the strings in
 the table below.  The string is called a format specifier, and in
