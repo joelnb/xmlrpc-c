@@ -805,8 +805,9 @@ This is an ASCIIZ string.
 <p><i>resultPP</i> is a pointer to the variable in which
 the function returns the handle for the XML-RPC result.
 
-<p><i>format</i> is a <a href="libxmlrpc.html#formatstring">format
-string</a> that describes the XML-RPC parameters.
+<p><i>format</i> is a <a href="libxmlrpc.html#formatstring">format string</a>
+that describes the XML-RPC parameters.  You need this even if there are no
+parameters &mdash; to specify that fact.
 
 <p>The variable arguments (<b>...</b>) are the values for the XML-RPC
 parameters.  Their number, type, and meaning are determined by
