@@ -2005,7 +2005,7 @@ ServerRunChannel(TServer *     serverP,
 from the <a href="#channels">channel</a> you supply.  For normal HTTP,
 the channel must be new -- with nothing having been read or written
 through it yet.  <b>ServerRunChannel()</b> reads an HTTP request from
-the channel, performs it, and writes the response to the channel.
+the channel, executes it, and writes the response to the channel.
 
 <p>This would be useful for an Inetd application.  Inetd is a server
 common on Unix systems that listens for connections on various ports
@@ -2091,7 +2091,7 @@ ServerRunConn2(TServer * serverP,
 from the read/write Abyss socket you supply.  For normal HTTP, the
 socket must be for a new TCP connection, with nothing having been read
 or written on the connection yet.  <b>ServerRunConn2()</b> reads an
-HTTP request from the socket, performs it, and writes the response to
+HTTP request from the socket, executes it, and writes the response to
 the socket.
 
 <p>This is useful in the same applications
@@ -2100,7 +2100,7 @@ except as described here.  It's a little simpler
 than <b>ServerRunChannel()</b> and exists in older versions of Xmlrpc-c.
 
 <p>This function was new in Xmlrpc-c 1.06 (July 2006).  In older
-Xmlrpc-c, use <b>ServerRunnConn()</b> instead.  The macro
+Xmlrpc-c, use <b>ServerRunConn()</b> instead.  The macro
 <b>HAVE_SERVER_RUN_CONN_2</b> tells a C program that the
 <b>libxmlrpc_abyss</b> is new enough to have this function.
 
@@ -2131,17 +2131,24 @@ ServerRunConn(TServer * serverP,
 from the already-connected socket you supply.  The socket must be
 in the TCP connected state at entry, with nothing having been read or
 written on the connection yet.  <b>ServerRunConn()</b> reads an HTTP
-request from the socket, performs it, writes the response to the
+request from the socket, executes it, writes the response to the
 socket, shuts down the connection, and closes the socket.
 
 <p>You use this the same way you use <b>ServerRunConn2()</b>,
-except you use the Stanard Input file descriptor directly instead of
+except you use the Standard Input file descriptor directly instead of
 creating an Abyss socket.
 
 <p><b>TOsSocket</b> is a typedef for the type of a conventional socket
 in the operating system in question.  I.e. it is <b>int</b> on Unix
 and <b>SOCKET</b> on Windows.  You should use <b>int</b> or
 <b>SOCKET</b> instead of <b>TOsSocket</b> in your program.
+
+<p><b>SeverRunConn</b> has no way to return failure information, so if it
+  fails to execute an HTTP Request, it exits the program.  This is one
+  way <b>ServerRunConn2()</b> is superior.  Note that failing to execute
+  an HTTP request is distinct from the HTTP request failing; as long as
+  <B>ServerRunConn</B> is able to deliver a failure response to the requester,
+  it will do that and consider the request successfully executed.
 
 
 <h2 id="terminating">Terminating an Abyss Server</h2>
