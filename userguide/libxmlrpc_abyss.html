@@ -1977,15 +1977,23 @@ via a Unix &quot;fork.&quot;
 <pre>
 <code>
     TChannel * channelP;
+    struct abyss_unix_chaninfo * channelInfoP;
     const char * error;
-    ChannelUnixCreateFd(&amp;channelP, STDIN_FILENO);
-    ServerRunChannel(&amp;abyssServer, &amp;channelP, NULL, &amp;error);
+    ChannelUnixCreateFd(STDIN_FILENO, &amp;channelP, &amp;channelInfoP, &amp;error);
     if (error) {
-        fprintf(stderr, &quot;Couldn't run the server.  %s&quot;, error);
+        fprintf(stderr, &quot;Couldn't create a channel.  %s&quot;, error);
         free(error);
+    } else {
+        ServerRunChannel(&amp;abyssServer, channelP, NULL, &amp;error);
+        if (error) {
+            fprintf(stderr, &quot;Couldn't run the server.  %s&quot;, error);
+            free(error);
+        } else {
+            ...
+        }
+        ChannelDestroy(channelP);
+        free(channelInfoP);
     }
-    ...
-    ChannelDestroy(channelP);
 </code>
 </pre>
 
@@ -1995,7 +2003,7 @@ via a Unix &quot;fork.&quot;
 <code>
 void
 ServerRunChannel(TServer *     serverP,
-                 TSocket *     channelP,
+                 TChannel *    channelP,
                  void *        channelInfoP,
                  const char ** errorP);
 </code>
