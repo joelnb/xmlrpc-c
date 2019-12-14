@@ -2265,6 +2265,9 @@ struct xmlrpc_curl_xportparms {
     xmlrpc_bool  gssapi_delegation;
     const char * referer;
     unsigned int connect_timeout;
+    xmlrpc_bool  tcp_keepalive;
+    unsigned int tcp_keepidle_sec;
+    unsigned int tcp_keepintvl sec;
 };
 </code>
 </pre>
@@ -2518,6 +2521,30 @@ restrictions.
 <p>In Xmlrpc-c before 1.41 (March 2015), the situation is much more
 complicated when DNS lookup takes a long time.  See
 <a href="#curltimeout">Timeouts</a>
+
+
+<h5 id="curlparm_keepalive">TCP keepalive</h5>
+
+<p>Keepalive is a feature of TCP in which a client conducts a transaction with
+  the server periodically just to determine if the server is still there.  It
+  does this only during intervals when there is no regular traffic on a
+  connection.  The Linux kernel implements the feature and the Curl library
+  provides controls for it, which are also available in the Xmlrpc-c API.
+  
+<p>The two parameters of the TCP keepalive feature are how long the connection
+  is idle (i.e. there are no messages on it besides keepalive messages) when
+  the client performs the first keepalive transaction and the period of
+  keepalive transactions thenceforth while the connection is idle.
+
+<p>You request TCP keepalive on a transport's connections with
+  the <i>tcp_keepalive</i> option.  You control the initial idle period
+  with <i>tcp_keepidle_sec</i> and the period with <i>tcp_keepintvl_sec</i>,
+  both of which are numbers of seconds.  Zero means accept the OS' default.
+
+<p>These parameters were new in Xmlrpc-c 1.57 (December 2019).  You also need
+  Curl library Version 7.25 or newer.  If you set <i>tcp_keepalive</i> true
+  or <i>tcp_keepidle_sec</i> or <i>tcp_keepintvl_sec</i> to nonzero and your
+  Curl library is older than that, client XML transport creation fails.
 
 
 <h5 id="httpproxy">HTTP Proxy Control</h5>
