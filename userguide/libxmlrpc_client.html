@@ -2532,14 +2532,17 @@ complicated when DNS lookup takes a long time.  See
   provides controls for it, which are also available in the Xmlrpc-c API.
   
 <p>The two parameters of the TCP keepalive feature are how long the connection
-  is idle (i.e. there are no messages on it besides keepalive messages) when
-  the client performs the first keepalive transaction and the period of
-  keepalive transactions thenceforth while the connection is idle.
+  is idle (i.e. there are no messages on it) before the client starts trying
+  to determine if the server is still there and the frequency with which the
+  client sends messages to the server in that attempt.  When the client has
+  sent a certain number of messages without getting a response, it considers
+  the connection broken.
 
 <p>You request TCP keepalive on a transport's connections with
-  the <i>tcp_keepalive</i> option.  You control the initial idle period
-  with <i>tcp_keepidle_sec</i> and the period with <i>tcp_keepintvl_sec</i>,
-  both of which are numbers of seconds.  Zero means accept the OS' default.
+  the <i>tcp_keepalive</i> option.  You control the idle period
+  with <i>tcp_keepidle_sec</i> and the message period
+  with <i>tcp_keepintvl_sec</i>, both of which are numbers of seconds.  Zero
+  means accept the OS' default.
 
 <p>These parameters were new in Xmlrpc-c 1.57 (December 2019).  You also need
   Curl library Version 7.25 or newer.  If you set <i>tcp_keepalive</i> true
