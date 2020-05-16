@@ -727,9 +727,9 @@ from a separate thread or signal handler.
 <p>If you have a signal handler that calls <b>terminate()</b> and the
 process receives a signal while the server is running, the server will
 terminate (<b>run()</b> will return) soon after the signal handler
-returns.  If the server is processing an RPC when the
-process receives the signal, it will not terminate until it is done with that
-RPC.
+returns.  If the server is processing any RPCs when the
+process receives the signal, it will not terminate until it has completed
+those RPCs.
 
 <p>You can also call this from an XML-RPC method (i.e. from the
 <b>execute</b> method of a <b>xmlrpc_c::method</b> object), as long as
@@ -738,12 +738,6 @@ connections.  If, on the other hand, you are running the server with
 <b>run()</b> and you have a system in which it does that by way of a
 Unix fork, a <b>terminate()</b> from inside an Abyss HTTP request
 handler has no effect.
-
-<p>If you are running the server with <b>run()</b>, which means the
-server processes the connections (executes RPCs) in separate threads,
-<b>terminate()</b> affects only the foreground thread that waits
-for, accepts, and dispatches new connections.  The background RPC
-threads continue normally to completion in their own time.
 
 <p>This method was new in Xmlrpc-c 1.11 (June 2007).  Before that,
 there is no way to terminate a running <b>xmlrpc_c::serverAbyss</b>

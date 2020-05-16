@@ -1050,8 +1050,9 @@ from a separate thread or signal handler.
 <b>xmlrpc_server_abyss_terminate()</b> and the process receives a signal while
 the server is running, the server will terminate
 (<b>xmlrpc_server_abyss_run_server()</b> will return) soon after the signal
-handler returns.  If the server is processing an RPC when the process receives
-the signal, it will not terminate until it is done with that RPC.
+handler returns.  If the server is processing any RPCs when the
+process receives the signal, it will not terminate until it has completed
+those RPCs.
 
 <p>You can also call this from an XML-RPC method function, as long as that
 function is running in the same process that waits for and accepts new
@@ -1060,12 +1061,6 @@ it processes connections in the background and you have a system in which it
 does that by way of a Unix fork (which is unusual in modern times), a
 <b>xmlrpc_server_abyss_terminate()</b> from inside an XML-RPC method
 function has no effect.
-
-<p>If you are running the server in a mode in which it processes
-connections in the background (i.e. in separate threads or processes),
-<b>xmlrpc_server_abyss_terminate()</b> affects only the foreground
-thread that waits for and dispatches RPCs.  Any background thread that
-is executing an RPC continues normally to completion in its own time.
 
 <p>This function was new in Xmlrpc-c 1.14 (March 2008).  Before that,
 the only way to terminate a server is to execute a
