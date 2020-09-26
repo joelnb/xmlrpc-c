@@ -1259,13 +1259,14 @@ type, and is convenient in several <b>xmlrpc_c::value_struct</b> methods.
 <h4 id="constructors_valuestruct">Constructors</h4>
 
 <p>You construct an <b>xmlrpc_c::value_struct</b> object from a C++
-<b>map&lt;string, xmlrpc_c::value&gt;</b>:
+<b>map&lt;std::string, xmlrpc_c::value&gt;</b>:
 
 <pre>
 <code>
     // Make the map value 'structData'
-    map&lt;string, value&gt; structData;
-    pair&lt;string, value&gt; member("the_integer", xmlrpc_c::value_int(9));
+    map&lt;std::string, xmlrpc_c::value&gt; structData;
+    pair&lt;std::string, xmlrpc_c::value&gt; member("the_integer",
+                                                    xmlrpc_c::value_int(9));
     structData.insert(member);
         
     // Make an XML-RPC struct out of it
@@ -1284,8 +1285,8 @@ as described under <a href="#class_value">Class <b>xmlrpc_c::value</b></a>.
 <pre>
 <code>
     xmlrpc_c::value_struct const param1(whatever);
-    map&lt;string, xmlrpc_c::value&gt; const param1Value(
-        static_cast&lt;map&lt;string, xmlrpc_c::value&gt; &gt;(param1));
+    map&lt;std::string, xmlrpc_c::value&gt; const param1Value(
+        static_cast&lt;map&lt;std::string, xmlrpc_c::value&gt; &gt;(param1));
 </code>
 </pre>
 
