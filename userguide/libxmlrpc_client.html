@@ -394,11 +394,11 @@ variable</a> pointer.
 <p><i>appname</i> and <i>appversion</i> are meaningful only if the
 client XML transport is <b>libwww</b>, and are in the parameter list
 (instead of the <b>libwww</b> transport-specific parameters) only for
-historical reasons.  These values control the User-Agent HTTP header
-in the XML-RPC call.  (The User-Agent HTTP header normally tells
+historical reasons.  These values control the User-Agent HTTP header field
+in the XML-RPC call.  (The User-Agent HTTP header field normally tells
 through what program the user made the HTTP request; for classic web
 browsing, it identifies the web browser program, such as Internet
-Explorer).  The value in the User-Agent header is
+Explorer).  The value in the User-Agent header field is
 <i>appname</i>/<i>appversion</i>, plus the name and version number of
 the libwww library.  For the other HTTP transports, see the
 documentation of the individual transport for information on
@@ -2167,13 +2167,13 @@ the signal.  (Current Xmlrpc-c <em>always</em> uses <b>CURLOPT_NOSIGNAL</b>).
 
 <p>In HTTP, the &quot;user agent&quot; is the program through which the user
 makes an HTTP request.  For classic web browsing, it is the web browser
-program, such as Internet Explorer 6.0.  An optional header in the HTTP
-request, the <b>User-Agent</b> header, identifies the user agent.  It does
-this with a value that looks like this: &quot;prog1/1.0 prog2/2.1
+program, such as Internet Explorer 6.0.  An optional header field in the HTTP
+request, the <b>User-Agent</b> header field, identifies the user agent.  It
+does this with a value that looks like this: &quot;prog1/1.0 prog2/2.1
 prog3/0.9beta&quot;.  It is a sequence of name/version pairs, identifying
 components at successively lower layers.
 
-<p>The Xmlrpc-c Curl transport by default inludes a User-Agent header
+<p>The Xmlrpc-c Curl transport by default inludes a User-Agent header field
 in its requests, whose value is a name/version pair for Xmlrpc-c followed
 by a name/version pair for Curl, separated by spaces.
 
@@ -2187,13 +2187,13 @@ prepends nothing.
 the transport does not include information about Xmlrpc-c and Curl.
 
 <p>If <i>dont_advertise</i> is true and <i>user_agent</i> is null, the
-transport does not include a User-Agent header in the request at all.
+transport does not include a User-Agent header field in the request at all.
 
 <p>The behavior is different before Xmlrpc-c 1.21 (December 2009).  In these
-older releases, the default is not to include a User-Agent header.  If you
-specify non-null <i>user_agent</i>, the transport includes the full User-Agent
-header, including the Xmlrpc-c and Curl information and <i>user_agent</i>
-value.  There is no <i>dont_advertise</i> option.
+older releases, the default is not to include a User-Agent header field.  If
+you specify non-null <i>user_agent</i>, the transport includes the full
+User-Agent header field, including the Xmlrpc-c and Curl information
+and <i>user_agent</i> value.  There is no <i>dont_advertise</i> option.
 
 
 <h4 id="referer">Referer</h4>
@@ -2222,7 +2222,7 @@ referer value is meaningful to the server.
 
 <p>Because of the <a href="#pythonhttp">Expect/Continue bug</a> that some
 XML-RPC servers have, the Curl transport never sends an HTTP Expect header
-(and, more importantly, never expects a continue response).
+field (and, more importantly, never expects a continue response).
 
 <p>BUT: Before Xmlrpc-c 1.19 (June 2009), with a recent libcurl library and a
 large XML-RPC call, the transport <em>does</em> send the Expect and waits up
@@ -2425,13 +2425,13 @@ usually the default).
 
 <p><i>user_agent</i> is a string that identifies the user of the
 Xmlrpc-c client object, for purposes of a <b>User-Agent</b> HTTP
-header.  
+header field.
 
 <p>If the parameter is NULL or not present, the HTTP request has no
-<b>User-Agent</b> header.  See the discussion of user agents above.
+<b>User-Agent</b> header field.  See the discussion of user agents above.
 
 <p>The <i>user_agent</i> parameter was new in Xmlrpc-c 1.03 (June 2005).
-Before that, the Curl transport never used a <b>User-Agent</b> header.
+Before that, the Curl transport never used a <b>User-Agent</b> header field.
 
 
 <h5 id="ssldetailparm">SSL Details</h5>
@@ -2990,29 +2990,30 @@ parameter.  This is easy, but not as flexible as using a signal.
 <h3 id="boguscontentlength">Bogus Content Length</h3>
 
 <p>Per the XML-RPC spec, an HTTP response which is an XML-RPC response must
-have a Content-Length header and its value must be the size of the XML-RPC
-response message.  <b>libxmlrpc_client</b> facilities are thus allowed to fail
-the XML-RPC call if the response does not have the required Content-Length
-header or does not contain the specified amount of contents.  With the Curl or
-Libwww XML transport, <b>libxmlrpc_client</b> does not require a
-Content-Length header, but with the Wininet XML transport, it does.
+have a Content-Length header field and its value must be the size of the
+XML-RPC response message.  <b>libxmlrpc_client</b> facilities are thus allowed
+to fail the XML-RPC call if the response does not have the required
+Content-Length header field or does not contain the specified amount of
+contents.  With the Curl or Libwww XML transport, <b>libxmlrpc_client</b> does
+not require a Content-Length header field, but with the Wininet XML transport,
+it does.
 
-<p>An HTTP chunked response does not have a Content-Length header, so
-cannot be an XML-RPC response.  But there are some pseudo-XML-RPC
-servers that send an HTTP chunked response without a Content-Length
-header or a pseudo-HTTP chunked response with a Content-Length header
-with a liberal (greater than actual) value.
+<p>An HTTP chunked response does not have a Content-Length header field, so
+cannot be an XML-RPC response.  But there are some pseudo-XML-RPC servers that
+send an HTTP chunked response without a Content-Length header field or a
+pseudo-HTTP chunked response with a Content-Length header field with a liberal
+(greater than actual) value.
 
-<b>libxmlrpc_client</b> facilities accept and process naturally an
-HTTP chunked response, with the Curl and Libwww XML transports.  With
-the Wininet transport, <b>libxmlrpc_client</b> accepts a pseudo-HTTP
-response which is chunked and also has a Content-Length header.  That
-header must specify the actual content length (i.e. the number of
-characters after decoding according to the Transfer-Encoding header).
+<b>libxmlrpc_client</b> facilities accept and process naturally an HTTP
+chunked response, with the Curl and Libwww XML transports.  With the Wininet
+transport, <b>libxmlrpc_client</b> accepts a pseudo-HTTP response which is
+chunked and also has a Content-Length header field.  That header field must
+specify the actual content length (i.e. the number of characters after
+decoding according to the Transfer-Encoding header field).
 
 <p>Even though an HTTP server never sends a chunked response with a
-Content-Length header, a true HTTP client ignores the Content-Length
-header in a chunked response -- i.e. it tolerates the server error.
+Content-Length header field, a true HTTP client ignores the Content-Length
+header field in a chunked response -- i.e. it tolerates the server error.
 An XML-RPC client need not.  This is a rare case where an XML-RPC
 client is excused from also being an HTTP client.  As stated above,
 the Wininet XML transport takes advantage of that excuse, so a
@@ -3021,19 +3022,20 @@ is not an HTTP client.
 
 <h3 id="pythonhttp">Python Expect/Continue Bug (3 Second Delay)</h3>
 
-<p>In HTTP 1.1 (but not 1.0), the client can send the header &quot;Expect:
-100-continue&quot;, which tells the server that the client isn't going to send
-the body of the HTTP request until the server tells it to by sending a
-&quot;continue&quot; response.  The server is obligated to send that response.
+<p>In HTTP 1.1 (but not 1.0), the client can send the header field
+&quot;Expect: 100-continue&quot;, which tells the server that the client isn't
+going to send the body of the HTTP request until the server tells it to by
+sending a &quot;continue&quot; response.  The server is obligated to send that
+response.
 
 <p>The point of this is that the client doesn't want to spend a lot of
 resources generating and sending a body that the server is just going to
-reject based on the headers (for example because the body, according to the
-headers, is too big for the server to handle).
+reject based on the header (for example because the body, according to the
+header, is too big for the server to handle).
 
 <p>But some servers that are otherwise HTTP 1.1 don't hold up their end of the
-deal: they just ignore the Expect header and leave the client hanging.  (This
-is presumably just a matter of implementation mistake or expedience).
+deal: they just ignore the Expect header field and leave the client hanging.
+(This is presumably just a matter of implementation mistake or expedience).
 
 <p>Users have reported this using Python 2.7 and 3.2 (note that we are not
 saying the bug is <em>in </em> Python).  No users of Python servers have

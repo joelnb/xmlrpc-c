@@ -611,7 +611,7 @@ certain Abyss functions.
 
 <p><a href="libxmlrpc_abyss.html#SessionGetRequestInfo">
 <b>SessionGetRequestInfo</b></a> can give you some information about
-the HTTP headers that came with the call, while
+the HTTP header that came with the call, while
 <a href="libxmlrpc_abyss.html#SessionGetChannelInfo"><b>SessionGetChannelInfo()</b></a>
 can tell you how the call got to you.  In particular,
 <b>SessionGetChannelInfo()</b> typically tells you the IP address and TCP port
@@ -1405,7 +1405,8 @@ server closes the connection.
 
 <p>This is also the maximum time the server allows a connection to be open
 before the first data arrives from the client.  If a client connects and then
-doesn't start sending HTTP headers soon enough, it sees the connection close.
+doesn't start sending the HTTP header soon enough, it sees the connection
+close.
 
 <p>A value of zero requests the default.
 
@@ -1496,16 +1497,16 @@ compute the response as it sends it, not knowing until it reaches the
 end how big it is.
 
 <p>While this function makes the server chunk the response, the server
-in all cases includes the required content-length header, per XML-RPC.
+in all cases includes the required content-length header field, per XML-RPC.
 
 <p>When you use this option, the server is not a legal XML-RPC server.
 That's because an XML-RPC server must be an HTTP server and also
-include a content-length header in every response, but an HTTP server
-cannot include a content-length header in a chunked response.
+include a content-length header field in every response, but an HTTP server
+cannot include a content-length header field in a chunked response.
 
 <p>It's hard to see how chunking could be useful in XML-RPC, because
 not only is a response usually pretty small, but the XML-RPC standard
-requires a content-length header at the beginning of the response that
+requires a content-length header field at the beginning of the response that
 gives the whole response's size.  And of course, being nonstandard
 XML-RPC, the client might not be able to handle it.  (An Xmlrpc-c
 client can, though).
@@ -1543,17 +1544,18 @@ whose scripts the client should trust to perform RPCs on this server.  The
 most useful value is &quot;*&quot;, which means all third party servers.
 
 <p>When the server includes an Access-Control-Allow-Origin field in its
-response, it also includes an Access-Control-Allow-Methods header saying the
-client should allow the POST method (all XML-RPC calls use the POST method),
-and Access-Control-Allow-Headers headers that tell the client to allow
-Content-Type and Content-Length headers, two headers that are essential to any
-XML-RPC call.
+response, it also includes an Access-Control-Allow-Methods header field saying
+the client should allow the POST method (all XML-RPC calls use the POST
+method), and Access-Control-Allow-Headers header fields that tell the client
+to allow Content-Type and Content-Length header fields, two headers that are
+essential to any XML-RPC call.
 
 <p>This parameter was new in Xmlrpc-c 1.25 (December 2010).  Before that, the
 server fails any attempt to get option information, responding with a 405
 Method Not Allowed error to any Options request and never includes HTTP access
 control header fields in any other response.  Before Xmlrpc-c 1.39 (September
-2014), the server does not send the Access-Control-Allow-Headers headers.
+2014), the server does not send the Access-Control-Allow-Headers header
+fields.
 
 <h5 id="access_control_expires">access_control_expires</h5>
 
